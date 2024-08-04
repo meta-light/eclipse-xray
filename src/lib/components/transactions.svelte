@@ -2,24 +2,16 @@
     /* eslint-disable */
     //@ts-nocheck
     import { page } from "$app/stores";
-
-    import type { TransactionPage } from "$lib/types";
     import type { ProtonTransaction } from "$lib/xray/lib/parser/types";
-
     import { trpcWithQuery } from "$lib/trpc/client";
-
     import { fly } from "svelte/transition";
-
     import IconCard from "$lib/components/icon-card.svelte";
-    import Transaction from "$lib/components/transaction.svelte";
-
+    import Transaction from "$lib/components/transaction.svelte"
     export let account: string;
     export let user = "";
     export let filter = "";
     export let compressed = false;
-
     let cachedAddress = "";
-
     const client = trpcWithQuery($page);
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
@@ -32,47 +24,20 @@
         isMainnet: boolean;
     }) =>
         compressed
-            ? client.cnftTransactions.createInfiniteQuery(input, {
-                  getNextPageParam: (lastPage) => lastPage.oldest,
-                  refetchOnMount: false,
-                  refetchOnWindowFocus: false,
-              })
-            : client.transactions.createInfiniteQuery(input, {
-                  getNextPageParam: (lastPage) => lastPage.oldest,
-                  refetchOnMount: false,
-                  refetchOnWindowFocus: false,
-              });
+            ? client.cnftTransactions.createInfiniteQuery(input, {getNextPageParam: (lastPage) => lastPage.oldest, refetchOnMount: false, refetchOnWindowFocus: false,})
+            : client.transactions.createInfiniteQuery(input, {getNextPageParam: (lastPage) => lastPage.oldest, refetchOnMount: false, refetchOnWindowFocus: false,});
 
-    const loadMore = () => {
-        $transactions.fetchNextPage();
-    };
+    const loadMore = () => {$transactions.fetchNextPage();};
 
-    $: transactions = createTransactionQuery({
-        account,
-        filter,
-        isMainnet: isMainnetValue,
-        user,
-    });
-
-    $: transactionPages = ($transactions.data?.pages || []) as {
-        result: ProtonTransaction[];
-        oldest: string | null;
-    }[];
-
-    // Hard reset the query when the account changes
+    $: transactions = createTransactionQuery({account, filter, isMainnet: isMainnetValue, user,});
+    $: transactionPages = ($transactions.data?.pages || []) as {result: ProtonTransaction[]; oldest: string | null;}[];
+    
     $: if (cachedAddress !== account) {
         cachedAddress = account;
-
-        transactions = createTransactionQuery({
-            account,
-            filter,
-            isMainnet: isMainnetValue,
-            user,
-        });
+        transactions = createTransactionQuery({account, filter, isMainnet: isMainnetValue, user,});
     }
 
     $: lastPage = transactionPages[transactionPages.length - 1];
-
     $: lastPageHasTransactions = lastPage ? lastPage.result?.length > 0 : false;
 </script>
 
@@ -88,7 +53,6 @@
     {#each transactionPages as transactionsList}
         {#each transactionsList.result as transaction, idx (transaction.signature)}
             {#if transaction && transaction.signature != null}
-                <!-- Only animate the first few intro transactions -->
                 {#if idx < 8}
                     <div
                         class="mb-8"

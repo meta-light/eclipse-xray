@@ -9,17 +9,11 @@
         <slot name="title">
             <div class="flex w-full items-center justify-between">
                 <div class="w-3/4">
-                    <div
-                        class="my-2 h-3 w-1/4 animate-pulse rounded-full bg-secondary"
-                    />
-                    <div
-                        class="h-2 w-2/4 animate-pulse rounded-full bg-secondary"
-                    />
+                    <div class="mb-2 h-3 w-1/4 animate-pulse rounded-full bg-secondary" />
+                    <div class="h-2 w-2/4 animate-pulse rounded-full bg-secondary" />
                 </div>
                 <div class="flex w-1/4 justify-end">
-                    <div
-                        class="my-2 h-3 w-10 animate-pulse rounded-full bg-secondary"
-                    />
+                    <div class="mb-2 h-3 w-10 animate-pulse rounded-full bg-secondary" />
                 </div>
             </div>
         </slot>

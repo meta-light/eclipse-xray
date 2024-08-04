@@ -11,18 +11,9 @@
 <script lang="ts">
     import { parseProgramLogs } from "$lib/util/program-logs";
     export let logs: string[];
-
     const parsedLogs = parseProgramLogs(logs);
-
-    const totalComputeUnits = parsedLogs.reduce(
-        (sum, log) => sum + log.computeUnits,
-        0
-    );
-
-    // Check if there is at least one entry with non-empty logs
-    const hasNonEmptyLogs = parsedLogs.some(
-        (instruction) => instruction.logs.length > 0
-    );
+    const totalComputeUnits = parsedLogs.reduce((sum, log) => sum + log.computeUnits, 0);
+    const hasNonEmptyLogs = parsedLogs.some((instruction) => instruction.logs.length > 0);
 </script>
 
 <div class="pt-0">
@@ -51,8 +42,8 @@
             {/if}
             {#each instruction.logs as log}
                 <p class={`px-3 pb-1 text-sm text-${log.style}`}>
-                    <span class={`mr-1 text-${log.style}`}>{log.prefix}</span
-                    ><span class={``}>{log.text}</span>
+                    <span class={`mr-1 text-${log.style}`}>{log.prefix}</span>
+                    <span class={``}>{log.text}</span>
                 </p>
             {/each}
         {/each}

@@ -7,7 +7,7 @@ const config = {
                 helius: {
                     accent: "#ea580c",
 
-                    "base-100": "black",
+                    "base-100": "white",
 
                     error: "#ee2222",
 
@@ -17,13 +17,13 @@ const config = {
 
                     primary: "#c7c7c7",
 
-                    "primary-content": "#f5f5f4",
+                    "primary-content": "#000000",
 
                     secondary: "#1d1d1d",
 
-                    success: "#34d399",
+                    success: "#03B500",
 
-                    warning: "#FBBD23",
+                    warning: "#002D00",
                 },
             },
         ],

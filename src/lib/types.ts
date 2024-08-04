@@ -1,22 +1,11 @@
 import type { ComponentType } from "svelte";
-
 import type { EnrichedTransaction } from "helius-sdk";
-
-export type ProtonTransaction = {
-  signature: string;
-  // Define the structure of ProtonTransaction here
-};
-
+export type ProtonTransaction = {signature: string;};
 import type { ProtonTransactionAction } from "$lib/xray";
-
 import type { IconPaths, modals } from "$lib/config";
-
 import type { SOL } from "$lib/xray";
-
 import type { Asset } from "@nifty-oss/asset";
-
 export * from "$lib/config";
-
 export interface UIConfig {
     dev: boolean;
     devMode: boolean;
@@ -131,7 +120,6 @@ export type RecognizedTokens = {
     [key: string]: string;
 };
 
-/** Used in the account/tokens page */
 export type UIAccountToken = {
     id: string;
     decimals: number;
@@ -140,17 +128,10 @@ export type UIAccountToken = {
     price: number;
     fullMetadata: any;
 };
-
-/**
- * Used in the account/tokens page. A special case for SOL is necessary because
- * it's not structed like other tokens
- */
 export type UISolAccountToken = {
     id: typeof SOL;
     balance: number;
     balanceInUSD: number;
     price: number;
 };
-
-/** Used in the Nifty Asset pages. */
 export type UINiftyAsset = Asset & { json: any };

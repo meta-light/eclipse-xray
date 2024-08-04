@@ -1,10 +1,7 @@
 <script lang="ts">
     import { getSolanaName } from "$lib/xray";
-
     import shortenString from "$lib/util/shorten-string";
-
     export let text: string = "";
-
     let shortened: string = "";
     let shortenedOriginal: string = "";
     let result: string = "";

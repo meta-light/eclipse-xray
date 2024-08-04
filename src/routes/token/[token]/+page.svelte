@@ -1,13 +1,19 @@
 <style>
+    .nav {
+        position: relative;
+        background-color: white;
+    }
+
     .nav::before {
         content: "";
         position: absolute;
-        bottom: 0;
-        left: 0;
+        top: 0;
+        left: 50%;
         height: 100%;
         width: 100vw;
-        transform: translate(-50%, 0);
-        background-color: black;
+        transform: translateX(-50%);
+        background-color: white;
+        z-index: -1;
     }
 
     .img {
@@ -92,18 +98,18 @@
             <PageLoader />
         </div>
     {:else}
-        <div class="nav content sticky top-14 z-30 bg-base-100 px-3 py-2">
+        <div class="nav content sticky z-30 px-3 py-2 text-white">
             <div
-                class="relative flex flex-wrap items-center justify-between bg-base-100"
+                class="relative flex flex-wrap items-center justify-between bg-gray-200 py-2 px-2 rounded-lg "
             >
                 <div>
-                    <h3 class="m-0 text-xl font-bold md:text-3xl">
+                    <h3 class="m-0 text-xl font-bold md:text-3xl text-black">
                         {metadata.name}
                     </h3>
                 </div>
 
                 <div>
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2 text-black">
                         {#if metadata.image}
                             <a
                                 href={metadata.image}
@@ -123,7 +129,7 @@
             </div>
         </div>
 
-        <div class="content px-3">
+        <div class="content px-3 mb-4">
             <div
                 class="flex flex-col items-center justify-center"
                 in:fade={{ delay: 100, duration: 800 }}
@@ -152,7 +158,6 @@
                         />
                     </div>
                 {:else}
-                    <!--Loading-->
                     <div>Loading...</div>
                 {/if}
             </div>

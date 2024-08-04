@@ -112,14 +112,19 @@
         </div>
     </div>
     {#if animate}
-        <div in:fly={{ delay: 500, duration: 1000, opacity: 0, y: 50 }} class="content pl-2 md:pl-0">
+        <div in:fly={{ delay: 500, duration: 1000, opacity: 0, y: 50 }} class="content pl-2 md:pl-0 mb-2">
             <div class="px-3">
                 <Transaction {transaction} />
             </div>
 
             {#if transaction.accounts}
-                <div class="px-3 pt-3">
-                    <Collapse sectionTitle="Account Changes" showDetails={false} hideIcon={true}>
+                <div class="mb-3 px-3">
+                    <Collapse 
+                        sectionTitle="Account Changes" 
+                        sectionAditionalInfo="Changes to account data"
+                        showDetails={false} 
+                        iconId="account"
+                    >
                         {#each transaction.accounts as account}
                             <Account data={account} />
                         {/each}
@@ -162,8 +167,8 @@
             <div class="mb-3 px-3">
                 <div class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg border p-1 py-3">
                     <div class="col-span-2 p-1 md:col-span-1">
-                        <div class="center ml-1 h-10 w-10 rounded-full bg-secondary">
-                            <Icon id="network" size="sm" />
+                        <div class="center ml-1 h-10 w-10 rounded-full bg-gray-200">
+                            <Icon id="network" size="sm" fill="black"/>
                         </div>
                     </div>
                     <div class="col-span-10 flex items-center justify-between pr-1 md:col-span-11">
@@ -179,7 +184,7 @@
             <div class="mb-3 px-3">
                 <div class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg border p-1 py-3">
                     <div class="col-span-2 p-1 md:col-span-1">
-                        <div class="center ml-1 h-10 w-10 rounded-full bg-secondary">
+                        <div class="center ml-1 h-10 w-10 rounded-full bg-gray-200">
                             <Icon id="box" size="sm" />
                         </div>
                     </div>
@@ -199,8 +204,13 @@
                 </div>
             </div>
 
-            <div class="px-3">
-                <Collapse sectionTitle="Transaction Data" showDetails={true} hideIcon={true}>
+            <div class="mb-3 px-3">
+                <Collapse 
+                    sectionTitle="Transaction Data" 
+                    sectionAditionalInfo="Raw transaction information"
+                    showDetails={false} 
+                    iconId="json"
+                >
                     <div class="mb-3">
                         {#if transactionData}
                             <JSON data={transactionData} label="transaction" />
@@ -212,8 +222,13 @@
             </div>
 
             {#if transaction.meta?.logMessages}
-                <div class="px-3 pt-3">
-                    <Collapse sectionTitle="Log Messages" showDetails={false} hideIcon={true}>
+                <div class="mb-3 px-3">
+                    <Collapse 
+                        sectionTitle="Log Messages" 
+                        sectionAditionalInfo="Program execution logs"
+                        showDetails={false} 
+                        iconId="info"
+                    >
                         <LogMessages logs={transaction.meta.logMessages} />
                     </Collapse>
                 </div>

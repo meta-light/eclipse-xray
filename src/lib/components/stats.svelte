@@ -1,40 +1,27 @@
 <script lang="ts">
     import formatMoney from "$lib/util/format-money";
-
-    import { SOL } from "$lib/xray";
-
     import { page } from "$app/stores";
-
     import { trpcWithQuery } from "$lib/trpc/client";
-
     import { fade } from "svelte/transition";
     import { PriceServiceConnection } from "@pythnetwork/price-service-client";
     import { onMount } from "svelte";
-
     const client = trpcWithQuery($page);
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
     const tps = client.tps.createQuery(isMainnetValue);
-
     const slot = client.currentSlot.createQuery([isMainnetValue]);
-
     let ethUsdPrice: number | null = null;
 
     onMount(async () => {
         const connection = new PriceServiceConnection("https://hermes.pyth.network");
-        const priceIds = [
-            "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id
-        ];
-
+        const priceIds = ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"];
         try {
             const [ethUsdFeed] = (await connection.getLatestPriceFeeds(priceIds)) ?? [];
             console.log("ETH/USD feed:", ethUsdFeed);
             const price = ethUsdFeed?.getPriceUnchecked();
             console.log("Price object:", price);
-            ethUsdPrice = price && typeof price.price === 'string' && typeof price.expo === 'number'
-                ? parseFloat(price.price) * Math.pow(10, price.expo)
-                : null;
+            ethUsdPrice = price && typeof price.price === 'string' && typeof price.expo === 'number' ? parseFloat(price.price) * Math.pow(10, price.expo) : null;
             console.log("Calculated ETH/USD price:", ethUsdPrice);
         } catch (error) {
             console.error("Error fetching ETH/USD price:", error);
@@ -45,11 +32,7 @@
 <div class="flex h-10 w-full items-center justify-center text-sm">
     <div class="mr-4">
         {#if !$tps.isLoading}
-            <div
-                in:fade={{
-                    duration: 500,
-                }}
-            >
+            <div in:fade={{duration: 500}}>
                 <span class="font-bold">TPS </span>
                 <span class="opacity-50">{$tps?.data?.toFixed(0)}</span>
             </div>
@@ -59,11 +42,7 @@
     </div>
     <div class="mr-4">
         {#if ethUsdPrice !== null}
-            <div
-                in:fade={{
-                    duration: 500,
-                }}
-            >
+            <div in:fade={{duration: 500}}>
                 <span class="font-bold">ETH/USD </span>
                 <span class="opacity-50">{formatMoney(ethUsdPrice)}</span>
             </div>
@@ -73,18 +52,12 @@
     </div>
     <div>
         {#if !$slot.isLoading}
-            <div
-                in:fade={{
-                    duration: 500,
-                }}
-            >
+            <div in:fade={{duration: 500}}>
                 <span class="font-bold">Current Slot </span>
                 <span class="opacity-50 hover:opacity-100">
                     <a
                         data-sveltekit-reload
-                        href="/block/{$slot?.data}?network={isMainnetValue
-                            ? 'mainnet'
-                            : 'devnet'}"
+                        href="/block/{$slot?.data}?network={isMainnetValue ? 'mainnet' : 'devnet'}"
                         class="pointer-events-auto hover:link-success"
                         >{$slot?.data?.toLocaleString()}</a
                     >
