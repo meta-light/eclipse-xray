@@ -3,3 +3,11 @@ packages/**/dist/**/*
 apps/**/.sveltekit/**/*
 tsconfig.json
 packages
+
+**/*
+
+*.ts
+*.tsx
+*.js
+*.jsx
+*.svelte

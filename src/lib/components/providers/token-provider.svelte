@@ -21,7 +21,14 @@
     const isMainnetValue = network !== "devnet";
     const client = trpcWithQuery($page);
 
-    export const metadata: UITokenMetadata = {
+    export const metadata: UITokenMetadata & {
+        mintExtensions?: {
+            metadata?: {
+                name?: string;
+                uri?: string;
+            };
+        };
+    } = {
         address: "",
         attributes: [],
         collectionKey: "",

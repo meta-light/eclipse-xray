@@ -1,22 +1,32 @@
 import { t } from "$lib/trpc/t";
-import { getAPIUrl } from "$lib/util/get-api-url";
-
+import { Connection, PublicKey } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
 import { z } from "zod";
-
-import { HELIUS_API_KEY } from "$env/static/private";
+import { getRPCUrl } from "$lib/util/get-rpc-url";
 
 export const balances = t.procedure
     .input(z.tuple([z.string(), z.boolean()]))
     .query(async ({ input }) => {
         const [account, isMainnet] = input;
-        const url = getAPIUrl(
-            `/v0/addresses/${account}/balances?api-key=${HELIUS_API_KEY}`,
-            isMainnet
-        );
+        const connection = new Connection(getRPCUrl(isMainnet ? "mainnet" : "devnet"), "confirmed");
+        const pubkey = new PublicKey(account);
 
-        const response = await fetch(url);
+        const [solBalance, tokenAccounts] = await Promise.all([
+            connection.getBalance(pubkey),
+            connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID }),
+        ]);
 
-        const data = await response.json();
+        const tokens = tokenAccounts.value.map((ta) => {
+            const accountInfo = AccountLayout.decode(ta.account.data);
+            return {
+                amount: accountInfo.amount.toString(),
+                decimals: accountInfo.delegateOption ? accountInfo.delegate : 0,
+                mint: new PublicKey(accountInfo.mint).toString(),
+            };
+        });
 
-        return data;
+        return {
+            nativeBalance: solBalance,
+            tokens,
+        };
     });

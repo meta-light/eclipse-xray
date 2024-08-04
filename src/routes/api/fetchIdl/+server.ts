@@ -5,17 +5,14 @@ export async function GET({ url }) {
     const account = url.searchParams.get("account");
     const isMainnetValue = url.searchParams.get("isMainnetValue");
 
-    // Can't use $env/static/private directly in SvelteKit endpoints
-    const { HELIUS_API_KEY } = process.env;
-
-    if (!HELIUS_API_KEY || !account) {
+    if (!account) {
         return new Response(
             JSON.stringify({
-                error: "API key or account parameter not set",
+                error: "Account parameter not set",
                 success: false,
             }),
             {
-                headers: { "Content-Type": "application/json " },
+                headers: { "Content-Type": "application/json" },
                 status: 400,
             }
         );
@@ -24,8 +21,7 @@ export async function GET({ url }) {
     try {
         const idl = await grabIdl(
             account,
-            isMainnetValue === "true",
-            HELIUS_API_KEY
+            isMainnetValue === "true"
         );
 
         if (idl) {
@@ -39,19 +35,21 @@ export async function GET({ url }) {
                     success: false,
                 }),
                 {
-                    headers: { "Content-Type": "application/json " },
+                    headers: { "Content-Type": "application/json" },
                     status: 404,
                 }
             );
         }
-    } catch (err) {
+    } catch (err: unknown) {
+        console.error("Error fetching IDL:", err);
+        const errorMessage = err instanceof Error ? err.message : "Failed to fetch IDL";
         return new Response(
             JSON.stringify({
-                error: "Failed to fetch IDL",
+                error: errorMessage,
                 success: false,
             }),
             {
-                headers: { "Content-Type": "application/json " },
+                headers: { "Content-Type": "application/json" },
                 status: 500,
             }
         );

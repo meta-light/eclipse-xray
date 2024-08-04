@@ -19,7 +19,7 @@
     const isMainnetValue = network !== "devnet";
     const accountInfo = client.accountInfo.createQuery([
         account,
-        isMainnetValue,
+        isMainnetValue ? "mainnet" : "devnet",
     ]);
     const price = client.price.createQuery(SOL);
 

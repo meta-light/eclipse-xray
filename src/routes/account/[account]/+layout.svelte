@@ -21,7 +21,7 @@
     const selectedNetwork = `network=${isMainnetValue ? "mainnet" : "devnet"}`;
     const accountInfo = client.accountInfo.createQuery([
         account,
-        isMainnetValue,
+        isMainnetValue ? "mainnet" : "devnet",
     ]);
 
     const assets = client.assets.createQuery({
@@ -30,7 +30,7 @@
     });
 
     $: endsWith = (str: string) => $page.url.pathname.endsWith(str);
-    $: hasAssets = $assets?.data?.total > 0;
+    $: hasAssets = ($assets?.data?.assets?.length ?? 0) > 0;
 
     let programIDL: Idl | null = null;
 

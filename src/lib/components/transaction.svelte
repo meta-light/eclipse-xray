@@ -31,14 +31,19 @@
         ? transactionActionsMetadata[transaction.type as ProtonActionType]
         : transactionActionsMetadata["UNKNOWN"];
 
-    const formatSource = (str: string) =>
-        str
+    const formatSource = (str: string | undefined) => {
+        if (!str) return "Unknown";
+        return str
             .split("_")
             .map(
                 (word: string) =>
-                    word.slice(0, 1) + word.slice(1, word.length).toLowerCase()
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
             )
             .join(" ");
+    };
+
+    // Ensure that transaction.actions is an array before using it in {#each}
+    $: actions = Array.isArray(transaction.actions) ? transaction.actions : [];
 </script>
 
 <div>
@@ -61,7 +66,7 @@
                             size="md"
                         />
                     </div>
-                    {#if transaction.type.includes("COMPRESSED")}
+                    {#if transaction.type && transaction.type.includes("COMPRESSED")}
                         <div
                             class="center absolute -top-5 left-8 z-10 bg-black px-1 text-[10px] text-[#FFD700]"
                             in:fade={{
@@ -81,7 +86,7 @@
                             {metadata.label}
                         </h3>
                         <div class="flex text-xs">
-                            {#if transaction.source !== "UNKNOWN" && transaction.source !== "SOLANA_PROGRAM_LIBRARY"}
+                            {#if transaction.source && transaction.source !== "UNKNOWN" && transaction.source !== "SOLANA_PROGRAM_LIBRARY"}
                                 <div class="mr-2 rounded">
                                     {formatSource(transaction.source)}
                                 </div>
@@ -111,7 +116,7 @@
             </div>
         </div>
 
-        {#each transaction.actions as action, idx}
+        {#each actions as action, idx}
             {@const address = action?.actionType?.includes("SENT")
                 ? action.sent || ""
                 : action?.actionType?.includes("RECEIVED")

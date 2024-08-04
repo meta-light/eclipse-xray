@@ -16,7 +16,7 @@
         stringColor: "#24ae67",
     });
 
-    let showCode = false;
+    let showCode = true;
 </script>
 
 <div

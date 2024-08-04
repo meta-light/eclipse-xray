@@ -2,7 +2,12 @@ import type { ComponentType } from "svelte";
 
 import type { EnrichedTransaction } from "helius-sdk";
 
-import type { ProtonTransaction, ProtonTransactionAction } from "$lib/xray";
+export type ProtonTransaction = {
+  signature: string;
+  // Define the structure of ProtonTransaction here
+};
+
+import type { ProtonTransactionAction } from "$lib/xray";
 
 import type { IconPaths, modals } from "$lib/config";
 

@@ -1,7 +1,15 @@
-// Replace with the new version of Helius SDK once it's out
-export function getRPCUrl(path: string, isMainnet: boolean = true) {
-    const baseUrl = isMainnet
-        ? "https://mainnet.helius-rpc.com"
-        : "https://devnet.helius-rpc.com";
-    return `${baseUrl}/${path}`;
+export function getRPCUrl(network: "mainnet" | "devnet") {
+    return network === "mainnet"
+        ? "https://mainnetbeta-rpc.eclipse.xyz"
+        : "https://staging-rpc.dev2.eclipsenetwork.xyz/";
+}
+
+export function getFallbackRPCUrl(network: "mainnet" | "devnet") {
+    return network === "mainnet"
+        ? "https://mainnet-rpc.eclipsenetwork.xyz"
+        : "https://devnet-rpc.eclipsenetwork.xyz";
+}
+
+export function getNetworkString(isMainnet: boolean): "mainnet" | "devnet" {
+  return isMainnet ? "mainnet" : "devnet";
 }

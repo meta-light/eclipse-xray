@@ -1,10 +1,8 @@
 import { t } from "$lib/trpc/t";
-
+import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
-import { isMainnet } from "../../util/stores/network";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
-
-import { HELIUS_API_KEY } from "$env/static/private";
+import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
 
 export const assets = t.procedure
     .input(
@@ -15,30 +13,23 @@ export const assets = t.procedure
         })
     )
     .query(async ({ input }) => {
-        const { cursor = 1, account } = input;
-        const url = getRPCUrl(`?api-key=${HELIUS_API_KEY}`, input.isMainnet);
-        const response = await fetch(url, {
-            body: JSON.stringify({
-                id: "get-assets-" + account,
-                jsonrpc: "2.0",
-                method: "getAssetsByOwner",
-                params: {
-                    limit: 1000,
-                    ownerAddress: account,
-                    page: cursor,
-                    sortBy: {
-                        sortBy: "created",
-                        sortDirection: "desc",
-                    },
-                },
-            }),
-            headers: {
-                "Content-Type": "application/json",
-            },
-            method: "POST",
+        const connection = new Connection(getRPCUrl(input.isMainnet ? "mainnet" : "devnet"), "confirmed");
+        const pubkey = new PublicKey(input.account);
+        const tokenAccounts = await connection.getTokenAccountsByOwner(pubkey, {
+            programId: TOKEN_PROGRAM_ID,
         });
 
-        const result = await response.json();
+        const assets = tokenAccounts.value.map((ta) => {
+            const accountInfo = AccountLayout.decode(ta.account.data);
+            return {
+                amount: accountInfo.amount.toString(),
+                decimals: accountInfo.delegateOption ? accountInfo.delegate : 0,
+                mint: new PublicKey(accountInfo.mint).toString(),
+            };
+        });
 
-        return result?.result;
+        return {
+            assets,
+            total: assets.length
+        };
     });

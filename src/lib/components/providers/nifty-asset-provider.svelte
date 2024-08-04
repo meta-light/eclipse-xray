@@ -24,7 +24,7 @@
     let account: any | undefined;
 
     if (address) {
-        account = client.niftyAsset.createQuery([address, isMainnetValue], {
+        account = client.niftyAsset.createQuery([address, isMainnetValue ? "mainnet" : "devnet"], {
             refetchOnMount: false,
             refetchOnWindowFocus: false,
         });

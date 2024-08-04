@@ -7,13 +7,11 @@ import { ConcurrentMerkleTreeAccount } from "@solana/spl-account-compression";
 import { PublicKey, Connection } from "@solana/web3.js";
 import { z } from "zod";
 
-import { HELIUS_API_KEY } from "$env/static/private";
-
 export const concurrentMerkleTree = t.procedure
     .input(z.object({ address: z.string(), isMainnet: z.boolean() }))
     .query(async ({ input }) => {
         const connection = new Connection(
-            getRPCUrl(`?api-key=${HELIUS_API_KEY}`, input.isMainnet),
+            getRPCUrl(input.isMainnet ? "mainnet" : "devnet"),
             "confirmed"
         );
 

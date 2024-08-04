@@ -3,34 +3,47 @@ import { z } from "zod";
 import { t } from "$lib/trpc/t";
 
 import { connect } from "$lib/xray";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
-import { Connection } from "@solana/web3.js";
-
-import { HELIUS_API_KEY } from "$env/static/private";
+import { getRPCUrl, getFallbackRPCUrl } from "$lib/util/get-rpc-url";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 
 export const rawTransaction = t.procedure
-    .input(z.tuple([z.string(), z.boolean()]))
-    .query(async ({ input }) => {
+    .input(
+        z.object({
+            transaction: z.string(),
+            network: z.enum(["mainnet", "devnet"])
+        })
+    )
+    .query(async ({ input, ctx }) => {
+        const { transaction, network } = input;
+        
+        const rpcUrl = getRPCUrl(network);
+        const fallbackRpcUrl = getFallbackRPCUrl(network);
+        
+        const connection = new Connection(rpcUrl, "confirmed");
+        
         try {
-            const [signature, isMainnet] = input;
-
-            const connection = new Connection(
-                getRPCUrl(`?api-key=${HELIUS_API_KEY}`, isMainnet),
-                "confirmed"
-            );
-
-            const transaction = await connection.getTransaction(signature, {
+            const txSignature = transaction;
+            const tx = await connection.getTransaction(txSignature, {
                 maxSupportedTransactionVersion: 0,
             });
 
-            if (!transaction) {
-                return { data: null, error: "Raw transaction not found" };
+            if (!tx) {
+                // If the primary RPC fails, try the fallback
+                const fallbackConnection = new Connection(fallbackRpcUrl, "confirmed");
+                const fallbackTx = await fallbackConnection.getTransaction(txSignature, {
+                    maxSupportedTransactionVersion: 0,
+                });
+
+                if (!fallbackTx) {
+                    throw new Error("Transaction not found");
+                }
+
+                return fallbackTx;
             }
 
-            return {
-                transaction,
-            };
+            return tx;
         } catch (error) {
-            return { data: null, error: "Server error" };
+            console.error("Error fetching raw transaction:", error);
+            throw error;
         }
     });

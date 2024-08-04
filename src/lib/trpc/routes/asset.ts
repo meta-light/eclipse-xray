@@ -1,30 +1,23 @@
 import { t } from "$lib/trpc/t";
-
 import { z } from "zod";
-
-import { HELIUS_API_KEY } from "$env/static/private";
-
 import { getRPCUrl } from "$lib/util/get-rpc-url";
 import type { UITokenMetadata } from "$lib/types";
 
-// TODO: add output validation once this merges with the token endpoint
 export const asset = t.procedure
     .input(z.tuple([z.string(), z.boolean()]))
     .query(async ({ input }) => {
         const [asset, isMainnet] = input;
-        const url = getRPCUrl(`?api-key=${HELIUS_API_KEY}`, isMainnet);
+        const url = getRPCUrl(isMainnet ? "mainnet" : "devnet");
 
         const response = await fetch(url, {
             body: JSON.stringify({
                 id: "asset",
                 jsonrpc: "2.0",
                 method: "getAsset",
-                params: {
-                    id: asset,
-                    options: {
-                        showFungible: true,
-                    },
-                },
+                params: [
+                    asset,
+                    { encoding: "jsonParsed" }
+                ]
             }),
             headers: {
                 "Content-Type": "application/json",
@@ -35,36 +28,35 @@ export const asset = t.procedure
         const data = await response.json();
         let metadata: UITokenMetadata | undefined;
 
-        if (data?.result?.compression?.compressed === true) {
-            const assetData = await fetch(data.result.content.json_uri);
-            const returnAssetData = await assetData.json();
-
+        if (data?.result) {
+            const result = data.result;
             metadata = {
-                address: data?.result?.id || "",
-                assetHash: data?.result?.compression?.asset_hash,
-                attributes: returnAssetData?.attributes || [],
-                burnt: data?.result?.burnt,
-                collectionKey: data?.result?.grouping[0]?.group_value || "",
-                compressed: true,
-                creatorHash: data?.result?.compression?.creator_hash,
-                creators: data?.result?.creators || [],
-                dataHash: data?.result?.compression?.data_hash,
-                delegate: data?.result?.ownership?.delegated
-                    ? data?.result?.ownership?.delegate
-                    : "",
-                description: returnAssetData?.description || "",
-                frozen: data?.result?.ownership?.frozen,
-                image: returnAssetData?.image || "",
-                leafId: data?.result?.compression?.leaf_id,
-                mintExtensions: data?.result?.mint_extensions || "",
-                mutable: data?.result?.mutable,
-                name: returnAssetData?.name || "",
-                owner: data?.result?.ownership?.owner || "",
-                // sellerFeeBasisPoints ??
-                sellerFeeBasisPoints: data?.result?.royalty.basis_points || 0,
-                seq: data?.result?.compression?.seq,
-                tree: data?.result?.compression?.tree,
+                address: result.mint || "",
+                attributes: result.attributes || [],
+                burnt: result.burnt || false,
+                collectionKey: result.collection?.key || "",
+                compressed: result.compression?.compressed || false,
+                creators: result.creators || [],
+                delegate: result.delegate || "",
+                description: result.data?.description || "",
+                frozen: result.frozen || false,
+                image: result.data?.uri || "",
+                mintExtensions: result.mintExtensions || "",
+                mutable: result.mutable || false,
+                name: result.data?.name || "",
+                owner: result.owner || "",
+                sellerFeeBasisPoints: result.data?.sellerFeeBasisPoints || 0,
             };
+
+            if (metadata.compressed) {
+                metadata.assetHash = result.compression?.assetHash;
+                metadata.creatorHash = result.compression?.creatorHash;
+                metadata.dataHash = result.compression?.dataHash;
+                metadata.leafId = result.compression?.leafId;
+                metadata.seq = result.compression?.seq;
+                metadata.tree = result.compression?.tree;
+            }
         }
+
         return metadata ?? data?.result;
     });

@@ -36,16 +36,8 @@
     export let inputEl: HTMLInputElement | null = null;
     export let searchError = "";
     export let size = "sm" as "sm" | "lg";
-
-    export const focusInput = () => {
-        inputEl?.focus();
-    };
-
-    export const clearSearch = () => {
-        inputValue = "";
-
-        inputEl?.focus();
-    };
+    export let focusInput = () => {};
+    export let clearSearch = () => {}; // Changed back to 'export let'
 
     let inputValue: string = "";
     let isSearching = false;
@@ -90,6 +82,7 @@
     const clearRecents = () => {
         window.localStorage.setItem(recentSearchesKey, JSON.stringify([]));
         recent = [];
+        clearSearch(); // Call the clearSearch prop function
     };
 
     const loadSearch = ({ url }: SearchResult) =>
@@ -252,11 +245,5 @@
         >
             <span class="text-sm">Explore</span>
         </button>
-        <!-- <button
-            class="bg-faint btn-outline btn col-span-3 mb-4 md:order-first"
-            on:click|preventDefault={connectWallet}
-        >
-            <span class="text-sm">{isBackpack ? "🎒" : ""}Connect Wallet</span>
-        </button> -->
     </div>
 {/if}

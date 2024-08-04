@@ -1,81 +1,54 @@
-import type { EnrichedTransaction } from "helius-sdk";
-
-import { parseTransaction } from "$lib/xray";
-
 import { t } from "$lib/trpc/t";
-
+import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
-import { getAPIUrl } from "$lib/util/get-api-url";
-
-import { HELIUS_API_KEY } from "$env/static/private";
+import { getRPCUrl } from "$lib/util/get-rpc-url";
 
 export const transactions = t.procedure
     .input(
         z.object({
             account: z.string(),
             cursor: z.string().optional(),
-            filter: z.string().optional(),
             isMainnet: z.boolean(),
-            user: z.string().optional(),
-        })
-    )
-    .output(
-        z.object({
-            oldest: z.string(),
-            result: z.array(
-                z.object({
-                    accounts: z.array(
-                        z.object({
-                            account: z.string(),
-                            changes: z.array(
-                                z.object({
-                                    amount: z.number(),
-                                    mint: z.string(),
-                                })
-                            ),
-                        })
-                    ),
-                    actions: z.array(
-                        z.object({
-                            actionType: z.string(),
-                            amount: z.number(),
-                            from: z.string().nullable().optional(),
-                            fromName: z.string().optional(),
-                            received: z.string().optional(),
-                            sent: z.string().optional(),
-                            to: z.string(),
-                            toName: z.string().optional(),
-                        })
-                    ),
-                    fee: z.number(),
-                    primaryUser: z.string(),
-                    raw: z.any(),
-                    signature: z.string(),
-                    source: z.string(),
-                    timestamp: z.number(),
-                    type: z.string(),
-                })
-            ),
         })
     )
     .query(async ({ input }) => {
-        const url = getAPIUrl(
-            `/v0/addresses/${
-                input.account
-            }/transactions?api-key=${HELIUS_API_KEY}${
-                input.filter ? `&type=${input.filter}` : ""
-            }${input.cursor ? `&before=${input.cursor}` : ""}`,
-            input.isMainnet
+        const connection = new Connection(getRPCUrl(input.isMainnet ? "mainnet" : "devnet"), "confirmed");
+        const pubkey = new PublicKey(input.account);
+
+        const signatures = await connection.getSignaturesForAddress(pubkey, {
+            before: input.cursor,
+            limit: 20,
+        });
+
+        if (signatures.length === 0) {
+            return {
+                oldest: "",
+                result: [],
+            };
+        }
+
+        const transactions = await Promise.all(
+            signatures.map(async (sig) => {
+                try {
+                    const tx = await connection.getTransaction(sig.signature, {
+                        maxSupportedTransactionVersion: 0,
+                    });
+                    return {
+                        blockTime: tx?.blockTime,
+                        err: tx?.meta?.err,
+                        signature: sig.signature,
+                        slot: tx?.slot,
+                    };
+                } catch (error) {
+                    return null;
+                }
+            })
         );
 
-        const response = await fetch(url);
-
-        const json: EnrichedTransaction[] = await response.json();
-
-        const result = json.map((tx) => parseTransaction(tx, input.user)) || [];
+        const result = transactions.filter((tx): tx is NonNullable<typeof tx> => tx !== null);
 
         return {
-            oldest: json[json.length - 1]?.signature || "",
+            oldest: signatures[signatures.length - 1]?.signature || "",
             result,
         };
     });

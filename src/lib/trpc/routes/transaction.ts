@@ -1,51 +1,36 @@
-import type { EnrichedTransaction } from "helius-sdk";
-
-import { parseTransaction } from "$lib/xray";
-
 import { t } from "$lib/trpc/t";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
-import { getAPIUrl } from "$lib/util/get-api-url";
-
-import { HELIUS_API_KEY } from "$env/static/private";
+import { getRPCUrl } from "$lib/util/get-rpc-url";
 
 export const transaction = t.procedure
     .input(
         z.object({
-            account: z.string().optional(),
             isMainnet: z.boolean(),
             transaction: z.string(),
         })
     )
     .query(async ({ input }) => {
         try {
-            const url = getAPIUrl(
-                `/v0/transactions/?api-key=${HELIUS_API_KEY}`,
-                input.isMainnet
-            );
+            const connection = new Connection(getRPCUrl(input.isMainnet ? "mainnet" : "devnet"), "confirmed");
+            const signature = input.transaction;
 
-            const response = await fetch(url, {
-                body: JSON.stringify({
-                    transactions: [input?.transaction],
-                }),
-
-                method: "POST",
+            const transaction = await connection.getTransaction(signature, {
+                maxSupportedTransactionVersion: 0,
             });
 
-            if (!response.ok) {
+            if (!transaction) {
                 return { data: null, error: "Transaction not found" };
             }
 
-            const [tx]: EnrichedTransaction[] = await response.json();
+            return {
+                blockTime: transaction.blockTime,
 
-            const parsed = parseTransaction(tx, input?.account);
+                meta: transaction.meta,
+                slot: transaction.slot,
+                transaction: transaction.transaction,
 
-            if (parsed === undefined) {
-                return { data: null, error: "Transaction not found" };
-            }
-
-            parsed.raw = tx;
-
-            return parsed;
+            };
         } catch (error) {
             return { data: null, error: "Server error" };
         }

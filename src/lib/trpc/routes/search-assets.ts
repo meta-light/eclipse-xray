@@ -1,9 +1,8 @@
 import { t } from "$lib/trpc/t";
-
 import { z } from "zod";
-
-import { HELIUS_API_KEY } from "$env/static/private";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
 
 export const searchAssets = t.procedure
     .input(
@@ -20,34 +19,30 @@ export const searchAssets = t.procedure
             account,
             cursor = 1,
             isMainnet,
-            tokenType = "all",
             nativeBalance = false,
         } = input;
 
-        const url = getRPCUrl(`/?api-key=${HELIUS_API_KEY}`, isMainnet);
+        const connection = new Connection(getRPCUrl(isMainnet ? "mainnet" : "devnet"), "confirmed");
+        const pubkey = new PublicKey(account);
 
-        const response = await fetch(url, {
-            body: JSON.stringify({
-                id: "my-id",
-                jsonrpc: "2.0",
-                method: "searchAssets",
-                params: {
-                    displayOptions: {
-                        showNativeBalance: nativeBalance,
-                    },
-                    limit: 1000,
-                    ownerAddress: account,
-                    page: cursor,
-                    sortBy: { sortBy: "id", sortDirection: "asc" },
-                    tokenType,
-                },
-            }),
-            headers: {
-                "Content-Type": "application/json",
-            },
-            method: "POST",
+        const [solBalance, tokenAccounts] = await Promise.all([
+            nativeBalance ? connection.getBalance(pubkey) : Promise.resolve(null),
+            connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID }),
+        ]);
+
+        const tokens = tokenAccounts.value.map((ta) => {
+            const accountInfo = AccountLayout.decode(ta.account.data);
+            return {
+                amount: accountInfo.amount.toString(),
+                decimals: accountInfo.delegateOption ? accountInfo.delegate : 0,
+                mint: new PublicKey(accountInfo.mint).toString(),
+            };
         });
-        const { result } = await response.json();
 
-        return result;
+        return {
+            nativeBalance: solBalance,
+            page: cursor,
+            tokens,
+            total: tokens.length,
+        };
     });

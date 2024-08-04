@@ -30,7 +30,7 @@
                 href="/?network={isMainnetValue ? 'mainnet' : 'devnet'}"
                 rel="noreferrer"
             >
-                <span class="text-3xl">XRAY</span>
+                <span class="text-3xl">ECLIPSE XRAY</span>
             </a>
         </div>
 

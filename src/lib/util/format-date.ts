@@ -9,9 +9,10 @@ export default (timestamp: number) => {
             : new Date(timestamp);
 
     return Intl.DateTimeFormat(undefined, {
+        day: "numeric",
         hour: "numeric",
         minute: "numeric",
-        day: "numeric",
+
         month: "numeric",
         year: "2-digit",
     }).format(date);

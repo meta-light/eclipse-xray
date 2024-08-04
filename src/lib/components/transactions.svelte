@@ -4,6 +4,7 @@
     import { page } from "$app/stores";
 
     import type { TransactionPage } from "$lib/types";
+    import type { ProtonTransaction } from "$lib/xray/lib/parser/types";
 
     import { trpcWithQuery } from "$lib/trpc/client";
 
@@ -53,11 +54,10 @@
         user,
     });
 
-    // TODO: Janky casting because the query resykt comes back super nested and not the right type.
-    // Issue: Ttransaction is SerializeObject<UndefinedToOptional<ProtonTransaction>>
-    // Expected: ProtonTransaction[]
-    $: transactionPages =
-        $transactions.data?.pages || ([] as TransactionPage[]);
+    $: transactionPages = ($transactions.data?.pages || []) as {
+        result: ProtonTransaction[];
+        oldest: string | null;
+    }[];
 
     // Hard reset the query when the account changes
     $: if (cachedAddress !== account) {
@@ -73,9 +73,7 @@
 
     $: lastPage = transactionPages[transactionPages.length - 1];
 
-    $: lastPageHasTransactions = lastPage
-        ? transactionPages[transactionPages.length - 1].result?.length
-        : false;
+    $: lastPageHasTransactions = lastPage ? lastPage.result?.length > 0 : false;
 </script>
 
 {#if $transactions.isLoading}
@@ -86,10 +84,10 @@
     {/each}
 {:else if transactionPages.length === 1 && !lastPageHasTransactions}
     <p class="opacity-50">No transactions</p>
-{:else}
+    {:else}
     {#each transactionPages as transactionsList}
-        {#each transactionsList.result as transaction, idx (transaction)}
-            {#if transaction?.signature}
+        {#each transactionsList.result as transaction, idx (transaction.signature)}
+            {#if transaction && transaction.signature != null}
                 <!-- Only animate the first few intro transactions -->
                 {#if idx < 8}
                     <div
