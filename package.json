@@ -3,6 +3,9 @@
     "version": "1.0.0",
     "type": "module",
     "platform": "node",
+    "engines": {
+        "node": "18.x"
+    },
     "scripts": {
         "// Dev/Build": "-------------------------------------------------------------",
         "dev": "dotenv -- vite dev",
