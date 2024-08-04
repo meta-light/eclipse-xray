@@ -10,7 +10,6 @@
     export let account: string;
     export let user = "";
     export let filter = "";
-    export let compressed = false;
     let cachedAddress = "";
     const client = trpcWithQuery($page);
     const params = new URLSearchParams(window.location.search);
@@ -23,9 +22,7 @@
         cursor?: string;
         isMainnet: boolean;
     }) =>
-        compressed
-            ? client.cnftTransactions.createInfiniteQuery(input, {getNextPageParam: (lastPage) => lastPage.oldest, refetchOnMount: false, refetchOnWindowFocus: false,})
-            : client.transactions.createInfiniteQuery(input, {getNextPageParam: (lastPage) => lastPage.oldest, refetchOnMount: false, refetchOnWindowFocus: false,});
+        client.transactions.createInfiniteQuery(input, {getNextPageParam: (lastPage) => lastPage.oldest, refetchOnMount: false, refetchOnWindowFocus: false,});
 
     const loadMore = () => {$transactions.fetchNextPage();};
 

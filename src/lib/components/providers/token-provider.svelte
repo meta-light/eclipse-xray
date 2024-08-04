@@ -29,7 +29,6 @@
     };
 
     let asset: any | undefined;
-    let deprecatedImage: any;
     if (address) {asset = client.asset.createQuery([address, isMainnetValue], {refetchOnMount: false, refetchOnWindowFocus: false,});}
     $: data = $asset?.data || token;
     let element: HTMLDivElement;
@@ -69,8 +68,6 @@
         metadata.burnt = data?.burnt;
         metadata.mintExtensions = data?.mint_extensions;
     }
-
-    $: if (data?.id && !metadata.image) {deprecatedImage = client.deprecatedImage.createQuery(data?.id); metadata.image = $deprecatedImage?.data;}
 
     const fetchJsonMetadata = async (jsonUri: string) => {
         try {

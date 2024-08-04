@@ -41,7 +41,6 @@
                     <h1 class="text-xl font-bold">Eclipse Blockchain Explorer</h1>
                     <p class="text-black max-w-lg">Search transactions, accounts, and more across the Eclipse Blockchain. Both Mainnet and Devnet are enabled. Run it back Turbo.</p>
                 </div>
-                <img src="/media/explorer.png" alt="Eclipse Blockchain Explorer" class="h-12 w-12 rounded-full border" />
             </div>
         </div>
     </section>
