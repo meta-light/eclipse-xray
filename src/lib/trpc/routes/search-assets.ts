@@ -2,7 +2,7 @@ import { t } from "$lib/trpc/t";
 import { z } from "zod";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, AccountLayout, getMint } from "@solana/spl-token";
 
 export const searchAssets = t.procedure
     .input(
@@ -30,14 +30,24 @@ export const searchAssets = t.procedure
             connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID }),
         ]);
 
-        const tokens = tokenAccounts.value.map((ta) => {
+
+        const tokens = await Promise.all(tokenAccounts.value.map(async (ta) => {
             const accountInfo = AccountLayout.decode(ta.account.data);
+            const mintPubkey = new PublicKey(accountInfo.mint);
+            const mintInfo = await getMint(connection, mintPubkey);
+            
             return {
-                amount: accountInfo.amount.toString(),
-                decimals: accountInfo.delegateOption ? accountInfo.delegate : 0,
-                mint: new PublicKey(accountInfo.mint).toString(),
+                id: mintPubkey.toString(),
+                balance: Number(accountInfo.amount),
+                decimals: mintInfo.decimals,
+                token_info: {
+                    balance: Number(accountInfo.amount),
+                    decimals: mintInfo.decimals,
+                    token_program_id: TOKEN_PROGRAM_ID.toString(),
+                    price_info: { price_per_token: 0 },
+                },
             };
-        });
+        }));
 
         return {
             nativeBalance: solBalance,

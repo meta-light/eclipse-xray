@@ -31,6 +31,7 @@
 
     $: endsWith = (str: string) => $page.url.pathname.endsWith(str);
     $: hasAssets = ($assets?.data?.assets?.length ?? 0) > 0;
+    $: isProgram = $accountInfo?.data?.value?.executable ?? false;
 
     let programIDL: Idl | null = null;
 
@@ -87,6 +88,11 @@
                     class="tab-bordered tab"
                     class:tab-active={endsWith("/tokens")}>Tokens</a
                 >
+                <a
+                    href={`/account/${account}/nfts?${selectedNetwork}`}
+                    class="tab-bordered tab"
+                    class:tab-active={endsWith("/nfts")}>NFTs</a
+                >
                 {#if hasAssets}
                     <a
                         href={`/account/${account}/assets?${selectedNetwork}`}
@@ -102,7 +108,7 @@
                         >Concurrent Merkle Tree
                     </a>
                 {/if}
-                {#if programIDL}
+                {#if isProgram && programIDL}
                     <a
                         href={`/account/${account}/idl?${selectedNetwork}`}
                         class="tab-bordered tab"

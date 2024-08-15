@@ -7,7 +7,6 @@
         height: 100%;
         width: 100vw;
         transform: translate(-50%, 0);
-        background-color: black;
     }
 
     .img {
@@ -17,877 +16,243 @@
 
 <script lang="ts">
     import { page } from "$app/stores";
+    import { trpcWithQuery } from "$lib/trpc/client";
     import Collapse from "$lib/components/collapse.svelte";
     import CopyButton from "$lib/components/copy-button.svelte";
     import JSON from "$lib/components/json.svelte";
-    import NiftyAssetProvider from "$lib/components/providers/nifty-asset-provider.svelte";
-    import type { UINiftyAsset } from "$lib/types";
-    import getMimeType from "$lib/util/get-mime-type";
-    import basisPointsToPercentage from "$lib/util/percentage";
-    import { niftyAssetStore } from "$lib/util/stores/nifty-asset";
-    import {
-        ExtensionType,
-        Standard,
-        State,
-        getExtension,
-        type Attributes,
-        type Blob,
-        type Creators,
-        type Grouping,
-        type Links,
-        type Manager,
-        type Metadata,
-        type Proxy,
-        type Royalties,
-        DelegateRole,
-    } from "@nifty-oss/asset";
-    import { cubicOut } from "svelte/easing";
-    import { fade, fly } from "svelte/transition";
     import PageLoader from "./_loader.svelte";
+    import { onMount } from 'svelte';
+    import { getRPCUrl } from "$lib/util/get-rpc-url";
+    import { PublicKey } from '@solana/web3.js';
 
     const address = $page.params.asset;
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
-    const KNOWN_IMAGE_EXTENSIONS = [
-        "image/png",
-        "image/jpeg",
-        "image/gif",
-        "image/svg+xml",
-    ];
 
-    let asset: UINiftyAsset;
-
-    let mediaUrl: string | null = null;
-    let mediaType: "image" | "video" | "onchain" | null = null;
-    let mediaBlob: string | null = null;
-
-    // extensions
-
-    let attributes: Attributes | undefined = undefined;
-    let blob: Blob | undefined = undefined;
-    let creators: Creators | undefined = undefined;
-    let grouping: Grouping | undefined = undefined;
-    let links: Links | undefined = undefined;
-    let manager: Manager | undefined = undefined;
-    let metadata: Metadata | undefined = undefined;
-    let proxy: Proxy | undefined = undefined;
-    let royalties: Royalties | undefined = undefined;
-    let hasExtensions = false;
-
-    const setMedia = async (asset: UINiftyAsset) => {
-        attributes = getExtension(asset, ExtensionType.Attributes);
-        blob = getExtension(asset, ExtensionType.Blob);
-        creators = getExtension(asset, ExtensionType.Creators);
-        grouping = getExtension(asset, ExtensionType.Grouping);
-        links = getExtension(asset, ExtensionType.Links);
-        manager = getExtension(asset, ExtensionType.Manager);
-        metadata = getExtension(asset, ExtensionType.Metadata);
-        proxy = getExtension(asset, ExtensionType.Proxy);
-        royalties = getExtension(asset, ExtensionType.Royalties);
-
-        hasExtensions = !!(
-            attributes ||
-            blob ||
-            creators ||
-            grouping ||
-            links ||
-            manager ||
-            metadata ||
-            proxy ||
-            royalties
-        );
-
-        if (blob && KNOWN_IMAGE_EXTENSIONS.includes(blob.contentType)) {
-            mediaBlob = Buffer.from(blob.data).toString("base64");
-            mediaType = "onchain";
-        }
-
-        if (asset.json && asset.json.image) {
-            mediaUrl = asset.json.image;
-            mediaType = "image";
-
-            const mimeType = await getMimeType(asset.json.image);
-            if (mimeType && mimeType.startsWith("video/")) {
-                mediaType = "video";
-            }
-        }
-    };
-
-    niftyAssetStore.subscribe((asset) => {
-        if (asset) setMedia(asset);
-    });
-
-    $: if (asset) {
-        niftyAssetStore.set(asset);
+    const client = trpcWithQuery($page);
+    interface NiftyAsset {
+        mint: string;
+        address: string;
+        owner?: string;
+        amount?: string;
+        supply?: string;
+        decimals: number;
+        metadata?: {
+            name?: string;
+            symbol?: string;
+            uri?: string;
+        };
     }
+    $: niftyAssetQuery = client.niftyAsset.createQuery([address, isMainnetValue]);
+    let asset: NiftyAsset;
+    let mediaUrl: string | null = null;
+    let mediaType: "image" | "video" | null = null;
+    $: if ($niftyAssetQuery.data) {
+        asset = $niftyAssetQuery.data;
+        if (asset.metadata && asset.metadata.uri) {mediaUrl = asset.metadata.uri; mediaType = "image";}
+    }
+    let nfts: any[] = [];
+    let fetchError: string | null = null;
+    interface Token { isNFT: boolean; mint: string; tokenAccount: string; amount: number; decimals: number; }
+    async function fetchAccountData(account: string) {
+        const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
+        try {
+            const response = await fetch(rpcUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: globalThis.JSON.stringify({
+                    jsonrpc: '2.0',
+                    id: 1,
+                    method: 'getProgramAccounts',
+                    params: [
+                        "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                        {
+                            encoding: "jsonParsed",
+                            filters: [
+                                {dataSize: 165},
+                                {memcmp: {offset: 32, bytes: account}}
+                            ]
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {throw new Error(`HTTP error! status: ${response.status}`);}
+            const result = await response.json();
+            console.log("Account data fetched:", result);
+            if (result.error) {throw new Error(result.error.message);}
+            if (!result.result) {throw new Error("No account data found");}
+            const nfts = result.result.map((item: any) => {
+                const parsedData = item.account.data.parsed.info;
+                return {
+                    mint: parsedData.mint,
+                    tokenAccount: item.pubkey,
+                    amount: parsedData.tokenAmount.uiAmount,
+                    decimals: parsedData.tokenAmount.decimals,
+                    isNFT: parsedData.tokenAmount.decimals === 0 && parsedData.tokenAmount.uiAmount === 1
+                };
+            }).filter((token: any) => token.isNFT);
+            return nfts;
+        } catch (error) {
+            console.error("Error fetching account data:", error);
+            throw error;
+        }
+    }
+
+    onMount(async () => {
+        if (asset && asset.owner) {
+            try {nfts = await fetchAccountData(asset.owner);} catch (error) {console.error("Error fetching account data:", error); fetchError = error instanceof Error ? error.message : String(error);}
+        }
+    });
 </script>
 
-<NiftyAssetProvider
-    {address}
-    bind:asset
-    let:loading
->
-    {#if loading}
-        <div class="content">
-            <PageLoader />
+<div class="content px-3">
+    {#if $niftyAssetQuery.isLoading}
+        <PageLoader />
+    {:else if $niftyAssetQuery.error}
+        <div class="error-container p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <h2 class="text-lg font-semibold mb-2">Error loading nifty asset data</h2>
+            <p>{$niftyAssetQuery.error.message}</p>
+            {#if $niftyAssetQuery.error.data?.code === 'BAD_REQUEST'}
+                <p class="mt-2 text-sm">Please check that the asset address is correct and try again.</p>
+            {:else if $niftyAssetQuery.error.data?.code === 'NOT_FOUND'}
+                <p class="mt-2 text-sm">The nifty asset could not be found. It might not exist or there might be an issue with the network.</p>
+            {:else}
+                <p class="mt-2 text-sm">An unexpected error occurred. Please try again later or contact support if the problem persists.</p>
+            {/if}
         </div>
-    {:else}
-        <div class="nav content sticky top-14 z-30 bg-base-100 px-3 py-2">
-            <div
-                class="relative flex flex-wrap items-center justify-between bg-base-100"
-            >
+    {:else if $niftyAssetQuery.data}
+        <div class="nav content sticky z-30 px-3 py-2 text-white">
+            <div class="relative flex flex-wrap items-center justify-between bg-gray-200 py-2 px-2 rounded-lg">
                 <div>
-                    <h3 class="m-0 text-xl font-bold md:text-3xl">
-                        {asset.name}
+                    <h3 class="m-0 text-l font-bold md:text-l text-black">
+                        {$niftyAssetQuery.data.metadata?.name || 'Unnamed Asset'}
                     </h3>
                 </div>
-
                 <div>
-                    <div class="flex items-center space-x-2">
-                        {#if asset.json && asset.json.image}
+                    <div class="flex items-center space-x-2 text-black">
+                        {#if mediaUrl}
                             <a
-                                href={asset.json.image}
+                                href={mediaUrl}
                                 target="_blank"
-                                class="btn-sm btn border-0 bg-black"
+                                class="btn-sm btn border-0 bg-black text-white"
                             >
                                 View Media
                             </a>
                         {/if}
-                        <CopyButton text={$page.params.search} />
-                        <CopyButton
-                            text={$page.url.href}
-                            icon="link"
-                        />
+                        <CopyButton text={$page.params.asset} />
+                        <CopyButton text={$page.url.href} icon="link" />
                     </div>
-                </div>
-            </div>
-            <div
-                class="relative flex flex-wrap items-center justify-between bg-base-100"
-            >
-                <div class="flex items-center space-x-2">
-                    <div class="badge badge-outline uppercase">
-                        {asset.mutable ? "mutable" : "immutable"}
-                    </div>
-                    {#if mediaType === "onchain"}
-                        <div class="badge badge-outline uppercase">
-                            on-chain media
-                        </div>
-                    {/if}
-                    {#if grouping}
-                        <div class="badge badge-outline uppercase">group</div>
-                    {/if}
-                    {#if asset.standard !== Standard.NonFungible}
-                        <div class="badge badge-outline uppercase">
-                            {Standard[asset.standard]}
-                        </div>
-                    {/if}
                 </div>
             </div>
         </div>
 
-        <div class="content px-3">
-            {#if mediaType}
-                <div class="content px-3">
-                    <div
-                        class="flex flex-col items-center justify-center"
-                        in:fade={{ delay: 100, duration: 800 }}
-                    >
-                        {#if mediaType === "video"}
-                            <!-- Video tag -->
-                            <div class="relative">
-                                <video
-                                    class="m-auto my-3 h-auto w-full rounded-md object-contain"
-                                    controls
-                                    autoplay
-                                    loop
-                                    muted
-                                    in:fade={{ delay: 600, duration: 1000 }}
-                                    src={mediaUrl}
-                                />
-                            </div>
-                        {:else if mediaType === "image"}
-                            <!-- Image tag -->
-                            <div class="relative">
-                                <img
-                                    class="img m-auto my-3 h-auto w-full rounded-md object-contain"
-                                    alt="asset media"
-                                    src={mediaUrl}
-                                    in:fade={{ delay: 600, duration: 1000 }}
-                                />
-                            </div>
-                        {:else if mediaType === "onchain"}
-                            <!-- Image tag -->
-                            <div class="relative">
-                                <img
-                                    class="img m-auto my-3 h-auto w-full rounded-md object-contain"
-                                    src={`data:${blob?.contentType};base64,${mediaBlob}`}
-                                    alt="on-chain asset media"
-                                    in:fade={{ delay: 600, duration: 1000 }}
-                                />
-                            </div>
-                        {:else}
-                            <!--Loading-->
-                            <div>Loading...</div>
-                        {/if}
-                    </div>
-                </div>
-            {/if}
-            <!-- Details -->
-            <div class="mt-3">
-                <div
-                    class="mt-3"
-                    in:fly={{
-                        delay: 100,
-                        easing: cubicOut,
-                        y: 50,
-                    }}
-                >
-                    <Collapse
-                        sectionTitle="Details"
-                        iconId="info"
-                        showDetails={true}
-                    >
-                        <div class="grid gap-2">
-                            <a
-                                class="card p-0"
-                                href="/account/{asset.authority}?network={isMainnetValue
-                                    ? 'mainnet'
-                                    : 'devnet'}"
-                            >
-                                <header
-                                    class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                >
-                                    <h4>Authority</h4>
-                                </header>
-                                <p class="text-sm">
-                                    {asset.authority}
-                                </p>
-                            </a>
-                            <a
-                                class="card p-0"
-                                href="/account/{asset.owner}?network={isMainnetValue
-                                    ? 'mainnet'
-                                    : 'devnet'}"
-                            >
-                                <header
-                                    class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                >
-                                    <h4>Owner</h4>
-                                </header>
-                                <p class="text-sm">
-                                    {asset.owner}
-                                </p>
-                            </a>
-                            {#if asset.group}
-                                <a
-                                    class="card p-0"
-                                    href="/nifty-asset/{asset.group}?network={isMainnetValue
-                                        ? 'mainnet'
-                                        : 'devnet'}"
-                                >
-                                    <header
-                                        class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                    >
-                                        <h4>Group</h4>
-                                    </header>
-                                    <p class="text-sm">
-                                        {asset.group}
-                                    </p>
-                                </a>
-                            {:else}
-                                <div class="card p-0">
-                                    <header
-                                        class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                    >
-                                        <h4>Group</h4>
-                                    </header>
-                                    <p class="text-sm">None</p>
-                                </div>
-                            {/if}
-                            {#if asset.delegate}
-                                <a
-                                    class="card p-0"
-                                    href="/account/{asset.delegate}?network={isMainnetValue
-                                        ? 'mainnet'
-                                        : 'devnet'}"
-                                >
-                                    <header
-                                        class="flex gap-2 text-sm font-medium uppercase text-gray-500"
-                                    >
-                                        <h4>Delegate</h4>
-                                        {#each asset.delegate.roles as role}
-                                            <div
-                                                class="badge badge-outline uppercase"
-                                            >
-                                                {DelegateRole[role]}
-                                            </div>
-                                        {/each}
-                                    </header>
-                                    <p class="text-sm">
-                                        {asset.delegate}
-                                    </p>
-                                </a>
-                            {:else}
-                                <div class="card p-0">
-                                    <header
-                                        class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                    >
-                                        <h4>Delegate</h4>
-                                    </header>
-                                    <p class="text-sm">None</p>
-                                </div>
-                            {/if}
-                            <div class="card p-0">
-                                <h4
-                                    class="text-sm font-medium uppercase text-gray-500"
-                                >
-                                    State
-                                </h4>
-                                <p class="text-sm">
-                                    {asset.state === State.Locked
-                                        ? "Locked"
-                                        : "Unlocked"}
-                                </p>
-                            </div>
-                        </div>
-                    </Collapse>
+        <!-- Display media if available -->
+        {#if mediaUrl}
+            <div class="content px-3">
+                <div class="flex flex-col items-center justify-center">
+                    {#if mediaType === "video"}
+                        <video
+                            class="m-auto my-3 h-auto w-full rounded-md object-contain"
+                            controls
+                            autoplay
+                            loop
+                            muted
+                            src={mediaUrl}
+                        />
+                    {:else}
+                        <img
+                            class="img m-auto my-3 h-auto w-full rounded-md object-contain"
+                            alt="asset media"
+                            src={mediaUrl}
+                        />
+                    {/if}
                 </div>
             </div>
-            <!-- Description -->
-            {#if asset.json || metadata}
-                <div class="mt-3">
-                    <div
-                        class="mt-3"
-                        in:fly={{
-                            delay: 100,
-                            easing: cubicOut,
-                            y: 50,
-                        }}
-                    >
-                        <Collapse
-                            sectionTitle="Description"
-                            iconId="person"
-                        >
-                            <p>
-                                {#if asset.json && asset.json.description && asset.json.description.length > 0}
-                                    {asset.json.description}
-                                {:else if metadata && metadata.description}
-                                    {metadata.description}
-                                {/if}
-                            </p>
-                        </Collapse>
+        {/if}
+
+        <!-- Details -->
+        <div class="mt-3">
+            <Collapse sectionTitle="Details" iconId="info" showDetails={true}>
+                <div class="grid gap-2">
+                    <div class="card p-0">
+                        <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-white">
+                            <h4>Mint</h4>
+                        </header>
+                        <p class="text-sm text-gray-300">{$niftyAssetQuery.data.mint}</p>
                     </div>
-                </div>
-            {/if}
-            <!-- Royalties -->
-            {#if royalties}
-                <div
-                    class="mt-3"
-                    in:fly={{
-                        delay: 300,
-                        easing: cubicOut,
-                        y: 50,
-                    }}
-                >
-                    <Collapse
-                        sectionTitle="Creator Royalties"
-                        sectionAditionalInfo={basisPointsToPercentage(
-                            Number(royalties.basisPoints)
-                        )}
-                        iconId="percentage"
-                    >
-                        <p>
-                            {asset.name ?? "The"} creator(s) currently expect to
-                            take {basisPointsToPercentage(
-                                Number(royalties.basisPoints)
-                            )} of every secondary sale on this piece.
-                        </p>
-                    </Collapse>
-                </div>
-                <!-- Royalties Rule Set -->
-                {#if royalties.constraint.type !== "Empty"}
-                    <div
-                        class="mt-3"
-                        in:fly={{
-                            delay: 300,
-                            easing: cubicOut,
-                            y: 50,
-                        }}
-                    >
-                        <Collapse
-                            sectionTitle="Royalties Rule Set"
-                            iconId="json"
-                            showDetails={false}
-                        >
-                            <JSON
-                                data={royalties.constraint}
-                                label="token"
-                            />
-                        </Collapse>
-                    </div>
-                {/if}
-            {/if}
-            <!-- Creators -->
-            {#if creators && creators.creators.length > 0}
-                <div
-                    class="mt-3"
-                    in:fly={{
-                        delay: 300,
-                        easing: cubicOut,
-                        y: 50,
-                    }}
-                >
-                    <Collapse
-                        sectionTitle="Creators"
-                        sectionAditionalInfo={creators.creators.length}
-                        iconId="creator"
-                    >
-                        <div class="grid gap-2">
-                            {#each creators.creators as creator, idx}
-                                <a
-                                    class="card p-0"
-                                    href="/account/{creator.address}?network={isMainnetValue
-                                        ? 'mainnet'
-                                        : 'devnet'}"
-                                >
-                                    <header
-                                        class="flex items-center justify-between gap-6 text-sm font-medium text-gray-500"
-                                    >
-                                        <h4>
-                                            CREATOR {idx + 1}
-                                        </h4>
-                                        <abbr
-                                            title={`Creator ${
-                                                idx + 1
-                                            } royalties percentage`}
-                                        >
-                                            <h4>
-                                                {creator.share}%
-                                            </h4>
-                                        </abbr>
-                                    </header>
-                                    <p class="text-sm">
-                                        {creator.address}
-                                    </p>
-                                </a>
-                            {/each}
+                    {#if $niftyAssetQuery.data.owner}
+                        <div class="card p-0">
+                            <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-white">
+                                <h4>Owner</h4>
+                            </header>
+                            <p class="text-sm text-gray-300">{$niftyAssetQuery.data.owner}</p>
                         </div>
-                    </Collapse>
+                    {/if}
+                    <div class="card p-0">
+                        <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-white">
+                            <h4>Supply</h4>
+                        </header>
+                        <p class="text-sm text-gray-300">{$niftyAssetQuery.data.supply || $niftyAssetQuery.data.amount || 'N/A'}</p>
+                    </div>
+                    <div class="card p-0">
+                        <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-white">
+                            <h4>Decimals</h4>
+                        </header>
+                        <p class="text-sm text-gray-300">{$niftyAssetQuery.data.decimals}</p>
+                    </div>
                 </div>
-            {/if}
-            <!-- JSON Metadata -->
-            {#if asset.json}
-                <div class="mt-3">
-                    <Collapse
-                        sectionTitle="JSON Metadata"
-                        iconId="json"
-                        showDetails={false}
-                    >
-                        <JSON
-                            data={asset.json}
-                            label="token"
-                        />
-                    </Collapse>
-                </div>
-            {/if}
-            <!-- Extensions -->
-            {#if hasExtensions}
-                <div class="mt-3">
-                    <Collapse
-                        sectionTitle="Extensions"
-                        iconId="box"
-                        showDetails={false}
-                    >
-                        <p>List of extensions attached to this asset.</p>
-                        {#if attributes}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Attributes"
-                                    iconId="attributes"
-                                >
-                                    <div class="flex flex-wrap gap-2">
-                                        {#each attributes.traits as attribute, idx}
-                                            <div class="card p-0">
-                                                <h4
-                                                    class="text-sm font-medium uppercase text-gray-500"
-                                                >
-                                                    {attribute.traitType}
-                                                </h4>
-                                                <p class="text-sm">
-                                                    {attribute.value}
-                                                </p>
-                                            </div>
-                                        {/each}
-                                    </div>
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if blob}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Blob"
-                                    iconId="dots"
-                                >
-                                    <div class="grid gap-2">
-                                        {#if mediaType !== "onchain" && mediaBlob}
-                                            <div class="relative">
-                                                <img
-                                                    class="img m-auto my-3 rounded-md object-contain"
-                                                    src={`data:${blob?.contentType};base64,${mediaBlob}`}
-                                                    alt="on-chain asset media"
-                                                    in:fade={{
-                                                        delay: 600,
-                                                        duration: 1000,
-                                                    }}
-                                                />
-                                            </div>
-                                        {/if}
-                                        <div class="card p-0">
-                                            <h4
-                                                class="text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                Content-Type
-                                            </h4>
-                                            <p class="text-sm">
-                                                {blob.contentType}
-                                            </p>
-                                        </div>
-                                        <div class="card p-0">
-                                            <h4
-                                                class="text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                Data Size
-                                            </h4>
-                                            <p class="text-sm">
-                                                {blob.data.length} bytes
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if creators}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Creators"
-                                    sectionAditionalInfo={creators.creators
-                                        .length}
-                                    iconId="creator"
-                                >
-                                    <div class="grid gap-2">
-                                        {#each creators.creators as creator, idx}
-                                            <a
-                                                class="card p-0"
-                                                href="/account/{creator.address}?network={isMainnetValue
-                                                    ? 'mainnet'
-                                                    : 'devnet'}"
-                                            >
-                                                <header
-                                                    class="flex items-center justify-between gap-6 text-sm font-medium text-gray-500"
-                                                >
-                                                    <h4>
-                                                        CREATOR {idx + 1}
-                                                    </h4>
-                                                    <abbr
-                                                        title={`Creator ${
-                                                            idx + 1
-                                                        } royalties percentage`}
-                                                    >
-                                                        <h4>
-                                                            {creator.share}%
-                                                        </h4>
-                                                    </abbr>
-                                                </header>
-                                                <p class="text-sm">
-                                                    {creator.address}
-                                                </p>
-                                            </a>
-                                        {/each}
-                                    </div>
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if grouping}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Grouping"
-                                    iconId="collection"
-                                >
-                                    <div class="grid gap-2">
-                                        <div class="card p-0">
-                                            <h4
-                                                class="text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                Size
-                                            </h4>
-                                            <p class="text-sm">
-                                                {grouping.size}
-                                            </p>
-                                        </div>
-                                        <div class="card p-0">
-                                            <h4
-                                                class="text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                Maximum Size
-                                            </h4>
-                                            <p class="text-sm">
-                                                {grouping.maxSize}
-                                            </p>
-                                        </div>
-                                        {#if grouping.delegate}
-                                            <a
-                                                class="card p-0"
-                                                href="/account/{grouping.delegate}?network={isMainnetValue
-                                                    ? 'mainnet'
-                                                    : 'devnet'}"
-                                            >
-                                                <header
-                                                    class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                                >
-                                                    <h4>Delegate</h4>
-                                                </header>
-                                                <p class="text-sm">
-                                                    {grouping.delegate}
-                                                </p>
-                                            </a>
-                                        {:else}
-                                            <div class="card p-0">
-                                                <header
-                                                    class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                                >
-                                                    <h4>Delegate</h4>
-                                                </header>
-                                                <p class="text-sm">None</p>
-                                            </div>
-                                        {/if}
-                                    </div>
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if links}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Links"
-                                    iconId="link"
-                                >
-                                    <div class="grid gap-2">
-                                        {#each links.values as link}
-                                            <a
-                                                class="card p-0"
-                                                href={link.uri}
-                                            >
-                                                <header
-                                                    class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                                >
-                                                    <h4>{link.name}</h4>
-                                                </header>
-                                                <p class="text-sm">
-                                                    {link.uri}
-                                                </p>
-                                            </a>
-                                        {/each}
-                                    </div>
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if manager}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Manager"
-                                    iconId="person"
-                                >
-                                    <a
-                                        class="card p-0"
-                                        href="/account/{manager.delegate}?network={isMainnetValue
-                                            ? 'mainnet'
-                                            : 'devnet'}"
-                                    >
-                                        <header
-                                            class="flex gap-2 text-sm font-medium uppercase text-gray-500"
-                                        >
-                                            <h4>Delegate</h4>
-                                            {#each manager.delegate.roles as role}
-                                                <div
-                                                    class="badge badge-outline uppercase"
-                                                >
-                                                    {DelegateRole[role]}
-                                                </div>
-                                            {/each}
-                                        </header>
-                                        <p class="text-sm">
-                                            {manager.delegate}
-                                        </p>
-                                    </a>
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if metadata}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Metadata"
-                                    iconId="list"
-                                >
-                                    <div class="grid gap-2">
-                                        <div class="card p-0">
-                                            <h4
-                                                class="text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                Symbol
-                                            </h4>
-                                            <p class="text-sm">
-                                                {metadata.symbol.length > 0
-                                                    ? metadata.symbol
-                                                    : "None"}
-                                            </p>
-                                        </div>
-                                        <div class="card p-0">
-                                            <h4
-                                                class="text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                Description
-                                            </h4>
-                                            <p class="text-sm">
-                                                {metadata.description.length > 0
-                                                    ? metadata.description
-                                                    : "None"}
-                                            </p>
-                                        </div>
-                                        {#if metadata.uri.length > 0}
-                                            <a
-                                                class="card p-0"
-                                                href={metadata.uri}
-                                            >
-                                                <header
-                                                    class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                                >
-                                                    <h4>URI</h4>
-                                                </header>
-                                                <p class="text-sm">
-                                                    {metadata.uri}
-                                                </p>
-                                            </a>
-                                        {:else}
-                                            <div class="card p-0">
-                                                <h4
-                                                    class="text-sm font-medium uppercase text-gray-500"
-                                                >
-                                                    URI
-                                                </h4>
-                                                <p class="text-sm">None</p>
-                                            </div>
-                                        {/if}
-                                    </div>
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if proxy}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Proxy"
-                                    iconId="network"
-                                >
-                                    <a
-                                        class="card p-0"
-                                        href="/account/{proxy.program}?network={isMainnetValue
-                                            ? 'mainnet'
-                                            : 'devnet'}"
-                                    >
-                                        <header
-                                            class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                        >
-                                            <h4>Program</h4>
-                                        </header>
-                                        <p class="text-sm">
-                                            {proxy.program}
-                                        </p>
-                                    </a>
-                                    <div class="card p-0">
-                                        <header
-                                            class="flex items-center justify-between gap-6 text-sm font-medium text-gray-500"
-                                        >
-                                            <h4>Seeds</h4>
-                                            <CopyButton
-                                                text={proxy.seeds.toString()}
-                                                icon="link"
-                                            />
-                                        </header>
-                                        <p class="text-sm">{proxy.seeds}</p>
-                                    </div>
-                                    <div class="card p-0">
-                                        <header
-                                            class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                        >
-                                            <h4>Bump</h4>
-                                        </header>
-                                        <p class="text-sm">{proxy.bump}</p>
-                                    </div>
-                                    {#if proxy.authority}
-                                        <a
-                                            class="card p-0"
-                                            href="/account/{proxy.authority}?network={isMainnetValue
-                                                ? 'mainnet'
-                                                : 'devnet'}"
-                                        >
-                                            <header
-                                                class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                <h4>Authority</h4>
-                                            </header>
-                                            <p class="text-sm">
-                                                {proxy.authority}
-                                            </p>
-                                        </a>
-                                    {:else}
-                                        <div class="card p-0">
-                                            <header
-                                                class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                <h4>Authority</h4>
-                                            </header>
-                                            <p class="text-sm">None</p>
-                                        </div>
-                                    {/if}
-                                </Collapse>
-                            </div>
-                        {/if}
-                        {#if royalties}
-                            <div class="mt-3">
-                                <Collapse
-                                    sectionTitle="Royalties"
-                                    iconId="percentage"
-                                >
-                                    <div class="card p-0">
-                                        <header
-                                            class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                        >
-                                            <h4>Seller Fee</h4>
-                                        </header>
-                                        <p class="text-sm">
-                                            {royalties.basisPoints}
-                                        </p>
-                                    </div>
-                                    {#if royalties.constraint.type !== "Empty"}
-                                        <JSON
-                                            data={royalties.constraint}
-                                            label="token"
-                                        />
-                                    {:else}
-                                        <div class="card p-0">
-                                            <header
-                                                class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500"
-                                            >
-                                                <h4>Constraint</h4>
-                                            </header>
-                                            <p class="text-sm">Empty</p>
-                                        </div>
-                                    {/if}
-                                </Collapse>
-                            </div>
-                        {/if}
-                    </Collapse>
-                </div>
-            {/if}
+            </Collapse>
         </div>
+        {#if $niftyAssetQuery.data.metadata}
+            <div class="mt-3">
+                <Collapse sectionTitle="Metadata" iconId="list">
+                    <div class="grid gap-2">
+                        <div class="card p-0">
+                            <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500">
+                                <h4>Name</h4>
+                            </header>
+                            <p class="text-sm">{$niftyAssetQuery.data.metadata.name}</p>
+                        </div>
+                        <div class="card p-0">
+                            <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500">
+                                <h4>Symbol</h4>
+                            </header>
+                            <p class="text-sm">{$niftyAssetQuery.data.metadata.symbol}</p>
+                        </div>
+                        <div class="card p-0">
+                            <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500">
+                                <h4>URI</h4>
+                            </header>
+                            <p class="text-sm">{$niftyAssetQuery.data.metadata.uri}</p>
+                        </div>
+                    </div>
+                </Collapse>
+            </div>
+        {/if}
+        <div class="mt-3">
+            <Collapse sectionTitle="JSON Data" iconId="json" showDetails={false}>
+                <JSON data={$niftyAssetQuery.data} label="niftyAsset" />
+            </Collapse>
+        </div>
+        {#if nfts.length > 0}
+            <div class="mt-3">
+                <Collapse sectionTitle="NFTs owned by this wallet" iconId="image" showDetails={true}>
+                    <div class="grid gap-2">
+                        {#each nfts as nft}
+                            <a class="card p-0" href="/nifty-asset/{nft.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}">
+                                <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-gray-500">
+                                    <h4>{nft.mint}</h4>
+                                </header>
+                                <p class="text-sm">{nft.tokenAccount}</p>
+                            </a>
+                        {/each}
+                    </div>
+                </Collapse>
+            </div>
+        {/if}
+    {:else}
+        <p>No asset data available</p>
     {/if}
-</NiftyAssetProvider>
+</div>

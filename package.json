@@ -83,6 +83,7 @@
     },
     "dependencies": {
         "@coral-xyz/anchor": "^0.29.0",
+        "@duneanalytics/client-sdk": "^0.2.1",
         "@lottiefiles/svelte-lottie-player": "^0.3.0",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.1",
         "@nifty-oss/asset": "^0.3.0",

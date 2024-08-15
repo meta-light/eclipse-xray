@@ -1,17 +1,11 @@
 <script lang="ts">
     // @ts-nocheck
     import type { ProtonTransaction } from "$lib/xray";
-
     import { onMount } from "svelte";
-
     import { page } from "$app/stores";
-
     import { fly } from "svelte/transition";
-
     import { Circle } from "svelte-loading-spinners";
-
     import { trpcWithQuery } from "$lib/trpc/client";
-
     import Account from "$lib/components/account-data.svelte";
     import CopyButton from "$lib/components/copy-button.svelte";
     import IconCard from "$lib/components/icon-card.svelte";
@@ -22,25 +16,14 @@
     import Collapse from "$lib/components/collapse.svelte";
     import Network from "$lib/components/network.svelte";
 
-    function getNetworkString(isMainnet: boolean): string {
-        return isMainnet ? 'mainnet' : 'devnet';
-    }
-
-    function safeStringify(obj: any): string {
-        try {
-            return JSON.stringify(obj, null, 2);
-        } catch (error) {
-            return `Error stringifying object: ${error.message}`;
-        }
-    }
-
+    function getNetworkString(isMainnet: boolean): string {return isMainnet ? 'mainnet' : 'devnet';}
+    function safeStringify(obj: any): string {try {return JSON.stringify(obj, null, 2);} catch (error) {return `Error stringifying object: ${error.message}`;}}
+    
     let animate = false;
     let isLoading = true;
     let isMounted = false;
     let updatedMetadata;
-
     const signature = $page.params.tx;
-
     const client = trpcWithQuery($page);
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");

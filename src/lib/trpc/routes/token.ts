@@ -2,48 +2,62 @@ import { t } from "$lib/trpc/t";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getMint, getAccount, Mint, TransferFeeConfig } from "@solana/spl-token";
+import { TRPCError } from '@trpc/server';
 
-const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
 
 export const token = t.procedure
     .input(z.tuple([z.string(), z.boolean()]))
     .query(async ({ input }) => {
         const [token, isMainnet] = input;
-        const connection = new Connection(getRPCUrl(isMainnet ? "mainnet" : "devnet"), "confirmed");
-        const tokenPublicKey = new PublicKey(token);
+        console.log(`Fetching token data for ${token} on ${isMainnet ? 'mainnet' : 'devnet'}`);
 
         try {
-            const [metadataPDA] = PublicKey.findProgramAddressSync(
-                [Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), tokenPublicKey.toBuffer()],
-                TOKEN_METADATA_PROGRAM_ID
-            );
+            const connection = new Connection(getRPCUrl(isMainnet ? "mainnet" : "devnet"), "confirmed");
+            const tokenPublicKey = new PublicKey(token);
 
-            const accountInfo = await connection.getAccountInfo(metadataPDA);
+            const accountInfo = await connection.getAccountInfo(tokenPublicKey);
             if (!accountInfo) {
-                throw new Error("Metadata account not found");
+                throw new Error("Token account not found");
             }
 
-            const metadata = decodeMetadata(accountInfo.data);
-            return {
-                name: metadata.data.name,
-                symbol: metadata.data.symbol,
-                uri: metadata.data.uri,
-            };
+            const isToken2022 = accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID);
+
+            let tokenData;
+            if (isToken2022) {
+                // Handle Token-2022
+                const mintInfo = await getMint(connection, tokenPublicKey, undefined, TOKEN_2022_PROGRAM_ID) as Mint & {
+                    transferFeeConfig?: TransferFeeConfig;
+                };
+                tokenData = {
+                    address: token,
+                    decimals: mintInfo.decimals,
+                    supply: mintInfo.supply.toString(),
+                    isToken2022: true,
+                    extensions: {
+                        transferFeeConfig: mintInfo.transferFeeConfig,
+                    },
+                };
+            } else {
+                // Handle regular SPL tokens
+                const mintInfo = await getMint(connection, tokenPublicKey);
+                tokenData = {
+                    address: token,
+                    decimals: mintInfo.decimals,
+                    supply: mintInfo.supply.toString(),
+                    isToken2022: false,
+                };
+            }
+
+            console.log("Token data:", tokenData);
+            return tokenData;
         } catch (error) {
-            return null;
+            console.error("Error in token procedure:", error);
+            throw new TRPCError({
+                code: 'INTERNAL_SERVER_ERROR',
+                message: `Error fetching token data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                cause: error,
+            });
         }
     });
-
-function decodeMetadata(buffer: Buffer): any {
-    const name = buffer.slice(1, 33).toString().replace(/\0/g, '');
-    const symbol = buffer.slice(33, 65).toString().replace(/\0/g, '');
-    const uri = buffer.slice(65, 197).toString().replace(/\0/g, '');
-
-    return {
-        data: {
-            name,
-            symbol,
-            uri,
-        }
-    };
-}

@@ -15,10 +15,7 @@ export const assets = t.procedure
     .query(async ({ input }) => {
         const connection = new Connection(getRPCUrl(input.isMainnet ? "mainnet" : "devnet"), "confirmed");
         const pubkey = new PublicKey(input.account);
-        const tokenAccounts = await connection.getTokenAccountsByOwner(pubkey, {
-            programId: TOKEN_PROGRAM_ID,
-        });
-
+        const tokenAccounts = await connection.getTokenAccountsByOwner(pubkey, {programId: TOKEN_PROGRAM_ID});
         const assets = tokenAccounts.value.map((ta) => {
             const accountInfo = AccountLayout.decode(ta.account.data);
             return {
@@ -28,8 +25,5 @@ export const assets = t.procedure
             };
         });
 
-        return {
-            assets,
-            total: assets.length
-        };
+        return {assets, total: assets.length};
     });
