@@ -153,11 +153,6 @@
                                 <h4 class="font-semibold md:text-sm">
                                     {token.balance.toLocaleString(undefined, {maximumFractionDigits: 9})}
                                 </h4>
-                                <h4 class="text-xs opacity-50">
-                                    {#if ethUsdPrice}
-                                        {formatMoney(token.balance * ethUsdPrice)}
-                                    {/if}
-                                </h4>
                             </div>
                         </div>
                     </div>
