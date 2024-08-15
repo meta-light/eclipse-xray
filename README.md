@@ -1,4 +1,4 @@
-# Eclipse XRAY
+# 🧱Eclipse XRAY
 Eclipse XRAY is a modified fork of the Helius Labs Solana Explorer adapted to work with Eclipse Mainnet. 
 
 Eclipse XRAY leverages only the Eclipse public [RPC](https://docs.eclipse.xyz/developers/rpc-and-block-explorers) endpoints, [Pyth](https://docs.eclipse.xyz/developers/oracles/pyth-network) for price feeds, and [Dune](https://dune.com/hkey/eclipse-mainnet-bridge) to gather statstics from the [Eclipse Mainnet Bridge](https://etherscan.io/address/0x83cB71D80078bf670b3EfeC6AD9E5E6407cD0fd1).
@@ -50,17 +50,7 @@ npm run build
 | 📁`./src/routes`          | Any `+page` or `+server` file in this directory becomes a page or an endpoint based on the folder structure.                                                                                                |
 | 📁`./static`              | A place to put any static assets. The files in this directory are hosted at the root of the domain. When using images, try to import them in the `<script>` vs put them in `./static` when you can help it. |
 | 📄`./app.postcss`         | Initialize/config Tailwind + global styles.                                                                                                                                                                 |
-| 📄`./app.html`            | The top level HTML template that wraps all pages. Routes are injected into the `%sveltekit.body%` tag.                                                                                                     |
-
-## Routes
-|                    |                                                                                                                                                                                                    |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                | Home                                                                                                                                                                                               |
-| `/api`             | REST endpoints (This is mostly replaces by tRPC now)                                                                                                                                               |
-| `/[search]`        | From the home page, users can navigate to `/anything` which attempts to resolve the search and then redirect them to `/[search]/tx`, `/[search]/wallet`, or `/[search]/token` based on the search. |
-| `/[search]/tx`     | Details about a particular transaction where `[search]` is a transaction signature.                                                                                                                |
-| `/[search]/wallet` | Details about a particular wallet where `[search]` is a public key.                                                                                                                                |
-| `/[search]/token`  | Details about a particular token where `[search]` is a token mint address.                                                                                                                         |
+| 📄`./app.html`            | The top level HTML template that wraps all pages. Routes are injected into the `%sveltekit.body%` tag.                                                                                                      |
 
 ## Vercel Config
 |                 |                                                   |
@@ -71,15 +61,3 @@ npm run build
 
 ## Styles
 [TailwindCSS](https://tailwindcss.com/) is used for base utilies and [DaisyUI](https://daisyui.com/) contains helpful UI components.
-
-
-## Important Files & Folders
-|                                         |                                                                                                                                                                      |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 📄`./src/lib/parser/index.ts`           | UI calls the function in this file to parse transactions                                                                                                             |
-| 📄`./src/lib/parser/types.ts`           | Contains the types, interfaces, and enums needed to understand to work on the parser.                                                                                |
-| 📁`./src/lib/parser/parsers`            | Contains all parser methods.                                                                                                                                         |
-| 📄`./src/lib/parser/parsers/index.ts`   | Exports parser files in `./src/parsers`.                                                                                                                             |
-| 📄`./src/lib/parser/parsers/unknown.ts` | If there is no dedicated parser file for a Helius transaction type, they are parsed in this file. Changing the label on the UI is in `./apps/web/src/lib/config.ts`. |
-| 📁`./src/lib/parser/utils`              | Utility functions for the parser functions                                                                                                                           |
-| 📄`./src/lib/search.ts`                 | The function that resolves search inputs to a URL parameter.                                                                                                         |
