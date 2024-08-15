@@ -21,8 +21,12 @@ Eclipse XRAY leverages only the Eclipse public [RPC](https://docs.eclipse.xyz/de
 -   [DaisyUI Components](https://daisyui.com/)
 
 ### Setup Environment
-In the root of the project, create a `.env` file with the values mentioned in `.env.template`.
-The only environment variable used is a Dune API key for the bridge stats.
+In the root of the project, create a `.env` file with the following contents:
+```
+DUNE_KEY=<dune_api_key>
+```
+This is only required for Mainnet Bridge stats.
+
 
 ### Install
 Run the install command from the root of the project to install dependencies for all apps and packages.
