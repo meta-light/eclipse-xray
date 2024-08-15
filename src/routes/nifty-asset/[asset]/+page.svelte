@@ -23,13 +23,10 @@
     import PageLoader from "./_loader.svelte";
     import { onMount } from 'svelte';
     import { getRPCUrl } from "$lib/util/get-rpc-url";
-    import { PublicKey } from '@solana/web3.js';
-
     const address = $page.params.asset;
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
-
     const client = trpcWithQuery($page);
     interface NiftyAsset {
         mint: string;
@@ -99,12 +96,7 @@
             throw error;
         }
     }
-
-    onMount(async () => {
-        if (asset && asset.owner) {
-            try {nfts = await fetchAccountData(asset.owner);} catch (error) {console.error("Error fetching account data:", error); fetchError = error instanceof Error ? error.message : String(error);}
-        }
-    });
+    onMount(async () => {if (asset && asset.owner) {try {nfts = await fetchAccountData(asset.owner);} catch (error) {console.error("Error fetching account data:", error); fetchError = error instanceof Error ? error.message : String(error);}}});
 </script>
 
 <div class="content px-3">
@@ -132,15 +124,7 @@
                 </div>
                 <div>
                     <div class="flex items-center space-x-2 text-black">
-                        {#if mediaUrl}
-                            <a
-                                href={mediaUrl}
-                                target="_blank"
-                                class="btn-sm btn border-0 bg-black text-white"
-                            >
-                                View Media
-                            </a>
-                        {/if}
+                        {#if mediaUrl}<a href={mediaUrl} target="_blank" class="btn-sm btn border-0 bg-black text-white">View Media</a>{/if}
                         <CopyButton text={$page.params.asset} />
                         <CopyButton text={$page.url.href} icon="link" />
                     </div>
@@ -153,20 +137,9 @@
             <div class="content px-3">
                 <div class="flex flex-col items-center justify-center">
                     {#if mediaType === "video"}
-                        <video
-                            class="m-auto my-3 h-auto w-full rounded-md object-contain"
-                            controls
-                            autoplay
-                            loop
-                            muted
-                            src={mediaUrl}
-                        />
+                        <video class="m-auto my-3 h-auto w-full rounded-md object-contain" controls autoplay loop muted src={mediaUrl} />
                     {:else}
-                        <img
-                            class="img m-auto my-3 h-auto w-full rounded-md object-contain"
-                            alt="asset media"
-                            src={mediaUrl}
-                        />
+                        <img class="img m-auto my-3 h-auto w-full rounded-md object-contain" alt="asset media" src={mediaUrl} />
                     {/if}
                 </div>
             </div>

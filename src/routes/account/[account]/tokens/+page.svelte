@@ -33,18 +33,14 @@
                         encoding: "jsonParsed",
                         filters: [
                             {
-                                dataSize: 165  // This is the size of token account data
+                                dataSize: 165
                             }
                         ]
                     }
                 ]
             })
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) {throw new Error(`HTTP error! status: ${response.status}`);}
         const result = await response.json();
         console.log("Account data fetched:", result);
         return result.result || [];
@@ -62,13 +58,9 @@
                 params: [account]
             })
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) {throw new Error(`HTTP error! status: ${response.status}`);}
         const result = await response.json();
-        return result.result.value / 1e9; // Convert lamports to SOL
+        return result.result.value / 1e9;
     }
 
     onMount(async () => {
@@ -89,7 +81,6 @@
                     };
                 })
                 .filter((token: { isNFT: boolean }) => !token.isNFT);
-
             tokens.unshift({
                 mint: 'ETH',
                 tokenAccount: account,
@@ -97,10 +88,6 @@
                 decimals: 9,
                 isNFT: false
             });
-
-            console.log("Tokens:", tokens);
-
-            // Fetch ETH/USD price
             const connection = new PriceServiceConnection("https://hermes.pyth.network");
             const priceIds = ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"];
             const [ethUsdFeed] = (await connection.getLatestPriceFeeds(priceIds)) ?? [];
@@ -120,21 +107,18 @@
         <p>Loading tokens...</p>
     {:else}
         {#each tokens as token}
-            <a href="/token/{token.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}" class="block">
-                <div class="mb-4 grid grid-cols-12 items-center gap-3 rounded-lg border px-3 py-2 hover:border-primary">
+            {#if token.mint === 'ETH'}
+                <div class="mb-4 grid grid-cols-12 items-center gap-3 rounded-lg border px-3 py-2">
                     <div class="col-span-2 p-1 md:col-span-1">
                         <div class="aspect-square w-full rounded-lg bg-cover bg-no-repeat border flex items-center justify-center" 
-                             style="background-image: url({token.mint === 'ETH' ? '/media/tokens/ethereum.svg' : fallback}); 
-                                    background-color: {token.mint !== 'ETH' ? '#f0f0f0' : 'transparent'};">
-                            {#if token.mint !== 'ETH'}
-                                <span class="text-2xl font-bold text-gray-400">?</span>
-                            {/if}
+                             style="background-image: url('/media/tokens/ethereum.svg'); 
+                                    background-color: 'transparent';">
                         </div>
                     </div>
                     <div class="col-span-10 flex items-center justify-between text-right md:col-span-11">
                         <div>
                             <h4 class="font-semibold md:text-sm">
-                                {token.mint === 'ETH' ? 'ETH' : token.mint.slice(0, 4) + '...' + token.mint.slice(-4)}
+                                ETH
                             </h4>
                         </div>
                         <div>
@@ -142,14 +126,43 @@
                                 {token.balance.toLocaleString(undefined, {maximumFractionDigits: 9})}
                             </h4>
                             <h4 class="text-xs opacity-50">
-                                {#if token.mint === 'ETH' && ethUsdPrice}
+                                {#if ethUsdPrice}
                                     {formatMoney(token.balance * ethUsdPrice)}
                                 {/if}
                             </h4>
                         </div>
                     </div>
                 </div>
-            </a>
+            {:else}
+                <a href="/token/{token.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}" class="block">
+                    <div class="mb-4 grid grid-cols-12 items-center gap-3 rounded-lg border px-3 py-2 hover:border-primary">
+                        <div class="col-span-2 p-1 md:col-span-1">
+                            <div class="aspect-square w-full rounded-lg bg-cover bg-no-repeat border flex items-center justify-center" 
+                                 style="background-image: url({fallback}); 
+                                        background-color: '#f0f0f0';">
+                                <span class="text-2xl font-bold text-gray-400">?</span>
+                            </div>
+                        </div>
+                        <div class="col-span-10 flex items-center justify-between text-right md:col-span-11">
+                            <div>
+                                <h4 class="font-semibold md:text-sm">
+                                    {token.mint.slice(0, 4) + '...' + token.mint.slice(-4)}
+                                </h4>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold md:text-sm">
+                                    {token.balance.toLocaleString(undefined, {maximumFractionDigits: 9})}
+                                </h4>
+                                <h4 class="text-xs opacity-50">
+                                    {#if ethUsdPrice}
+                                        {formatMoney(token.balance * ethUsdPrice)}
+                                    {/if}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            {/if}
         {/each}
     {/if}
 </div>
