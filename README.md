@@ -1,8 +1,8 @@
 # 🧱Eclipse XRAY
-🔗 **Froked from**: https://github.com/helius-labs/xray
+🔗 **Forked from**: https://github.com/helius-labs/xray
 Eclipse XRAY is a modified fork of the Helius Labs Solana Explorer adapted to work with Eclipse Mainnet. 
 
-Eclipse XRAY leverages only the Eclipse public [RPC](https://docs.eclipse.xyz/developers/rpc-and-block-explorers) endpoints, [Pyth](https://docs.eclipse.xyz/developers/oracles/pyth-network) for price feeds, [All Domains](https://docs.eclipse.xyz/developers/web3-domains/alldomains) for username discovery, and [Dune](https://dune.com/hkey/eclipse-mainnet-bridge) to gather statstics from the [Eclipse Mainnet Bridge](https://etherscan.io/address/0x83cB71D80078bf670b3EfeC6AD9E5E6407cD0fd1).
+Eclipse XRAY leverages only the Eclipse public [RPC](https://docs.eclipse.xyz/developers/rpc-and-block-explorers) endpoints, [Pyth](https://docs.eclipse.xyz/developers/oracles/pyth-network) for price feeds, [All Domains](https://docs.eclipse.xyz/developers/web3-domains/alldomains) for username discovery, and [Dune](https://dune.com/hkey/eclipse-mainnet-bridge) to gather statistics from the [Eclipse Mainnet Bridge](https://etherscan.io/address/0x83cB71D80078bf670b3EfeC6AD9E5E6407cD0fd1).
 
 ## To-Do List
 - [ ] Integrate Eclipse Mainnet Pyth Feeds
