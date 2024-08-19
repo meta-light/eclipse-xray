@@ -1,16 +1,24 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { trpcWithQuery } from "$lib/trpc/client";
-
+    import { onMount } from "svelte";
+    import { TldParser } from "@onsol/tldparser";
+    import { Connection, PublicKey } from "@solana/web3.js";
     export let address: string;
-
+    let username: string | null = null;
+    let isLoading = true;
     const client = trpcWithQuery($page);
-
-    // Remove the accountUsernames query
-    // Instead, you might want to use a placeholder or alternative way to display usernames
-    let username = address; // Use the address as a fallback
-
-    // You can add any alternative logic here to fetch or display usernames if needed
+    const RPC_URL = 'https://mainnetbeta-rpc.eclipse.xyz';
+    const connection = new Connection(RPC_URL);
+    async function fetchAllDomainsUsername(address: string) {
+        const parser = new TldParser(connection);
+        try {
+            const pubkey = new PublicKey(address);
+            const allUserDomains = await parser.getAllUserDomains(pubkey);
+            if (allUserDomains.length > 0) {username = allUserDomains[0].toString(); isLoading = false;}
+        } 
+        catch (error) {console.error("Error fetching AllDomains username:", error); isLoading = false;}
+    }
+    onMount(() => {fetchAllDomainsUsername(address);});
 </script>
-
-<slot {username} />
+<slot username={username} {isLoading} />

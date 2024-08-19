@@ -15,7 +15,7 @@ import { transactions } from "$lib/trpc/routes/transactions";
 import { blockTransactions } from "$lib/trpc/routes/block-transactions";
 import { assets } from "$lib/trpc/routes/assets";
 import { duneQuery } from "$lib/trpc/routes/dune-query";
-
+import { pythPrice } from "$lib/trpc/routes/pyth-price";
 export const t = initTRPC.context<Context>().create();
 
 export const router = t.router({
@@ -29,6 +29,7 @@ export const router = t.router({
     duneQuery,
     niftyAsset,
     nfts,
+    pythPrice,
     rawTransaction,
     searchAssets,
     token,

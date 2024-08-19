@@ -2,11 +2,12 @@
     import { page } from "$app/stores";
     import { onMount } from 'svelte';
     import { getRPCUrl } from "$lib/util/get-rpc-url";
-    import { PriceServiceConnection } from "@pythnetwork/price-service-client";
     import { tweened } from "svelte/motion";
     import formatMoney from "$lib/util/format-money";
     import fallback from "./fallback_image.svg";
+    import { trpcWithQuery } from "$lib/trpc/client";
 
+    const client = trpcWithQuery($page);
     const { account } = $page.params;
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
@@ -15,8 +16,14 @@
     let tokens: any[] = [];
     let nativeBalance = 0;
     let fetchError: string | null = null;
-    let ethUsdPrice: number | null = null;
     const balance = tweened(0, {duration: 1000});
+
+    const pythPriceQuery = client.pythPrice.createQuery();
+    let ethUsdPrice: number | null = null;
+
+    $: if ($pythPriceQuery.data !== undefined) {
+        ethUsdPrice = $pythPriceQuery.data;
+    }
 
     async function fetchAccountData() {
         const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
@@ -88,11 +95,6 @@
                 decimals: 9,
                 isNFT: false
             });
-            const connection = new PriceServiceConnection("https://hermes.pyth.network");
-            const priceIds = ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"];
-            const [ethUsdFeed] = (await connection.getLatestPriceFeeds(priceIds)) ?? [];
-            const price = ethUsdFeed?.getPriceUnchecked();
-            ethUsdPrice = price && typeof price.price === 'string' && typeof price.expo === 'number' ? parseFloat(price.price) * Math.pow(10, price.expo) : null;
         } catch (error) {
             console.error("Error fetching account data:", error);
             fetchError = error instanceof Error ? error.message : String(error);
@@ -126,8 +128,10 @@
                                 {token.balance.toLocaleString(undefined, {maximumFractionDigits: 9})}
                             </h4>
                             <h4 class="text-xs opacity-50">
-                                {#if ethUsdPrice}
+                                {#if !$pythPriceQuery.isLoading && ethUsdPrice !== null}
                                     {formatMoney(token.balance * ethUsdPrice)}
+                                {:else}
+                                    <div class="pulse h-2 w-16 rounded-lg bg-secondary" />
                                 {/if}
                             </h4>
                         </div>

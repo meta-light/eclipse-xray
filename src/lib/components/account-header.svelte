@@ -24,7 +24,6 @@
     import { trpcWithQuery } from "$lib/trpc/client";
     import { onMount } from "svelte";
     import { tweened } from "svelte/motion";
-    import { PriceServiceConnection } from "@pythnetwork/price-service-client";
     import formatMoney from "$lib/util/format-money";
     import CopyButton from "$lib/components/copy-button.svelte";
     import Username from "$lib/components/providers/username-provider.svelte";
@@ -51,22 +50,24 @@
     }
 
     let ethUsdPrice: number | null = null;
+    const pythPriceQuery = client.pythPrice.createQuery();
 
-    onMount(async () => {
-        const connection = new PriceServiceConnection("https://hermes.pyth.network");
-        const priceIds = ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"];
-        try {
-            const [ethUsdFeed] = (await connection.getLatestPriceFeeds(priceIds)) ?? [];
-            const price = ethUsdFeed?.getPriceUnchecked();
-            ethUsdPrice = price && typeof price.price === 'string' && typeof price.expo === 'number' ? parseFloat(price.price) * Math.pow(10, price.expo) : null;
-        } catch (error) {
-            console.error("Error fetching ETH/USD price:", error);
-        }
-    });
+    $: if ($pythPriceQuery.data !== undefined) {
+        ethUsdPrice = $pythPriceQuery.data;
+    }
+
     $: worth = $balance * (ethUsdPrice ?? 0);
+
+    let localIsLoading = true;
+
+    onMount(() => {
+        setTimeout(() => {
+            localIsLoading = false;
+        }, 5000);
+    });
 </script>
 
-<Username address={account} let:usernames let:usernameIsLoading>
+<Username address={account} let:username let:isLoading>
     <div class="nav sticky top-16 z-30 gap-2 bg-base-100 px-3 pt-2">
         <div class="flex flex-col bg-base-100">
             <div class="flex items-center justify-between">
@@ -98,19 +99,19 @@
                     {/if}
                 </div>
             </div>
-            {#if usernameIsLoading}
+            {#if localIsLoading && isLoading}
                 <div class="flex flex-wrap gap-2 pt-2">
                     {#each [1, 2, 3] as _}
                         <div class="username-block inline-block h-6 w-[72px] animate-pulse rounded-full px-3 py-1 text-xs font-extrabold" />
                     {/each}
                 </div>
-            {:else if usernames && usernames?.length > 0}
+            {:else}
                 <div class="flex flex-wrap gap-2 pt-2">
-                    {#each usernames as username}
+                    {#if username}
                         <div class="username-block inline-block rounded-full px-3 py-1 text-xs font-extrabold">
-                            {username.username}
+                            {username}
                         </div>
-                    {/each}
+                    {/if}
                 </div>
             {/if}
         </div>

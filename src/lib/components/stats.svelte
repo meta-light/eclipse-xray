@@ -3,27 +3,20 @@
     import { page } from "$app/stores";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { fade } from "svelte/transition";
-    import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-    import { onMount } from "svelte";
     const client = trpcWithQuery($page);
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
     const tps = client.tps.createQuery(isMainnetValue);
     const slot = client.currentSlot.createQuery([isMainnetValue]);
-    let ethUsdPrice: number | null = null;
     const duneQueryResult = client.duneQuery.createQuery();
-    onMount(async () => {
-        const connection = new PriceServiceConnection("https://hermes.pyth.network");
-        const priceIds = ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"];
-        try {
-            const [ethUsdFeed] = (await connection.getLatestPriceFeeds(priceIds)) ?? [];
-            const price = ethUsdFeed?.getPriceUnchecked();
-            ethUsdPrice = price && typeof price.price === 'string' && typeof price.expo === 'number' ? parseFloat(price.price) * Math.pow(10, price.expo) : null;
-        } catch (error) {
-            console.error("Error fetching ETH/USD price:", error);
-        }
-    });
+    
+    const pythPriceQuery = client.pythPrice.createQuery();
+    let ethUsdPrice: number | null = null;
+
+    $: if ($pythPriceQuery.data !== undefined) {
+        ethUsdPrice = $pythPriceQuery.data;
+    }
 
     // Add a function to format large numbers
     function formatLargeNumber(num: number): string {
@@ -47,7 +40,7 @@
             {/if}
         </div>
         <div>
-            {#if ethUsdPrice !== null}
+            {#if !$pythPriceQuery.isLoading && ethUsdPrice !== null}
                 <div in:fade={{duration: 500}}>
                     <span class="font-bold">ETH:</span>
                     <span class="opacity-50">{formatMoney(ethUsdPrice)}</span>

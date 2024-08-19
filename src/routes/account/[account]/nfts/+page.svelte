@@ -64,7 +64,7 @@
     {#if fetchError}
         <p class="col-span-4 text-red-500">Error loading NFTs: {fetchError}</p>
     {:else if nfts.length === 0}
-        <p class="col-span-4">Loading NFTs...</p>
+        <p class="col-span-4">No NFTs found for this account.</p>
     {:else}
         {#each nfts as nft}
             <div class="aspect-square w-full">
