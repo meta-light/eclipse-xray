@@ -58,12 +58,5 @@ npm run build
 | 📄`./app.postcss`         | Initialize/config Tailwind + global styles.                                                                                                                                                                 |
 | 📄`./app.html`            | The top level HTML template that wraps all pages. Routes are injected into the `%sveltekit.body%` tag.                                                                                                      |
 
-## Vercel Config
-|                 |                                                   |
-| --------------- | ------------------------------------------------- |
-| Build Command   | `cd ../.. && npx turbo run build --filter=web...` |
-| Output Director | `apps/web/.svelte-kit`                            |
-| Install Command | `npm install --prefix=../..`                      |
-
 ## Styles
 [TailwindCSS](https://tailwindcss.com/) is used for base utilies and [DaisyUI](https://daisyui.com/) contains helpful UI components.
