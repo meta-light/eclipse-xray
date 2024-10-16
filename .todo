@@ -1,6 +1,14 @@
-[ ] Metaplex Integration
-[ ] Nifty Asset Integration
-[ ] Libreplex Integration
+[ ] Metaplex Integration - https://docs.eclipse.xyz/developers/nfts/metaplex
+[ ] Nifty Asset Integration - https://docs.eclipse.xyz/developers/nfts/nifty-asset
+[ ] Libreplex Integration - https://docs.eclipse.xyz/developers/nfts/libreplex-token-2022
 [ ] Contribitions Guide
+[ ] Pyth Integration - https://docs.eclipse.xyz/developers/oracles/pyth-network
+[ ] AllDomains Integration - https://docs.eclipse.xyz/developers/developer-tooling/decentralized-identities/alldomains
 [ ] Token Metadata
 [ ] Begin labeling program IDs
+
+## others
+https://docs.eclipse.xyz/developers/rpc-and-block-explorers/dragons-mouth-grpc-subscriptions
+https://www.usenexus.org/
+https://docs.eclipse.xyz/developers/bridges/eclipse-canonical-bridge
+https://docs.eclipse.xyz/developers/bridges/inter-blockchain-communication-ibc
