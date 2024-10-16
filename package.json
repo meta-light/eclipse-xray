@@ -4,7 +4,7 @@
     "type": "module",
     "platform": "node",
     "engines": {
-        "node": "18.x"
+        "node": "22.x"
     },
     "scripts": {
         "// Dev/Build": "-------------------------------------------------------------",
@@ -89,14 +89,11 @@
         "@nifty-oss/asset": "^0.3.0",
         "@onsol/tldparser": "^0.5.3",
         "@pythnetwork/price-service-client": "^1.9.0",
-        "@pythnetwork/pyth-solana-receiver": "^0.8.0",
         "@solana/spl-account-compression": "^0.1.8",
         "@solana/spl-token": "^0.4.8",
-        "@solana/spl-token-registry": "^0.2.4574",
         "@solana/wallet-adapter-wallets": "^0.19.11",
         "@solana/web3.js": "^1.95.2",
         "@svelte-on-solana/wallet-adapter-core": "^1.0.11-alpha.0",
-        "@svelte-on-solana/wallet-adapter-ui": "^1.0.21-alpha.0",
         "@sveltejs/kit": "^1.6.0",
         "@tanstack/svelte-query": "^4.24.9",
         "@trpc/client": "^10.12.0",
@@ -107,6 +104,7 @@
         "install": "^0.13.0",
         "json-format-highlight": "^1.0.4",
         "json-viewer-js": "^1.0.8",
+        "punycode.js": "^2.3.1",
         "svelte-highlight": "^7.1.2",
         "svelte-intersection-observer": "^0.10.0",
         "svelte-loading-spinners": "^0.3.4",

@@ -1,21 +1,26 @@
-<style>
-    .intro {
-        min-height: 65vh;
-    }
-</style>
+<style>.intro {min-height: 65vh;}</style>
 
 <script lang="ts">
     import { onMount } from "svelte";
-    import { fly } from "svelte/transition";
     import Icon from "$lib/components/icon.svelte";
     import Search from "$lib/components/search.svelte";
     import IntersectionObserver from "svelte-intersection-observer";
+    import featuredDapps from "../config/dapps.json";
+
     let searchError = "";
     let exploreELement: HTMLElement;
     let isFocused = false;
     let clearSearch = () => null;
     let focusInput = () => null;
     onMount(() => {setTimeout(() => {focusInput();}, 100);});
+
+    // Filter and randomly select 3 mainnet dApps
+    const mainnetDapps = featuredDapps.filter(dapp => dapp.network === "mainnet");
+    const randomMainnetDapps: any[] = [];
+    while (randomMainnetDapps.length < 3 && mainnetDapps.length > 0) {
+        const randomIndex = Math.floor(Math.random() * mainnetDapps.length);
+        randomMainnetDapps.push(mainnetDapps.splice(randomIndex, 1)[0]);
+    }
 </script>
 
 <div class="intro relative flex h-screen w-full items-center">
@@ -32,16 +37,24 @@
 
 <IntersectionObserver once={true} rootMargin="100px" element={exploreELement}>
     <section class="mx-auto mb-20 max-w-6xl py-10">
-        <div class="flex justify-center px-5">
-            <div class="flex items-center space-x-4 rounded-lg">
-                <div class="flex h-12 w-12 items-center justify-center rounded-full border">
-                    <Icon id="lightning" size="lg"/>
+        <h2 class="text-3xl font-bold text-center mb-8">FEATURED MAINNET DAPPS</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-5">
+            {#each randomMainnetDapps as dapp}
+                <div class="flex flex-col items-center p-6 space-y-4 rounded-lg border hover:shadow-lg transition-shadow">
+                    <div class="h-16 w-16 rounded-full bg-gray-100 overflow-hidden">
+                        {#if dapp.icon}
+                            <img src={dapp.icon} alt={`${dapp.name} icon`} class="w-full h-full object-cover" />
+                        {:else}
+                            <div class="flex h-full w-full items-center justify-center">
+                                <Icon id="image" size="lg"/>
+                            </div>
+                        {/if}
+                    </div>
+                    <h3 class="text-xl font-bold">{dapp.name}</h3>
+                    <p class="text-black text-center">{dapp.description}</p>
+                    <a href={dapp.link} class="text-blue-600 hover:underline">Learn More</a>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold">Eclipse Blockchain Explorer</h1>
-                    <p class="text-black max-w-lg">Search transactions, accounts, and more across the Eclipse Blockchain. Both Mainnet and Devnet are enabled. Run it back Turbo.</p>
-                </div>
-            </div>
+            {/each}
         </div>
     </section>
 </IntersectionObserver>

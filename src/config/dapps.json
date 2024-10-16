@@ -1,0 +1,82 @@
+[
+    {
+      "name": "Underdog Protocol",
+      "description": "Mint, Manage, and Distribute NFTs with No-code on Eclipse",
+      "icon": "/media/dapps/underdog.jpg",
+      "url": "",
+      "link": "https://eclipse.underdogprotocol.com/",
+      "network": "mainnet"
+    },
+    {
+      "name": "E Domains",
+      "description": "Send and receive assets on the Blockchian Network without having to worry about copy-pasting the wrong address.",
+      "icon": "/media/dapps/slav.jpg",
+      "url": "",
+      "link": "https://eclipse.slav.meme/", 
+      "network": "mainnet"
+    },
+    {
+      "name": "ENSOFI",
+      "description": "Lend & borrow with certainty. Set your own fixed interest rate and keep it stable throughout, shielded from market fluctuations.",
+      "icon": "/media/dapps/ensofi.jpg",
+      "url": "",
+      "link": "https://app.testnet.ensofi.xyz/?chain=ECLIPSE/",
+      "network": "testnet"
+    },
+    {
+        "name": "Sharp Trade",
+        "description": "Your Sharp Predictions and Options platform on Eclipse. Options alpha testing is ongoing.",
+        "icon": "/media/dapps/sharp.jpg",
+        "link": "https://eclipse.sharptrade.fi/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Lifinity",
+        "description": "The first oracle-based DEX on Eclipse, designed to improve capital efficiency and reduce impermanent loss.",
+        "icon": "/media/dapps/lifinity.jpg",
+        "link": "https://eclipse.lifinity.io/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Hedgehog Markets",
+        "description": "Prediction markets on Eclipse",
+        "icon": "/media/dapps/hedgehog.jpg",
+        "link": "https://eclipse.hedgehog.markets/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Blockmesh",
+        "description": "An open-source, secure network for ethical AI oversight",
+        "icon": "/media/dapps/blockmesh.jpg",
+        "link": "https://www.blockmesh.xyz/",
+        "network": "pre-launch"
+    },
+    {
+        "name": "Validators",
+        "description": "VALIDATORS HAVE LANDED ON ECLIPSE: BORN ON SOLANA, LIVING ON CELESTIA, SETTLING ON ETHEREUM",
+        "icon": "/media/dapps/validators.jpg",
+        "link": "https://www.validators.wtf/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Skate",
+        "description": "Ready to Become a Skate Legend? Begin your journey by completing tasks on Skate Park to earn Ollies.",
+        "icon": "/media/dapps/skate.jpg",
+        "link": "https://park.skatechain.org/en",
+        "network": "mainnet"
+    },
+    {
+        "name": "Dummy Token Faucet",
+        "description": "A Dummy Token Faucet for Eclipse Devnet",
+        "icon": "",
+        "link": "https://eclipse-dummy-token-faucet.vercel.app/",
+        "network": "devnet"
+    },
+    {
+        "name": "All Domains",
+        "description": "THE ONLY YIELD-BEARING DOMAINS IN WEB3",
+        "icon": "/media/dapps/alldomains.jpg",
+        "link": "https://alldomains.id/",
+        "network": "pre-launch"
+    }
+]
