@@ -13,12 +13,20 @@ export default defineConfig(({ mode }) => ({
     define: {
         APP_NAME: JSON.stringify(pkg.name),
         APP_VERSION: JSON.stringify(pkg.version),
-        // ...nodeBandAid,
         "process.env.NODE_DEBUG": false,
     },
 
     optimizeDeps: {
         esbuildOptions: {
+            define: {
+                global: 'globalThis'
+            },
+            plugins: [
+                NodeGlobalsPolyfillPlugin({
+                    buffer: true,
+                    process: true,
+                })
+            ],
             target: "es2020",
         },
     },
@@ -28,13 +36,13 @@ export default defineConfig(({ mode }) => ({
         NodeModulesPolyfillPlugin(),
         NodeGlobalsPolyfillPlugin({
             buffer: true,
-            define: {},
             process: true,
         }),
     ],
     resolve: {
         alias: {
-            $lib: path.resolve("./src/lib"), // Add this line
+            $lib: path.resolve("./src/lib"),
+            crypto: 'crypto-browserify'
         },
     },
 }));

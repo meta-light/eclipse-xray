@@ -7,17 +7,15 @@
         "node": "18.x"
     },
     "scripts": {
-        "// Dev/Build": "-------------------------------------------------------------",
         "dev": "dotenv -- vite dev",
         "build": "vite build",
         "preview": "vite preview",
-        "// Typescript": "-------------------------------------------------------------",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-        "// Lint": "-------------------------------------------------------------",
         "test": "npm run lint",
         "lint": "eslint .",
         "format": "prettier --write '{public,src}/**/*.{css,html,js,svelte}'",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "postinstall": "node patch-package.js"
     },
     "lint-staged": {
         "*.{js,jsx,ts,tsx}": [
@@ -98,6 +96,7 @@
         "@tanstack/svelte-query": "^4.24.9",
         "@trpc/client": "^10.12.0",
         "@trpc/server": "^10.12.0",
+        "crypto-browserify": "^3.12.0",
         "events": "^3.3.0",
         "helius-sdk": "^1.0.7",
         "highlight.js": "^11.7.0",
