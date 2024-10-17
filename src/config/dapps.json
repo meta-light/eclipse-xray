@@ -78,5 +78,68 @@
         "icon": "/media/dapps/alldomains.jpg",
         "link": "https://alldomains.id/",
         "network": "pre-launch"
+    },
+    {
+        "name": "Cryptara Conquest",
+        "description": "Multichain play-to-airdrop top-down 2D survival RPG based in dungeons of Cryptara built by IntoTheVerse powered by SVM Eclipse. Coming soon to MoveVM!",
+        "icon": "/media/dapps/cryptara.jpg",
+        "link": "https://t.co/bHwam6SZhq",
+        "network": "pre-launch"
+    },
+    {
+        "name": "Let's Cook",
+        "description": "Align your community and cook together",
+        "icon": "/media/dapps/letscook.jpg",
+        "link": "https://eclipse.letscook.wtf/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Scope",
+        "description": "Native NFT Launchpad for Eclipse",
+        "icon": "/media/dapps/scope.jpg",
+        "link": "https://scopenft.xyz/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Astrol",
+        "description": "First Native Lending Protocol On Eclipse",
+        "icon": "/media/dapps/astrol.jpg",
+        "link": "https://astrol.io/",
+        "network": "pre-launch"
+    },
+    {
+        "name": "Orca",
+        "description": "Orca is the go-to place to trade tokens and provide liquidity on Eclipse",
+        "icon": "/media/dapps/orca.jpg",
+        "link": "https://www.orca.so/",
+        "network": "pre-launch"
+    },
+    {
+        "name": "KOI KOI",
+        "description": "World’s first permissionless book-making platform, powered by Eclipse with Blinks",
+        "icon": "/media/dapps/koikoi.jpg",
+        "link": "https://x.com/KoikoiOfficial",
+        "network": "pre-launch"
+    },
+    {
+        "name": "Official Eclipse Bridge",
+        "description": "The official bridge for Eclipse",
+        "icon": "/media/dapps/eclipse.jpg",
+        "link": "https://bridge.eclipse.xyz/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Invariant",
+        "description": "The most efficient AMM DEX with concentrated liquidity built on Eclipse.",
+        "icon": "/media/dapps/invariant.jpg",
+        "link": "https://invariant.app/swap",
+        "network": "pre-launch"
+    },
+    {
+        "name": "Beacon Protocol",
+        "description": "Onchain orchestration of data for AI. Unlocking data sources for AI and ensuring everyone gets paid.",
+        "icon": "/media/dapps/beacon.jpg",
+        "link": "https://beaconprotocol.com/",
+        "network": "pre-launch"
     }
 ]
