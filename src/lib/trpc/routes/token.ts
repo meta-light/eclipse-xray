@@ -86,23 +86,11 @@ export const token = t.procedure
             let externalMetadata;
             if (isToken2022) {
                 const extensionData = accountInfo.data.slice(MINT_SIZE);
-                const metadataOffset = extensionData.indexOf(Buffer.from('USD Coin'));
-                if (metadataOffset !== -1) {
-                    const nameLength = extensionData.readUInt32LE(metadataOffset - 4);
-                    const name = extensionData.slice(metadataOffset, metadataOffset + nameLength).toString('utf8');
-                    const symbolOffset = metadataOffset + nameLength;
-                    const symbolLength = extensionData.readUInt32LE(symbolOffset);
-                    const symbol = extensionData.slice(symbolOffset + 4, symbolOffset + 4 + symbolLength).toString('utf8');
-                    const uriOffset = symbolOffset + 4 + symbolLength;
-                    const uriLength = extensionData.readUInt32LE(uriOffset);
-                    const uri = extensionData.slice(uriOffset + 4, uriOffset + 4 + uriLength).toString('utf8');
-
-                    metadata = { name, symbol, uri, };
-                    
-                    // Fetch external metadata from URI
-                    if (uri) {
-                        externalMetadata = await fetchMetadataFromUri(uri);
-                    }
+                metadata = parseToken2022Metadata(extensionData);
+                
+                // Fetch external metadata from URI
+                if (metadata?.uri) {
+                    externalMetadata = await fetchMetadataFromUri(metadata.uri);
                 }
             }
 
@@ -136,4 +124,33 @@ async function getRPCUrlAndConnection(isMainnet: boolean): Promise<[string, Conn
     const connection = new Connection(url, "confirmed");
     const umi = createUmi(url);
     return [url, connection, umi];
+}
+
+function parseToken2022Metadata(extensionData: Buffer): { name: string; symbol: string; uri: string } | undefined {
+    const possibleTokenNames = ['USD Coin', 'Solana', 'dogwifhat'];
+    
+    for (const tokenName of possibleTokenNames) {
+        const metadataOffset = extensionData.indexOf(Buffer.from(tokenName));
+        if (metadataOffset !== -1) {
+            try {
+                const nameLength = extensionData.readUInt32LE(metadataOffset - 4);
+                const name = extensionData.slice(metadataOffset, metadataOffset + nameLength).toString('utf8');
+                
+                const symbolOffset = metadataOffset + nameLength;
+                const symbolLength = extensionData.readUInt32LE(symbolOffset);
+                const symbol = extensionData.slice(symbolOffset + 4, symbolOffset + 4 + symbolLength).toString('utf8');
+                
+                const uriOffset = symbolOffset + 4 + symbolLength;
+                const uriLength = extensionData.readUInt32LE(uriOffset);
+                const uri = extensionData.slice(uriOffset + 4, uriOffset + 4 + uriLength).toString('utf8');
+
+                return { name, symbol, uri };
+            } catch (error) {
+                console.error(`Error parsing metadata for ${tokenName}:`, error);
+            }
+        }
+    }
+    
+    console.warn('No matching token name found in metadata');
+    return undefined;
 }
