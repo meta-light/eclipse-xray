@@ -1,16 +1,20 @@
 <script lang="ts">
     import type { UITokenMetadata } from "$lib/types";
-    import { SOL } from "$lib/xray";
-    import { getRPCUrl } from "$lib/util/get-rpc-url";
+    import { trpcWithQuery } from "$lib/trpc/client";
+    import { page } from "$app/stores";
     import IntersectionObserver from "svelte-intersection-observer";
+
+    const ETH = 'So11111111111111111111111111111111111111112'; // ETH address on your Solana fork
 
     export let address: string | undefined = undefined;
     export let token: any | undefined = undefined;
     export let status: { isLoading: boolean; isError: boolean } | undefined = undefined;
     let intersecting = false;
-    const params = new URLSearchParams(window.location.search);
-    const network = params.get("network");
-    const isMainnetValue = network !== "devnet";
+    const isMainnetValue = $page.url.searchParams.get("network") !== "devnet";
+
+    const client = trpcWithQuery($page);
+
+    $: tokenQuery = address && address !== ETH ? client.token.createQuery([address, isMainnetValue]) : null;
 
     export const metadata: UITokenMetadata = {
         address: "",
@@ -25,53 +29,55 @@
         sellerFeeBasisPoints: 0,
     };
 
-    async function fetchTokenData() {
-        if (!address) return;
+    let isNFT = false;
 
-        const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
-        const response = await fetch(rpcUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                jsonrpc: '2.0',
-                id: 1,
-                method: 'getTokenAccountBalance',
-                params: [address]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        return result.result?.value;
+    $: if (tokenQuery) {
+        console.log(`Query state for token ${address}:`, $tokenQuery);
     }
 
-    $: if (address && address !== SOL) {
-        fetchTokenData().then(data => {
-            if (data) {
-                metadata.address = address;
-                metadata.name = data.symbol || "Unknown Token";
-                metadata.image = `/media/tokens/${data.symbol?.toLowerCase() || 'unknown'}.svg`;
-                token = { ...data, address };
-                status = { isLoading: false, isError: false };
-            }
-        }).catch(error => {
-            console.error("Error fetching token data:", error);
-            status = { isLoading: false, isError: true };
-        });
-    } else if (address === SOL) {
+    $: if (tokenQuery && $tokenQuery.data) {
+        const result = $tokenQuery.data;
+        isNFT = result.decimals === 0 || result.decimals === undefined;
+        
+        metadata.address = result.address;
+        metadata.name = result.metadata?.name || "Unknown Token";
+        metadata.image = result.externalMetadata?.image || `/media/tokens/${result.metadata?.symbol?.toLowerCase() || 'unknown'}.png`;
+        token = { ...result, address };
+        status = { isLoading: false, isError: false };
+        
+        if (isNFT) {
+            console.log(`Token ${address} is an NFT.`);
+        } else {
+            console.log(`Token ${address} is not an NFT. Decimals: ${result.decimals}`);
+        }
+    } else if (tokenQuery && $tokenQuery.error) {
+        console.error(`Error fetching token data for ${address}:`, $tokenQuery.error);
+        status = { isLoading: false, isError: true };
+    } else if (tokenQuery) {
+        status = { isLoading: true, isError: false };
+    }
+
+    $: if (address === ETH) {
         metadata.name = "ETH";
         metadata.image = "/media/tokens/ethereum.svg";
-        metadata.address = SOL;
+        metadata.address = ETH;
+        token = {
+            address: ETH,
+            decimals: 9,
+            isToken2022: false,
+            metadata: {
+                name: "Ethereum",
+                symbol: "ETH",
+                uri: "",
+            },
+        };
         status = { isLoading: false, isError: false };
+        isNFT = false;
     }
 
     let element: HTMLDivElement;
     $: tokenIsLoading = status?.isLoading;
     $: tokenFailed = status?.isError;
-    $: isNFT = metadata?.attributes && metadata?.attributes?.length > 0;
 </script>
 
 <div>
@@ -83,6 +89,7 @@
                 {tokenIsLoading}
                 {tokenFailed}
                 {isNFT}
+                {token}
             />
         {/if}
     </IntersectionObserver>

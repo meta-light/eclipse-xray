@@ -25,7 +25,7 @@ export interface TokenData {
     symbol: string;
     uri: string;
   };
-  externalMetadata?: any; // We use 'any' here as the structure might vary
+  externalMetadata?: any;
 }
 
 async function fetchMetadataFromUri(uri: string): Promise<any> {
@@ -36,6 +36,22 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
     console.error(`Error fetching metadata from URI: ${uri}`, error);
     return null;
   }
+}
+
+function parseToken2022Metadata(extensionData: Buffer): string | undefined {
+
+    let stringData = extensionData.toString('utf8').replace(/\0/g, '');
+
+    const uriRegex = /(https?:\/\/\S+)/;
+    const uriMatch = stringData.match(uriRegex);
+
+    if (uriMatch) {
+        const [, uri] = uriMatch;
+        return uri;
+    }
+
+    console.warn('No valid URI found');
+    return undefined;
 }
 
 export const token = t.procedure
@@ -82,15 +98,23 @@ export const token = t.procedure
                 freezeAuthority: decodedMintInfo.freezeAuthority,
             };
 
-            let metadata;
-            let externalMetadata;
+            let metadata: { name: string; symbol: string; uri: string } | undefined;
+            let externalMetadata: any | undefined;
             if (isToken2022) {
                 const extensionData = accountInfo.data.slice(MINT_SIZE);
-                metadata = parseToken2022Metadata(extensionData);
+                const uri = parseToken2022Metadata(extensionData);
                 
-                // Fetch external metadata from URI
-                if (metadata?.uri) {
-                    externalMetadata = await fetchMetadataFromUri(metadata.uri);
+                if (uri) {
+                    try {
+                        externalMetadata = await fetchMetadataFromUri(uri);
+                        metadata = {
+                            name: externalMetadata.name,
+                            symbol: externalMetadata.symbol,
+                            uri: uri,
+                        };
+                    } catch (error) {
+                        console.error('Error fetching external metadata:', error);
+                    }
                 }
             }
 
@@ -101,8 +125,8 @@ export const token = t.procedure
                 isToken2022,
                 freezeAuthority: mintInfo.freezeAuthority?.toBase58(),
                 mintAuthority: mintInfo.mintAuthority?.toBase58(),
-                metadata: metadata || undefined,
-                externalMetadata: externalMetadata || undefined,
+                metadata: metadata,
+                externalMetadata: externalMetadata,
             };
 
             return tokenData;
@@ -124,33 +148,4 @@ async function getRPCUrlAndConnection(isMainnet: boolean): Promise<[string, Conn
     const connection = new Connection(url, "confirmed");
     const umi = createUmi(url);
     return [url, connection, umi];
-}
-
-function parseToken2022Metadata(extensionData: Buffer): { name: string; symbol: string; uri: string } | undefined {
-    const possibleTokenNames = ['USD Coin', 'Solana', 'dogwifhat'];
-    
-    for (const tokenName of possibleTokenNames) {
-        const metadataOffset = extensionData.indexOf(Buffer.from(tokenName));
-        if (metadataOffset !== -1) {
-            try {
-                const nameLength = extensionData.readUInt32LE(metadataOffset - 4);
-                const name = extensionData.slice(metadataOffset, metadataOffset + nameLength).toString('utf8');
-                
-                const symbolOffset = metadataOffset + nameLength;
-                const symbolLength = extensionData.readUInt32LE(symbolOffset);
-                const symbol = extensionData.slice(symbolOffset + 4, symbolOffset + 4 + symbolLength).toString('utf8');
-                
-                const uriOffset = symbolOffset + 4 + symbolLength;
-                const uriLength = extensionData.readUInt32LE(uriOffset);
-                const uri = extensionData.slice(uriOffset + 4, uriOffset + 4 + uriLength).toString('utf8');
-
-                return { name, symbol, uri };
-            } catch (error) {
-                console.error(`Error parsing metadata for ${tokenName}:`, error);
-            }
-        }
-    }
-    
-    console.warn('No matching token name found in metadata');
-    return undefined;
 }
