@@ -1,108 +1,120 @@
-import { z } from "zod";
 import { t } from "$lib/trpc/t";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { z } from "zod";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { TRPCError } from '@trpc/server';
-import { TOKEN_PROGRAM_ID, getAccount, getMint } from "@solana/spl-token";
+import { MINT_SIZE, MintLayout } from "@solana/spl-token";
+import { Buffer } from 'buffer';
+import axios from 'axios';
+
+const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
 
 export const niftyAsset = t.procedure
     .input(z.tuple([z.string(), z.boolean()]))
     .query(async ({ input }) => {
-        const [address, isMainnet] = input;
-        console.log(`Fetching nifty asset data for ${address} on ${isMainnet ? 'mainnet' : 'devnet'}`);
+        const [token, isMainnet] = input;
+        console.log(`Fetching Token-2022 NFT data for ${token} on ${isMainnet ? 'mainnet' : 'devnet'}`);
 
         try {
-            const connection = new Connection(getRPCUrl(isMainnet ? "mainnet" : "devnet"), "confirmed");
-            const publicKey = new PublicKey(address);
-
-            // First, try to get the token account info
-            let tokenAccountInfo;
+            let tokenPublicKey: PublicKey;
             try {
-                tokenAccountInfo = await getAccount(connection, publicKey);
+                tokenPublicKey = new PublicKey(token);
             } catch (error) {
-                console.log("Not a token account, trying as a mint...");
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: `Invalid token address: "${token}". Must be a valid base58-encoded string.`,
+                });
             }
 
-            let nftData: {
-                address: string;
-                mint: string;
-                owner?: string;
-                amount?: string;
-                supply?: string;
-                decimals: number;
-                metadata?: any;
+            const url = getRPCUrl(isMainnet ? "mainnet" : "devnet");
+            const connection = new Connection(url, "confirmed");
+            const accountInfo = await connection.getAccountInfo(tokenPublicKey);
+
+            if (!accountInfo) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: `Token account not found for address: ${token}`,
+                });
+            }
+
+            const isToken2022 = accountInfo.owner.toBase58() === TOKEN_2022_PROGRAM_ID;
+
+            if (!isToken2022) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: `Invalid token account: ${token}. Not owned by Token-2022 program.`,
+                });
+            }
+
+            const decodedMintInfo = MintLayout.decode(accountInfo.data);
+            const mintInfo = {
+                mintAuthority: decodedMintInfo.mintAuthority,
+                supply: decodedMintInfo.supply,
+                decimals: decodedMintInfo.decimals,
+                isInitialized: decodedMintInfo.isInitialized,
+                freezeAuthority: decodedMintInfo.freezeAuthority,
             };
 
-            if (tokenAccountInfo) {
-                // It's a token account, get the associated mint
-                const mintInfo = await getMint(connection, tokenAccountInfo.mint);
-                nftData = {
-                    address: address,
-                    mint: tokenAccountInfo.mint.toBase58(),
-                    owner: tokenAccountInfo.owner.toBase58(),
-                    amount: tokenAccountInfo.amount.toString(),
-                    decimals: mintInfo.decimals,
-                };
-            } else {
-                // It might be a mint account
+            const isNFT = mintInfo.decimals === 0 && mintInfo.supply.toString() === '1';
+
+            if (!isNFT) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: `Invalid NFT: ${token}. Supply must be 1 and decimals must be 0.`,
+                });
+            }
+
+            let metadata;
+            let extendedMetadata;
+            const extensionData = accountInfo.data.slice(MINT_SIZE);
+            const metadataOffset = extensionData.indexOf(Buffer.from([0x04, 0x00, 0x00, 0x00])); // Metadata type identifier
+            if (metadataOffset !== -1) {
+                const nameLength = extensionData.readUInt32LE(metadataOffset + 4);
+                const name = extensionData.slice(metadataOffset + 8, metadataOffset + 8 + nameLength).toString('utf8');
+                const symbolOffset = metadataOffset + 8 + nameLength;
+                const symbolLength = extensionData.readUInt32LE(symbolOffset);
+                const symbol = extensionData.slice(symbolOffset + 4, symbolOffset + 4 + symbolLength).toString('utf8');
+                const uriOffset = symbolOffset + 4 + symbolLength;
+                const uriLength = extensionData.readUInt32LE(uriOffset);
+                const uri = extensionData.slice(uriOffset + 4, uriOffset + 4 + uriLength).toString('utf8');
+
+                metadata = { name, symbol, uri };
+
+                // Fetch extended metadata from URI
                 try {
-                    const mintInfo = await getMint(connection, publicKey);
-                    nftData = {
-                        address: address,
-                        mint: address,
-                        supply: mintInfo.supply.toString(),
-                        decimals: mintInfo.decimals,
-                    };
+                    const response = await axios.get(uri);
+                    extendedMetadata = response.data;
                 } catch (error) {
-                    throw new TRPCError({
-                        code: 'NOT_FOUND',
-                        message: 'NFT not found. The address is neither a valid token account nor a mint.',
-                    });
+                    console.error("Error fetching extended metadata:", error);
                 }
             }
 
-            // Fetch metadata (simplified, as we can't use nifty-oss)
-            const metadataPDA = await getMetadata(new PublicKey(nftData.mint));
-            const metadataInfo = await connection.getAccountInfo(metadataPDA);
-            if (metadataInfo) {
-                nftData.metadata = decodeMetadata(metadataInfo.data);
-            }
+            const nftData = {
+                address: token,
+                mint: token,
+                decimals: mintInfo.decimals,
+                supply: mintInfo.supply.toString(),
+                isToken2022: true,
+                isNFT: true,
+                freezeAuthority: mintInfo.freezeAuthority?.toBase58(),
+                mintAuthority: mintInfo.mintAuthority?.toBase58(),
+                metadata: metadata || undefined,
+                extendedMetadata: extendedMetadata || undefined,
+            };
 
             return nftData;
         } catch (error) {
+            console.error("Error in nifty asset procedure:", error);
             if (error instanceof TRPCError) {
                 throw error;
             }
             throw new TRPCError({
                 code: 'INTERNAL_SERVER_ERROR',
-                message: `Error fetching nifty asset data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                message: `Error fetching Token-2022 NFT data: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 cause: error,
             });
         }
     });
-
-// Helper functions for metadata (simplified)
-async function getMetadata(mint: PublicKey): Promise<PublicKey> {
-    const [publicKey] = await PublicKey.findProgramAddress(
-        [
-            Buffer.from("metadata"),
-            new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s").toBuffer(),
-            mint.toBuffer(),
-        ],
-        new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
-    );
-    return publicKey;
-}
-
-function decodeMetadata(buffer: Buffer): any {
-    // Simplified metadata decoding
-    // You'll need to implement proper decoding based on your metadata structure
-    return {
-        name: buffer.toString('utf8', 0, 32).replace(/\0/g, ''),
-        symbol: buffer.toString('utf8', 32, 64).replace(/\0/g, ''),
-        uri: buffer.toString('utf8', 64, 200).replace(/\0/g, ''),
-    };
-}
 
 export const nfts = t.procedure
     .input(z.object({
@@ -137,7 +149,7 @@ export const nfts = t.procedure
                 return null;
             }));
 
-            const filteredTokens = tokens.filter(token => token !== null);
+            const filteredTokens = tokens.filter((token): token is NonNullable<typeof token> => token !== null);
             console.log('All tokens in the wallet:', filteredTokens);
             return filteredTokens;
         } catch (error) {

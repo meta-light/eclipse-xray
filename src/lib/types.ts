@@ -135,3 +135,21 @@ export type UISolAccountToken = {
     price: number;
 };
 export type UINiftyAsset = Asset & { json: any };
+
+export interface TokenData {
+    metadata?: {
+        symbol: string;
+        name: string;
+        uri: string;
+    };
+    externalMetadata?: {
+        image?: string;
+        description?: string;
+    };
+    address: string;
+    decimals: number;
+    isToken2022: boolean;
+    supply: string;
+    freezeAuthority: string;
+    mintAuthority: string;
+}

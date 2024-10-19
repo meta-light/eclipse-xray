@@ -28,6 +28,7 @@
     const client = trpcWithQuery($page);
     $: tokenQuery = client.token.createQuery([address, isMainnetValue]);
     $: if ($tokenQuery.error) {console.error("Token query error:", $tokenQuery.error);}
+    console.log($tokenQuery);
 </script>
 
 <div class="content px-3 mb-4">
@@ -57,10 +58,33 @@
         </div>
         <div class="mt-6">
             <Collapse sectionTitle="Token Information" iconId="info" showDetails={true}>
-                <p>Address: {$tokenQuery.data.address}</p>
-                <p>Decimals: {$tokenQuery.data.decimals}</p>
-                <p>Supply: {$tokenQuery.data.supply}</p>
-                <p>Token Type: {$tokenQuery.data.isToken2022 ? 'Token-2022' : 'Regular Token'}</p>
+                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                    {#if $tokenQuery.data.externalMetadata?.image}
+                        <img src={$tokenQuery.data.externalMetadata.image} alt={$tokenQuery.data.metadata?.name || "Token"} class="w-24 h-24 object-contain rounded-full bg-gray-100" />
+                    {/if}
+                    <div>
+                        <p class="font-bold text-lg">{$tokenQuery.data.metadata?.name || "Unknown Token"}</p>
+                        {#if $tokenQuery.data.externalMetadata?.description}
+                            <p class="text-gray-600 mt-2">{$tokenQuery.data.externalMetadata.description}</p>
+                        {/if}
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-[auto,1fr] gap-x-4 gap-y-2">
+                    <span class="font-semibold">Symbol:</span>
+                    <span>{$tokenQuery.data.metadata?.symbol}</span>
+                    
+                    <span class="font-semibold">Address:</span>
+                    <span class="break-all">{$tokenQuery.data.address}</span>
+                    
+                    <span class="font-semibold">Decimals:</span>
+                    <span>{$tokenQuery.data.decimals}</span>
+                    
+                    <span class="font-semibold">Supply:</span>
+                    <span class="break-all">{$tokenQuery.data.supply}</span>
+                    
+                    <span class="font-semibold">Token Type:</span>
+                    <span>{$tokenQuery.data.isToken2022 ? 'Token-2022' : 'Regular Token'}</span>
+                </div>
             </Collapse>
         </div>
         <div class="mb-6 mt-6">

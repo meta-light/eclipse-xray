@@ -27,9 +27,6 @@ export async function grabIdl(
                 console.error(`Account ${accountAddress} not found on ${url}`);
                 continue; // Try the next URL
             }
-
-            console.log(`Account ${accountAddress} found on ${url}`);
-
             const dummyKeypair = Keypair.generate();
             const dummyWallet = {
                 publicKey: dummyKeypair.publicKey,
@@ -57,7 +54,6 @@ export async function grabIdl(
                 idlStore.set(idl);
                 return idl;
             } else {
-                console.log(`No IDL found for account ${accountAddress} on ${url}`);
                 return { accountExists: true, hasIdl: false };
             }
         } catch (error: unknown) {
