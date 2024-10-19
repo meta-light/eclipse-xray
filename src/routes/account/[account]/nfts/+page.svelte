@@ -13,30 +13,29 @@
     let allTokens: any[] = [];
     let nfts: any[] = [];
     let fetchError: string | null = null;
+    let isLoading = true;
 
     const isMainnetValue = $page.url.searchParams.get("network") !== "devnet";
 
     async function fetchAccountData() {
+        isLoading = true;
         const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
         const connection = new Connection(rpcUrl, "confirmed");
         const pubkey = new PublicKey(account);
 
         try {
-            console.log("Fetching account data...");
             const [splTokenAccounts, token2022Accounts] = await Promise.all([
                 connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID }),
                 connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_2022_PROGRAM_ID }),
             ]);
 
             const allTokenAccounts = [...splTokenAccounts.value, ...token2022Accounts.value];
-            console.log("Total token accounts:", allTokenAccounts.length);
 
             allTokens = await Promise.all(allTokenAccounts.map(async (ta) => {
                 const data = new Uint8Array(ta.account.data);
                 const accountInfo = AccountLayout.decode(data);
                 const mintPubkey = new PublicKey(accountInfo.mint);
                 
-                console.log(`Processing token account: ${ta.pubkey.toString()}, Mint: ${mintPubkey.toString()}`);
                 
                 return {
                     mint: mintPubkey.toString(),
@@ -46,19 +45,16 @@
                 };
             }));
 
-            console.log("Processed tokens:", allTokens);
 
             // Fetch token data directly from the connection
             nfts = await Promise.all(allTokens.map(async (token) => {
                 try {
                     const mintInfo = await connection.getParsedAccountInfo(new PublicKey(token.mint));
-                    console.log(`Mint info for ${token.mint}:`, mintInfo);
                     
                     if (mintInfo.value && 'parsed' in mintInfo.value.data) {
                         const parsedData = mintInfo.value.data.parsed;
                         if ('info' in parsedData && 'decimals' in parsedData.info) {
                             const decimals = parsedData.info.decimals;
-                            console.log(`Decimals for ${token.mint}:`, decimals);
                             return decimals === 0 ? { ...token, decimals } : null;
                         }
                     }
@@ -71,11 +67,12 @@
             }));
             nfts = nfts.filter(nft => nft !== null);
 
-            console.log("Filtered NFTs:", nfts);
 
         } catch (error) {
             console.error("Error fetching account data:", error);
             fetchError = error instanceof Error ? error.message : String(error);
+        } finally {
+            isLoading = false;
         }
     }
 
@@ -84,7 +81,9 @@
 
 <div class="container mx-auto px-4">
     <h2 class="text-2xl font-bold mb-4">Account NFTs</h2>
-    {#if fetchError}
+    {#if isLoading}
+        <p>Loading...</p>
+    {:else if fetchError}
         <p class="text-red-500">Error loading NFTs: {fetchError}</p>
     {:else if nfts.length === 0}
         <p>No NFTs found for this account.</p>
@@ -93,6 +92,7 @@
             {#each nfts as nft (nft.mint)}
                 <TokenProvider address={nft.mint}>
                     <div slot="default" let:metadata let:tokenIsLoading let:tokenFailed let:token={tokenData}>
+                    <a href="/token/{nft.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}"> <!--Keep this as token until nifty asset route is working-->
                         {#if tokenIsLoading}
                             <div class="animate-pulse bg-gray-200 aspect-square rounded"></div>
                         {:else if tokenFailed}
@@ -114,7 +114,8 @@
                                 </div>
                             </div>
                         {/if}
-                    </div>
+
+</a></div>
                 </TokenProvider>
             {/each}
         </div>

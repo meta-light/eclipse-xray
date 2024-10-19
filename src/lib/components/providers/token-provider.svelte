@@ -31,26 +31,17 @@
 
     let isNFT = false;
 
-    $: if (tokenQuery) {
-        console.log(`Query state for token ${address}:`, $tokenQuery);
-    }
-
-    $: if (tokenQuery && $tokenQuery.data) {
-        const result = $tokenQuery.data;
-        isNFT = result.decimals === 0 || result.decimals === undefined;
-        
-        metadata.address = result.address;
-        metadata.name = result.metadata?.name || "Unknown Token";
-        metadata.image = result.externalMetadata?.image || `/media/tokens/${result.metadata?.symbol?.toLowerCase() || 'unknown'}.png`;
-        token = { ...result, address };
-        status = { isLoading: false, isError: false };
-        
-        if (isNFT) {
-            console.log(`Token ${address} is an NFT.`);
-        } else {
-            console.log(`Token ${address} is not an NFT. Decimals: ${result.decimals}`);
+    $: if (tokenQuery && (($tokenQuery ?? {}).data ?? null)) {
+        const result = $tokenQuery!.data;
+        if (result) {
+            isNFT = result.decimals === 0 || result.decimals === undefined;
+            metadata.address = result.address;
+            metadata.name = result.metadata?.name || "Unknown Token";
+            metadata.image = (result.externalMetadata as { image?: string })?.image || "";
+            token = { ...result, address };
+            status = { isLoading: false, isError: false };
         }
-    } else if (tokenQuery && $tokenQuery.error) {
+    } else if (tokenQuery && $tokenQuery?.error) {
         console.error(`Error fetching token data for ${address}:`, $tokenQuery.error);
         status = { isLoading: false, isError: true };
     } else if (tokenQuery) {

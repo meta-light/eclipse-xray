@@ -44,7 +44,6 @@
             transaction = $rawTransactionQuery.data;
             isLoading = false;
             error = null;
-            console.log("Transaction data:", transaction);
         } else if ($rawTransactionQuery.error) {
             error = "Error fetching transaction";
             isLoading = false;

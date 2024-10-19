@@ -32,14 +32,18 @@
         mint: string;
         address: string;
         owner?: string;
-        amount?: string;
-        supply?: string;
         decimals: number;
+        isNFT: boolean;
+        supply: string;
+        isToken2022: boolean;
+        freezeAuthority: string;
+        mintAuthority: string;
         metadata?: {
-            name?: string;
-            symbol?: string;
-            uri?: string;
+            symbol: string;
+            name: string;
+            uri: string;
         };
+        amount?: string;
     }
     $: niftyAssetQuery = client.niftyAsset.createQuery([address, isMainnetValue]);
     let asset: NiftyAsset;
@@ -155,26 +159,28 @@
                         </header>
                         <p class="text-sm text-gray-300">{$niftyAssetQuery.data.mint}</p>
                     </div>
-                    {#if $niftyAssetQuery.data.owner}
+                    <!-- {#if $niftyAssetQuery.data.owner}
                         <div class="card p-0">
                             <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-white">
                                 <h4>Owner</h4>
                             </header>
                             <p class="text-sm text-gray-300">{$niftyAssetQuery.data.owner}</p>
                         </div>
-                    {/if}
-                    <div class="card p-0">
+                    {/if} -->
+                    <!-- <div class="card p-0">
                         <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-white">
                             <h4>Supply</h4>
                         </header>
-                        <p class="text-sm text-gray-300">{$niftyAssetQuery.data.supply || $niftyAssetQuery.data.amount || 'N/A'}</p>
-                    </div>
-                    <div class="card p-0">
+                        <p class="text-sm text-gray-300">
+                            {$niftyAssetQuery.data?.supply ?? $niftyAssetQuery.data?.amount ?? 'N/A'}
+                        </p>
+                    </div> -->
+                    <!-- <div class="card p-0">
                         <header class="flex items-center justify-between gap-6 text-sm font-medium uppercase text-white">
                             <h4>Decimals</h4>
                         </header>
                         <p class="text-sm text-gray-300">{$niftyAssetQuery.data.decimals}</p>
-                    </div>
+                    </div> -->
                 </div>
             </Collapse>
         </div>

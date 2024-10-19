@@ -9,6 +9,7 @@ import { Umi } from '@metaplex-foundation/umi';
 import { MINT_SIZE } from "@solana/spl-token";
 import { Buffer } from 'buffer';
 import axios from 'axios';
+import { ACCOUNT_SIZE } from "@solana/spl-token";
 
 const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
 const TOKEN_PROGRAM_ID = "";
@@ -25,28 +26,68 @@ export interface TokenData {
     symbol: string;
     uri: string;
   };
-  externalMetadata?: any;
+  externalMetadata?: {
+    image?: string;
+    description?: string;
+    [key: string]: any;
+  } | Record<string, never>;
 }
 
 async function fetchMetadataFromUri(uri: string): Promise<any> {
-  try {
-    const response = await axios.get(uri);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching metadata from URI: ${uri}`, error);
-    return null;
-  }
+    const ipfsGateways = [
+        'https://gateway.pinata.cloud/ipfs/',
+        'https://cloudflare-ipfs.com/ipfs/',
+        'https://ipfs.io/ipfs/'
+    ];
+
+    if (uri.startsWith('ipfs://')) {
+        const ipfsHash = uri.slice(7); // Remove 'ipfs://' prefix
+        for (const gateway of ipfsGateways) {
+            try {
+                const url = gateway + ipfsHash;
+                const response = await axios.get(url, { timeout: 5000 }); // 5 second timeout
+                if (response.data) {
+                    return response.data;
+                }
+            } catch (error) {
+                console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
+                // Continue to the next gateway
+            }
+        }
+        console.error('Failed to fetch metadata from all IPFS gateways');
+        return null;
+    } else {
+        // Handle HTTP(S) URIs
+        try {
+            const response = await axios.get(uri, { timeout: 5000 });
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            console.error(`Error fetching metadata from URI: ${uri}`, error instanceof Error ? error.message : String(error));
+        }
+        return null;
+    }
 }
 
 function parseToken2022Metadata(extensionData: Buffer): string | undefined {
-
     let stringData = extensionData.toString('utf8').replace(/\0/g, '');
+    // Look for the IPFS URI and extract just the hash
+    const ipfsUriRegex = /ipfs:\/\/(\w+)/;
+    const ipfsUriMatch = stringData.match(ipfsUriRegex);
 
-    const uriRegex = /(https?:\/\/\S+)/;
-    const uriMatch = stringData.match(uriRegex);
+    if (ipfsUriMatch) {
+        const [, ipfsHash] = ipfsUriMatch;
+        const uri = `ipfs://${ipfsHash}`;
+        return uri;
+    }
 
-    if (uriMatch) {
-        const [, uri] = uriMatch;
+    // If no IPFS URI found, try to find a standard HTTP(S) URI
+    const httpUriRegex = /(https?:\/\/\S+)/;
+    const httpUriMatch = stringData.match(httpUriRegex);
+
+    if (httpUriMatch) {
+        const [, uri] = httpUriMatch;
         return uri;
     }
 
@@ -89,7 +130,18 @@ export const token = t.procedure
                 });
             }
 
-            const decodedMintInfo = MintLayout.decode(accountInfo.data);
+
+            let decodedMintInfo;
+            try {
+                decodedMintInfo = MintLayout.decode(accountInfo.data.slice(0, ACCOUNT_SIZE));
+            } catch (error) {
+                console.error("Error decoding mint info:", error);
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: `Error decoding mint info: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                });
+            }
+
             const mintInfo = {
                 mintAuthority: decodedMintInfo.mintAuthority,
                 supply: decodedMintInfo.supply,
@@ -100,18 +152,22 @@ export const token = t.procedure
 
             let metadata: { name: string; symbol: string; uri: string } | undefined;
             let externalMetadata: any | undefined;
-            if (isToken2022) {
-                const extensionData = accountInfo.data.slice(MINT_SIZE);
+            if (isToken2022 && accountInfo.data.length > ACCOUNT_SIZE) {
+                const extensionData = accountInfo.data.slice(ACCOUNT_SIZE);
                 const uri = parseToken2022Metadata(extensionData);
                 
                 if (uri) {
                     try {
                         externalMetadata = await fetchMetadataFromUri(uri);
-                        metadata = {
-                            name: externalMetadata.name,
-                            symbol: externalMetadata.symbol,
-                            uri: uri,
-                        };
+                        if (externalMetadata) {
+                            metadata = {
+                                name: externalMetadata.name || '',
+                                symbol: externalMetadata.symbol || '',
+                                uri: uri,
+                            };
+                        } else {
+                            console.warn('Failed to fetch external metadata');
+                        }
                     } catch (error) {
                         console.error('Error fetching external metadata:', error);
                     }

@@ -28,7 +28,14 @@
     const client = trpcWithQuery($page);
     $: tokenQuery = client.token.createQuery([address, isMainnetValue]);
     $: if ($tokenQuery.error) {console.error("Token query error:", $tokenQuery.error);}
-    console.log($tokenQuery);
+
+    interface ExternalMetadata {
+        image?: string;
+        description?: string;
+        [key: string]: any;
+    }
+
+    $: externalMetadata = $tokenQuery.data?.externalMetadata as ExternalMetadata | undefined;
 </script>
 
 <div class="content px-3 mb-4">
@@ -59,13 +66,17 @@
         <div class="mt-6">
             <Collapse sectionTitle="Token Information" iconId="info" showDetails={true}>
                 <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-                    {#if $tokenQuery.data.externalMetadata?.image}
-                        <img src={$tokenQuery.data.externalMetadata.image} alt={$tokenQuery.data.metadata?.name || "Token"} class="w-24 h-24 object-contain rounded-full bg-gray-100" />
+                    {#if externalMetadata?.image}
+                        <img 
+                            src={externalMetadata.image} 
+                            alt={$tokenQuery.data.metadata?.name || "Token"} 
+                            class="w-24 h-24 object-contain rounded-full bg-gray-100" 
+                        />
                     {/if}
                     <div>
                         <p class="font-bold text-lg">{$tokenQuery.data.metadata?.name || "Unknown Token"}</p>
-                        {#if $tokenQuery.data.externalMetadata?.description}
-                            <p class="text-gray-600 mt-2">{$tokenQuery.data.externalMetadata.description}</p>
+                        {#if externalMetadata?.description}
+                            <p class="text-gray-600 mt-2">{externalMetadata.description}</p>
                         {/if}
                     </div>
                 </div>

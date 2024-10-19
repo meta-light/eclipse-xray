@@ -134,7 +134,7 @@ export type UISolAccountToken = {
     balanceInUSD: number;
     price: number;
 };
-export type UINiftyAsset = Asset & { json: any };
+export type UINiftyAsset = Asset & { json: any; amount?: string | number; owner?: string };
 
 export interface TokenData {
     metadata?: {
