@@ -28,6 +28,8 @@
     import CopyButton from "$lib/components/copy-button.svelte";
     import Username from "$lib/components/providers/username-provider.svelte";
     import ShortenAddress from "./shorten-address.svelte";
+    import { publicKeyMappings } from "$lib/xray/config";
+
     const client = trpcWithQuery($page);
     export let account: string = "";
     export let link: string = "";
@@ -37,7 +39,26 @@
     const accountInfo = client.accountInfo.createQuery([account, isMainnetValue ? "mainnet" : "devnet", ]);
     const balance = tweened(0, {duration: 1000});
     let animate = false;
-    onMount(() => {animate = true;});
+    let programName: string | null = null;
+    let programRepo: string | null = null;
+
+    const programsQuery = client.programs.createQuery();
+
+    onMount(async () => {
+        if (account in publicKeyMappings && typeof account === 'string') {
+            programName = publicKeyMappings[account as keyof typeof publicKeyMappings];
+        };
+        animate = true;
+    });
+
+    $: if ($programsQuery.data && !programName) {
+        const matchingProgram = $programsQuery.data.find(program => program.program_address === account);
+        if (matchingProgram) {
+            programName = matchingProgram.name;
+            programRepo = matchingProgram.repo;
+        }
+    }
+
     $: if ($accountInfo?.data?.balance) {balance.set($accountInfo.data.balance);}
 
     function toggleNetwork() {
@@ -75,6 +96,16 @@
                     <h3 class="relative m-0 text-lg font-bold md:text-2xl">
                         <ShortenAddress address={account} />
                     </h3>
+                    <!-- Add program name with repo link if available -->
+                    {#if programName}
+                        <span class="ml-2 text-sm font-normal opacity-70">
+                            {#if programRepo}
+                                (<a href={programRepo} target="_blank" rel="noopener noreferrer" class="hover:underline">{programName}</a>)
+                            {:else}
+                                ({programName})
+                            {/if}
+                        </span>
+                    {/if}
                     <div class="relative flex items-center">
                         <div class="my-2">
                             <CopyButton text={account} />

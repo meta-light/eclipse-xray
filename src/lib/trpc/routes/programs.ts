@@ -10,7 +10,6 @@ export const programs = t.procedure
             const response = await axios.get(GITHUB_RAW_URL);
             const yamlData = response.data;
             const jsonData = yaml.load(yamlData) as any[];
-            console.log(JSON.stringify(jsonData, null, 2));
             return jsonData;
         }
         catch (error) {console.error("Error fetching and parsing Eclipse program registry:", error); return null;}

@@ -1,5 +1,5 @@
 import type { Modal, TransactionActionMetadata } from "$lib/types";
-import type { ProtonActionType, ProtonSupportedType } from "$lib/xray";
+import type { ProtonActionType } from "$lib/xray";
 
 import Help from "$lib/components/modals/help.svelte";
 import Menu from "$lib/components/modals/menu.svelte";

@@ -1,13 +1,8 @@
 import { isValidPublicKey } from "../index";
-
 import type { Connection } from "@solana/web3.js";
-
 import { PublicKey } from "@solana/web3.js";
-
 import { TldParser } from "@onsol/tldparser";
 import { browser } from "$app/environment";
-
-import getJupiterTokens from "$lib/util/get-tokens";
 import { ASSET_PROGRAM_ID } from "@nifty-oss/asset";
 
 export interface SearchResult {

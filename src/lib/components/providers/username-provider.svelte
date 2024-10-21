@@ -24,9 +24,9 @@
 
             if (allUserDomains.length > 0) {
                 username = allUserDomains[0].toString();
-                console.log("First AllDomains username:", username);
+                // console.log("First AllDomains username:", username);
             } else {
-                console.log("No AllDomains username found for this address");
+                // console.log("No AllDomains username found for this address");
             }
         } catch (error) {
             console.error("Error fetching AllDomains username:", error);

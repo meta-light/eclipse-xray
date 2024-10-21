@@ -1,16 +1,15 @@
-[ ] Metaplex Integration - https://docs.eclipse.xyz/developers/nfts/metaplex
 [ ] Nifty Asset Integration - https://docs.eclipse.xyz/developers/nfts/nifty-asset
 [ ] Libreplex Integration - https://docs.eclipse.xyz/developers/nfts/libreplex-token-2022
 [ ] Contribitions Guide
 [ ] Pyth Integration - https://docs.eclipse.xyz/developers/oracles/pyth-network
 [ ] AllDomains Integration - https://docs.eclipse.xyz/developers/developer-tooling/decentralized-identities/alldomains
-[ ] Begin labeling program IDs programatically - https://github.com/Eclipse-Laboratories-Inc/program-registry/blob/main/programs.yaml
+[ ] Begin labeling program IDs programatically - /src/lib/trpc/routes/programs.ts
 [ ] Add program ID labels to transactions
-[ ] delete solana stuff in config.js, other files
 [ ] fallback method for PRCs
 [ ] fix crypto module to remove shim
+Search Functionality
+NFTs in search should go to NFT route
+Start removing and resetting eslint, prettier, github actions, etc.
 
-https://www.usenexus.org/
-https://docs.eclipse.xyz/developers/bridges/eclipse-canonical-bridge
-https://docs.eclipse.xyz/developers/bridges/inter-blockchain-communication-ibc
+https://docs.eclipse.xyz/developers/bridges/eclipse-canonical-bridge - find program IDs
 https://docs.switchboard.xyz/docs/switchboard/readme/links-and-technical-documentation/eclipse
