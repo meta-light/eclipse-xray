@@ -1,19 +1,96 @@
 import { t } from "$lib/trpc/t";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { MintLayout, ACCOUNT_SIZE } from "@solana/spl-token";
 import { TRPCError } from '@trpc/server';
-import { MINT_SIZE, MintLayout } from "@solana/spl-token";
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
+import { Umi } from '@metaplex-foundation/umi';
 import { Buffer } from 'buffer';
 import axios from 'axios';
 
 const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+
+export interface NiftyAsset {
+    mint: string;
+    address: string;
+    owner?: string;
+    decimals: number;
+    isNFT: boolean;
+    supply: string;
+    isToken2022: boolean;
+    freezeAuthority?: string;
+    mintAuthority?: string;
+    metadata?: {
+        symbol: string;
+        name: string;
+        uri: string;
+    };
+    externalMetadata?: {
+        image?: string;
+        description?: string;
+        [key: string]: any;
+    } | Record<string, never>;
+}
+
+async function fetchMetadataFromUri(uri: string): Promise<any> {
+    const ipfsGateways = ['https://gateway.pinata.cloud/ipfs/', 'https://cloudflare-ipfs.com/ipfs/', 'https://ipfs.io/ipfs/'];
+    if (uri.startsWith('ipfs://')) {
+        const ipfsHash = uri.slice(7);
+        for (const gateway of ipfsGateways) {
+            try {
+                const url = gateway + ipfsHash;
+                const response = await axios.get(url, { timeout: 5000 });
+                if (response.data) {return response.data;}
+            } catch (error) {
+                console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
+            }
+        }
+        console.error('Failed to fetch metadata from all IPFS gateways');
+        return null;
+    } else {
+        try {
+            const response = await axios.get(uri, { timeout: 5000 });
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            console.error(`Error fetching metadata from URI: ${uri}`, error instanceof Error ? error.message : String(error));
+        }
+        return null;
+    }
+}
+
+function parseToken2022Metadata(extensionData: Buffer): string | undefined {
+    let stringData = extensionData.toString('utf8').replace(/\0/g, '');
+    // Look for the IPFS URI and extract just the hash
+    const ipfsUriRegex = /ipfs:\/\/(\w+)/;
+    const ipfsUriMatch = stringData.match(ipfsUriRegex);
+
+    if (ipfsUriMatch) {
+        const [, ipfsHash] = ipfsUriMatch;
+        const uri = `ipfs://${ipfsHash}`;
+        return uri;
+    }
+
+    // If no IPFS URI found, try to find a standard HTTP(S) URI
+    const httpUriRegex = /(https?:\/\/\S+)/;
+    const httpUriMatch = stringData.match(httpUriRegex);
+
+    if (httpUriMatch) {
+        const [, uri] = httpUriMatch;
+        return uri;
+    }
+
+    console.warn('No valid URI found');
+    return undefined;
+}
 
 export const niftyAsset = t.procedure
     .input(z.tuple([z.string(), z.boolean()]))
-    .query(async ({ input }) => {
+    .query(async ({ input }): Promise<NiftyAsset> => {
         const [token, isMainnet] = input;
-        console.log(`Fetching Token-2022 NFT data for ${token} on ${isMainnet ? 'mainnet' : 'devnet'}`);
 
         try {
             let tokenPublicKey: PublicKey;
@@ -26,8 +103,7 @@ export const niftyAsset = t.procedure
                 });
             }
 
-            const url = getRPCUrl(isMainnet ? "mainnet" : "devnet");
-            const connection = new Connection(url, "confirmed");
+            const [url, connection, umi] = await getRPCUrlAndConnection(isMainnet);
             const accountInfo = await connection.getAccountInfo(tokenPublicKey);
 
             if (!accountInfo) {
@@ -38,15 +114,26 @@ export const niftyAsset = t.procedure
             }
 
             const isToken2022 = accountInfo.owner.toBase58() === TOKEN_2022_PROGRAM_ID;
+            const isTokenProgram = accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID;
 
-            if (!isToken2022) {
+            if (!isToken2022 && !isTokenProgram) {
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
-                    message: `Invalid token account: ${token}. Not owned by Token-2022 program.`,
+                    message: `Invalid token account: ${token}. Not owned by Token or Token-2022 program.`,
                 });
             }
 
-            const decodedMintInfo = MintLayout.decode(accountInfo.data);
+            let decodedMintInfo;
+            try {
+                decodedMintInfo = MintLayout.decode(accountInfo.data.slice(0, ACCOUNT_SIZE));
+            } catch (error) {
+                console.error("Error decoding mint info:", error);
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: `Error decoding mint info: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                });
+            }
+
             const mintInfo = {
                 mintAuthority: decodedMintInfo.mintAuthority,
                 supply: decodedMintInfo.supply,
@@ -57,52 +144,44 @@ export const niftyAsset = t.procedure
 
             const isNFT = mintInfo.decimals === 0 && mintInfo.supply.toString() === '1';
 
-            if (!isNFT) {
-                throw new TRPCError({
-                    code: 'BAD_REQUEST',
-                    message: `Invalid NFT: ${token}. Supply must be 1 and decimals must be 0.`,
-                });
-            }
-
-            let metadata;
-            let extendedMetadata;
-            const extensionData = accountInfo.data.slice(MINT_SIZE);
-            const metadataOffset = extensionData.indexOf(Buffer.from([0x04, 0x00, 0x00, 0x00])); // Metadata type identifier
-            if (metadataOffset !== -1) {
-                const nameLength = extensionData.readUInt32LE(metadataOffset + 4);
-                const name = extensionData.slice(metadataOffset + 8, metadataOffset + 8 + nameLength).toString('utf8');
-                const symbolOffset = metadataOffset + 8 + nameLength;
-                const symbolLength = extensionData.readUInt32LE(symbolOffset);
-                const symbol = extensionData.slice(symbolOffset + 4, symbolOffset + 4 + symbolLength).toString('utf8');
-                const uriOffset = symbolOffset + 4 + symbolLength;
-                const uriLength = extensionData.readUInt32LE(uriOffset);
-                const uri = extensionData.slice(uriOffset + 4, uriOffset + 4 + uriLength).toString('utf8');
-
-                metadata = { name, symbol, uri };
-
-                // Fetch extended metadata from URI
-                try {
-                    const response = await axios.get(uri);
-                    extendedMetadata = response.data;
-                } catch (error) {
-                    console.error("Error fetching extended metadata:", error);
+            let metadata: { name: string; symbol: string; uri: string } | undefined;
+            let externalMetadata: any | undefined;
+            if (isToken2022 && accountInfo.data.length > ACCOUNT_SIZE) {
+                const extensionData = accountInfo.data.slice(ACCOUNT_SIZE);
+                const uri = parseToken2022Metadata(extensionData);
+                
+                if (uri) {
+                    try {
+                        externalMetadata = await fetchMetadataFromUri(uri);
+                        if (externalMetadata) {
+                            metadata = {
+                                name: externalMetadata.name || '',
+                                symbol: externalMetadata.symbol || '',
+                                uri: uri,
+                            };
+                        } else {
+                            console.warn('Failed to fetch external metadata');
+                        }
+                    } catch (error) {
+                        console.error('Error fetching external metadata:', error);
+                    }
                 }
             }
 
-            const nftData = {
-                address: token,
+            const niftyAssetData: NiftyAsset = {
                 mint: token,
+                address: token,
                 decimals: mintInfo.decimals,
+                isNFT,
                 supply: mintInfo.supply.toString(),
-                isToken2022: true,
-                isNFT: true,
+                isToken2022,
                 freezeAuthority: mintInfo.freezeAuthority?.toBase58(),
                 mintAuthority: mintInfo.mintAuthority?.toBase58(),
-                metadata: metadata || undefined,
-                extendedMetadata: extendedMetadata || undefined,
+                metadata,
+                externalMetadata,
             };
 
-            return nftData;
+            return niftyAssetData;
         } catch (error) {
             console.error("Error in nifty asset procedure:", error);
             if (error instanceof TRPCError) {
@@ -110,12 +189,20 @@ export const niftyAsset = t.procedure
             }
             throw new TRPCError({
                 code: 'INTERNAL_SERVER_ERROR',
-                message: `Error fetching Token-2022 NFT data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                message: `Error fetching Nifty Asset data: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 cause: error,
             });
         }
     });
 
+async function getRPCUrlAndConnection(isMainnet: boolean): Promise<[string, Connection, Umi]> {
+    const url = getRPCUrl(isMainnet ? "mainnet" : "devnet");
+    const connection = new Connection(url, "confirmed");
+    const umi = createUmi(url);
+    return [url, connection, umi];
+}
+
+// Keep the existing nfts procedure as is
 export const nfts = t.procedure
     .input(z.object({
         account: z.string(),

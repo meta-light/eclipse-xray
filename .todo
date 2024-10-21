@@ -4,11 +4,13 @@
 [ ] Contribitions Guide
 [ ] Pyth Integration - https://docs.eclipse.xyz/developers/oracles/pyth-network
 [ ] AllDomains Integration - https://docs.eclipse.xyz/developers/developer-tooling/decentralized-identities/alldomains
-[ ] Token Metadata
-[ ] Begin labeling program IDs
+[ ] Begin labeling program IDs programatically - https://github.com/Eclipse-Laboratories-Inc/program-registry/blob/main/programs.yaml
+[ ] Add program ID labels to transactions
+[ ] delete solana stuff in config.js, other files
+[ ] fallback method for PRCs
+[ ] fix crypto module to remove shim
 
-## others
-https://docs.eclipse.xyz/developers/rpc-and-block-explorers/dragons-mouth-grpc-subscriptions
 https://www.usenexus.org/
 https://docs.eclipse.xyz/developers/bridges/eclipse-canonical-bridge
 https://docs.eclipse.xyz/developers/bridges/inter-blockchain-communication-ibc
+https://docs.switchboard.xyz/docs/switchboard/readme/links-and-technical-documentation/eclipse

@@ -6,13 +6,12 @@ import { MintLayout } from "@solana/spl-token";
 import { TRPCError } from '@trpc/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { Umi } from '@metaplex-foundation/umi';
-import { MINT_SIZE } from "@solana/spl-token";
 import { Buffer } from 'buffer';
 import axios from 'axios';
 import { ACCOUNT_SIZE } from "@solana/spl-token";
 
 const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
-const TOKEN_PROGRAM_ID = "";
+const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 
 export interface TokenData {
   address: string;
@@ -34,30 +33,21 @@ export interface TokenData {
 }
 
 async function fetchMetadataFromUri(uri: string): Promise<any> {
-    const ipfsGateways = [
-        'https://gateway.pinata.cloud/ipfs/',
-        'https://cloudflare-ipfs.com/ipfs/',
-        'https://ipfs.io/ipfs/'
-    ];
-
+    const ipfsGateways = ['https://gateway.pinata.cloud/ipfs/', 'https://cloudflare-ipfs.com/ipfs/', 'https://ipfs.io/ipfs/'];
     if (uri.startsWith('ipfs://')) {
-        const ipfsHash = uri.slice(7); // Remove 'ipfs://' prefix
+        const ipfsHash = uri.slice(7);
         for (const gateway of ipfsGateways) {
             try {
                 const url = gateway + ipfsHash;
-                const response = await axios.get(url, { timeout: 5000 }); // 5 second timeout
-                if (response.data) {
-                    return response.data;
-                }
+                const response = await axios.get(url, { timeout: 5000 });
+                if (response.data) {return response.data;}
             } catch (error) {
                 console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
-                // Continue to the next gateway
             }
         }
         console.error('Failed to fetch metadata from all IPFS gateways');
         return null;
     } else {
-        // Handle HTTP(S) URIs
         try {
             const response = await axios.get(uri, { timeout: 5000 });
             if (response.data) {
@@ -72,25 +62,19 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
 
 function parseToken2022Metadata(extensionData: Buffer): string | undefined {
     let stringData = extensionData.toString('utf8').replace(/\0/g, '');
-    // Look for the IPFS URI and extract just the hash
     const ipfsUriRegex = /ipfs:\/\/(\w+)/;
     const ipfsUriMatch = stringData.match(ipfsUriRegex);
-
     if (ipfsUriMatch) {
         const [, ipfsHash] = ipfsUriMatch;
         const uri = `ipfs://${ipfsHash}`;
         return uri;
     }
-
-    // If no IPFS URI found, try to find a standard HTTP(S) URI
     const httpUriRegex = /(https?:\/\/\S+)/;
     const httpUriMatch = stringData.match(httpUriRegex);
-
     if (httpUriMatch) {
         const [, uri] = httpUriMatch;
         return uri;
     }
-
     console.warn('No valid URI found');
     return undefined;
 }
@@ -109,28 +93,22 @@ export const token = t.procedure
                     message: `Invalid token address: "${token}". Must be a valid base58-encoded string.`,
                 });
             }
-
             const [url, connection, umi] = await getRPCUrlAndConnection(isMainnet);
             const accountInfo = await connection.getAccountInfo(tokenPublicKey);
-
             if (!accountInfo) {
                 throw new TRPCError({
                     code: 'NOT_FOUND',
                     message: `Token account not found for address: ${token}`,
                 });
             }
-
             const isToken2022 = accountInfo.owner.toBase58() === TOKEN_2022_PROGRAM_ID;
             const isTokenProgram = accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID;
-
             if (!isToken2022 && !isTokenProgram) {
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
                     message: `Invalid token account: ${token}. Not owned by Token or Token-2022 program.`,
                 });
             }
-
-
             let decodedMintInfo;
             try {
                 decodedMintInfo = MintLayout.decode(accountInfo.data.slice(0, ACCOUNT_SIZE));

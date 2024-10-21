@@ -1,6 +1,6 @@
 const MAINNET_URLS = [
-    "https://mainnetbeta-rpc.eclipse.xyz/",
     "https://eclipse.lgns.net/",
+    "https://mainnetbeta-rpc.eclipse.xyz/",
     "https://eclipse.helius-rpc.com/"
 ];
 

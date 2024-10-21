@@ -3,7 +3,6 @@ import { Connection } from "@solana/web3.js";
 const networks = {
     devnet: `https://staging-rpc.dev2.eclipsenetwork.xyz/`,
     mainnet: `https://mainnetbeta-rpc.eclipse.xyz`,
-    solanaMainnet: "https://mainnetbeta-rpc.eclipse.xyz",
 };
 
 export type Network = keyof typeof networks;

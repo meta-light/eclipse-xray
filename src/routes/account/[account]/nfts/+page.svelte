@@ -22,7 +22,6 @@
         const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
         const connection = new Connection(rpcUrl, "confirmed");
         const pubkey = new PublicKey(account);
-
         try {
             const [splTokenAccounts, token2022Accounts] = await Promise.all([
                 connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID }),
@@ -92,7 +91,7 @@
             {#each nfts as nft (nft.mint)}
                 <TokenProvider address={nft.mint}>
                     <div slot="default" let:metadata let:tokenIsLoading let:tokenFailed let:token={tokenData}>
-                    <a href="/token/{nft.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}"> <!--Keep this as token until nifty asset route is working-->
+                    <a href="/nft/{nft.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}"> <!--Keep this as token until nifty asset route is working-->
                         {#if tokenIsLoading}
                             <div class="animate-pulse bg-gray-200 aspect-square rounded"></div>
                         {:else if tokenFailed}

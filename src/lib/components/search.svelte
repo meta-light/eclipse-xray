@@ -68,6 +68,7 @@
     };
 
     let isMainnetValue = true;
+    let placeholder = "Search";
 
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
@@ -75,7 +76,18 @@
         if (network !== null) {isMainnetValue = network === "mainnet";}
         recent = getRecentSearches();
         isBackpack = window?.localStorage?.getItem("walletAdapter") === '"Backpack"';
+        updatePlaceholder();
     });
+
+    function updatePlaceholder() {
+        placeholder = size === "lg" 
+            ? "Input an Eclipse address or transaction signature..." 
+            : "Search";
+    }
+
+    $: if (size) {
+        updatePlaceholder();
+    }
 
     $: if ($walletStore.connected && !connected) {
         focusInput();
@@ -101,7 +113,7 @@
             bind:this={inputEl}
             class="input-bordered input h-10 w-full rounded-lg focus:input-primary text-white"
             class:h-14={size === "lg"}
-            placeholder="Input an Eclipse address or transaction signature..."
+            {placeholder}
             tabindex="0"
             type="text"
             on:focusin={() => dispatch("focusin")}
