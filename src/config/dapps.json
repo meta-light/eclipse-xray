@@ -141,5 +141,19 @@
         "icon": "/media/dapps/beacon.jpg",
         "link": "https://beaconprotocol.com/",
         "network": "pre-launch"
+    },
+    {
+        "name": "Openbook",
+        "description": "Openbook is a decentralized exchange for the Eclipse ecosystem.",
+        "icon": "",
+        "link": "https://openbook-dex-ui-eclipse.fly.dev/#/market/8GmrrARv2SQ5Z8eKnrvJ9VrcZHDoeGmRfR5MY5jmqfuM",
+        "network": "devnet"
+    },
+    {
+        "name": "Clone Markets",
+        "description": "Clone Markets is a decentralized exchange for the Eclipse ecosystem.",
+        "icon": "",
+        "link": "https://e-markets.clone.so/",
+        "network": "devnet"
     }
 ]

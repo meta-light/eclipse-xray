@@ -1,3 +1,0 @@
-- [Clone Markets](https://e-markets.clone.so/) -- seems to be down
-- [Openbook](https://openbook-dex-ui-eclipse.fly.dev/#/market/8GmrrARv2SQ5Z8eKnrvJ9VrcZHDoeGmRfR5MY5jmqfuM)
-- [Eclipse Program Registry](https://github.com/Eclipse-Laboratories-Inc/program-registry)
