@@ -10,12 +10,8 @@
         "dev": "dotenv -- vite dev",
         "build": "vite build",
         "preview": "vite preview",
-        "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "test": "npm run lint",
-        "lint": "eslint .",
-        "format": "prettier --write '{public,src}/**/*.{css,html,js,svelte}'",
-        "prepare": "husky install",
-        "postinstall": "node patch-package.js"
+        "lint": "eslint ."
     },
     "lint-staged": {
         "*.{js,jsx,ts,tsx}": [
