@@ -30,8 +30,15 @@
     });
 
     $: endsWith = (str: string) => $page.url.pathname.endsWith(str);
-    $: hasAssets = ($assets?.data?.assets?.length ?? 0) > 0;
     $: isProgram = $accountInfo?.data?.value?.executable ?? false;
+
+    $: isNonTokenAsset = (asset: any) => {
+        return !('amount' in asset && 'decimals' in asset && 'mint' in asset);
+    };
+
+    $: nonTokenAssets = $assets.data?.assets?.filter(isNonTokenAsset) ?? [];
+
+    $: hasNonTokenAssets = nonTokenAssets.length > 0;
 
     let programIDL: Idl | null = null;
 
@@ -93,7 +100,7 @@
                     class="tab-bordered tab"
                     class:tab-active={endsWith("/nfts")}>NFTs</a
                 >
-                {#if hasAssets}
+                {#if hasNonTokenAssets}
                     <a
                         href={`/account/${account}/assets?${selectedNetwork}`}
                         class="tab-bordered tab"

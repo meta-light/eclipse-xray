@@ -4,3 +4,6 @@ export const publicKeyMappings = {
     "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT": "PYTH MAINNET PRICE FEED",
     "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv": "SWITCHBOARD MAINNET PROGRAM",
 };
+
+export const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+export const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";

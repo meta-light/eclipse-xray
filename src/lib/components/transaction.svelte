@@ -17,7 +17,7 @@
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
     const supported = Object.keys(transactionActionsMetadata).includes(transaction.type);
-    const metadata = supported ? transactionActionsMetadata[transaction.type as ProtonActionType] : transactionActionsMetadata["UNKNOWN"];
+    const metadata = supported ? transactionActionsMetadata[transaction.type as keyof typeof transactionActionsMetadata] : transactionActionsMetadata["UNKNOWN"];
     const formatSource = (str: string | undefined) => {if (!str) return "Unknown"; return str.split("_").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");};
     $: actions = Array.isArray(transaction.actions) ? transaction.actions : [];
 </script>
@@ -50,7 +50,7 @@
                             </div>
                         </div>
                     </div>
-                    <h3 class="ml-2 mt-1 text-xs opacity-50">{formatDate(transaction.timestamp)}</h3>
+                    <h3 class="ml-2 mt-1 text-xs text-black opacity-50">{formatDate(transaction.blockTime ?? 0)}</h3>
                 </div>
             </div>
         </div>

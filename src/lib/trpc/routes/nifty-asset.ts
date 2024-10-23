@@ -8,9 +8,10 @@ import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { Umi } from '@metaplex-foundation/umi';
 import { Buffer } from 'buffer';
 import axios from 'axios';
-
-const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
-const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/xray/config";
+import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
+import { fetchMetadata } from '@metaplex-foundation/mpl-token-metadata';
+import { publicKey } from '@metaplex-foundation/umi';
 
 export interface NiftyAsset {
     mint: string;
@@ -97,6 +98,7 @@ export const niftyAsset = t.procedure
             try {
                 tokenPublicKey = new PublicKey(token);
             } catch (error) {
+                console.error(`Invalid token address: ${token}`, error);
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
                     message: `Invalid token address: "${token}". Must be a valid base58-encoded string.`,
@@ -117,6 +119,7 @@ export const niftyAsset = t.procedure
             const isTokenProgram = accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID;
 
             if (!isToken2022 && !isTokenProgram) {
+                console.error(`Invalid token program: ${accountInfo.owner.toBase58()}`);
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
                     message: `Invalid token account: ${token}. Not owned by Token or Token-2022 program.`,
@@ -145,11 +148,11 @@ export const niftyAsset = t.procedure
             const isNFT = mintInfo.decimals === 0 && mintInfo.supply.toString() === '1';
 
             let metadata: { name: string; symbol: string; uri: string } | undefined;
-            let externalMetadata: any | undefined;
+            let externalMetadata: any = null;
+            
             if (isToken2022 && accountInfo.data.length > ACCOUNT_SIZE) {
                 const extensionData = accountInfo.data.slice(ACCOUNT_SIZE);
                 const uri = parseToken2022Metadata(extensionData);
-                
                 if (uri) {
                     try {
                         externalMetadata = await fetchMetadataFromUri(uri);
@@ -165,6 +168,30 @@ export const niftyAsset = t.procedure
                     } catch (error) {
                         console.error('Error fetching external metadata:', error);
                     }
+                }
+            } else {
+                try {
+                    const umiPublicKey = publicKey(tokenPublicKey.toBase58());
+                    const [metadataPda] = findMetadataPda(umi, { mint: umiPublicKey });
+                    const metadataAccount = await fetchMetadata(umi, metadataPda);
+                    
+                    if (metadataAccount) {
+                        metadata = {
+                            name: metadataAccount.name,
+                            symbol: metadataAccount.symbol,
+                            uri: metadataAccount.uri,
+                        };
+                        externalMetadata = {};
+                        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+                        const uriLower = metadataAccount.uri.toLowerCase();
+                        if (imageExtensions.some(ext => uriLower.endsWith(ext))) {
+                            externalMetadata.image = metadataAccount.uri;
+                        }
+                    } else {
+                        console.log('No metadata account found');
+                    }
+                } catch (error) {
+                    console.error('Error fetching Metaplex metadata:', error);
                 }
             }
 
@@ -202,7 +229,6 @@ async function getRPCUrlAndConnection(isMainnet: boolean): Promise<[string, Conn
     return [url, connection, umi];
 }
 
-// Keep the existing nfts procedure as is
 export const nfts = t.procedure
     .input(z.object({
         account: z.string(),
@@ -213,13 +239,10 @@ export const nfts = t.procedure
         const network = isMainnet ? "mainnet" : "devnet";
         const connection = new Connection(getRPCUrl(network), "confirmed");
         const pubKey = new PublicKey(account);
-
         try {
-            // Fetch all token accounts
             const tokenAccounts = await connection.getTokenAccountsByOwner(pubKey, {
                 programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
             });
-
             const tokens = await Promise.all(tokenAccounts.value.map(async (tokenAccount) => {
                 const accountInfo = await connection.getParsedAccountInfo(tokenAccount.pubkey);
                 const tokenInfo = (accountInfo.value?.data as any)?.parsed?.info;

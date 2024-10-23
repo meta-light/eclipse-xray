@@ -1,6 +1,7 @@
 import type { EnrichedTransaction } from "helius-sdk";
 import { Source, TransactionType } from "helius-sdk";
 import * as parser from "./parsers";
+import { PublicKey } from '@solana/web3.js';
 
 export const SOL = "So11111111111111111111111111111111111111112";
 
@@ -153,11 +154,13 @@ export interface ProtonTransaction {
     fee: number;
     signature: string;
     timestamp: number;
+    blockTime?: number;
     source: Source;
     actions: ProtonTransactionAction[];
     accounts: ProtonAccount[];
     raw?: EnrichedTransaction;
     metadata?: { [key: string]: any };
+    customType: CustomTransactionType;
 }
 
 export interface ProtonAccount {
@@ -171,17 +174,6 @@ export interface ProtonAccountChange {
 }
 
 export type ProtonParsers = Record<string, ProtonParser>;
-
-export const unknownProtonTransaction: ProtonTransaction = {
-    accounts: [],
-    actions: [],
-    fee: 0,
-    primaryUser: "",
-    signature: "",
-    source: Source.SYSTEM_PROGRAM,
-    timestamp: 0,
-    type: "UNKNOWN",
-};
 
 export const protonParsers = {
     BORROW_FOX: parser.parseBorrowFox,
@@ -207,3 +199,122 @@ export const protonParsers = {
 
 export type ProtonType = keyof typeof protonParsers;
 export type ProtonActionType = keyof typeof ProtonSupportedActionType;
+
+export enum CustomTransactionType {
+  UNKNOWN = 'UNKNOWN',
+  TRANSFER = 'TRANSFER',
+  NFT_TRANSFER = 'NFT_TRANSFER',
+  TOKEN_TRANSFER = 'TOKEN_TRANSFER',
+  SWAP = 'SWAP',
+  TOKEN_AIRDROP = 'TOKEN_AIRDROP',
+  // Add more types as needed
+}
+
+export const unknownProtonTransaction: ProtonTransaction = {
+    accounts: [],
+    actions: [],
+    fee: 0,
+    primaryUser: "",
+    signature: "",
+    source: Source.SYSTEM_PROGRAM,
+    timestamp: 0,
+    type: "UNKNOWN",
+    customType: CustomTransactionType.UNKNOWN,
+};
+
+export function determineCustomTransactionType(transaction: EnrichedTransaction): CustomTransactionType {
+  const { instructions, accountKeys } = transaction;
+
+  // Check for Token Airdrop
+  if (isTokenAirdrop(transaction)) {
+    return CustomTransactionType.TOKEN_AIRDROP;
+  }
+
+  // Check for Transfer
+  if (instructions.length === 1 && 
+      instructions[0].programId === PublicKey.default.toBase58() &&
+      isParsedInstruction(instructions[0]) &&
+      instructions[0].parsed.type === 'transfer') {
+    return CustomTransactionType.TRANSFER;
+  }
+
+  // Check for Token Transfer
+  if (instructions.some(instr => 
+      instr.programId === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' &&
+      'parsed' in instr &&
+      typeof instr.parsed === 'object' &&
+      instr.parsed !== null &&
+      'type' in instr.parsed &&
+      instr.parsed.type === 'transferChecked' &&
+      'info' in instr.parsed &&
+      typeof instr.parsed.info === 'object' &&
+      instr.parsed.info !== null &&
+      'tokenAmount' in instr.parsed.info &&
+      typeof instr.parsed.info.tokenAmount === 'object' &&
+      instr.parsed.info.tokenAmount !== null &&
+      'uiAmount' in instr.parsed.info.tokenAmount &&
+      instr.parsed.info.tokenAmount.uiAmount === 1)) {
+    return CustomTransactionType.NFT_TRANSFER;
+  }
+
+  // Check for Swap (this is a simplified check and might need to be more specific)
+  if (instructions.length > 2 && 
+      instructions.some(instr => instr.programId === 'SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8')) {
+    return CustomTransactionType.SWAP;
+  }
+
+  // Add more type checks as needed
+
+  return CustomTransactionType.UNKNOWN;
+}
+
+function isTokenAirdrop(transaction: EnrichedTransaction): boolean {
+  const { instructions, accountKeys } = transaction;
+  
+  // Check if the Associated Token Account program is used
+  const ataProgram = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
+  const tokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+  
+  const hasAtaInstruction = instructions.some(instr => 
+    'programId' in instr && instr.programId === ataProgram
+  );
+  
+  const hasTokenTransfer = instructions.some(instr => 
+    'programId' in instr && instr.programId === tokenProgram &&
+    'parsed' in instr && 
+    typeof instr.parsed === 'object' &&
+    instr.parsed !== null &&
+    'type' in instr.parsed &&
+    instr.parsed.type === 'transfer'
+  );
+  
+  const newAccountCreated = transaction.meta?.postTokenBalances?.some((balance: any) => 
+    !transaction.meta?.preTokenBalances?.some((preBalance:any) => 
+      preBalance.accountIndex === balance.accountIndex
+    )
+  ) ?? false;
+  
+  return hasAtaInstruction && hasTokenTransfer && newAccountCreated;
+}
+
+// Add this type guard function
+function isParsedInstruction(instruction: any): instruction is { parsed: { type: string } } {
+  return 'parsed' in instruction && typeof instruction.parsed === 'object' && instruction.parsed !== null;
+}
+
+export function mapCustomTypeToProtonActionType(customType: CustomTransactionType): ProtonActionType {
+  switch (customType) {
+    case CustomTransactionType.TRANSFER:
+      return "TRANSFER";
+    case CustomTransactionType.NFT_TRANSFER:
+      return "COMPRESSED_NFT_TRANSFER";
+    case CustomTransactionType.TOKEN_TRANSFER:
+      return "TRANSFER";
+    case CustomTransactionType.SWAP:
+      return "SWAP";
+    case CustomTransactionType.TOKEN_AIRDROP:
+      return "AIRDROP";
+    default:
+      return "UNKNOWN";
+  }
+}

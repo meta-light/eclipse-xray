@@ -1,6 +1,6 @@
 import type { ComponentType } from "svelte";
 import type { EnrichedTransaction } from "helius-sdk";
-export type ProtonTransaction = {signature: string;};
+export type ProtonTransaction = {signature: string; blockTime: number;};
 import type { ProtonTransactionAction } from "$lib/xray";
 import type { IconPaths, modals } from "$lib/config";
 import type { SOL } from "$lib/xray";
@@ -141,6 +141,7 @@ export interface TokenData {
         symbol: string;
         name: string;
         uri: string;
+        image?: string;
     };
     externalMetadata?: {
         image?: string;

@@ -66,9 +66,9 @@
         <div class="mt-6">
             <Collapse sectionTitle="Token Information" iconId="info" showDetails={true}>
                 <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-                    {#if externalMetadata?.image}
+                    {#if externalMetadata?.image || $tokenQuery.data.metadata?.image}
                         <img 
-                            src={externalMetadata.image} 
+                            src={externalMetadata?.image || $tokenQuery.data.metadata?.image} 
                             alt={$tokenQuery.data.metadata?.name || "Token"} 
                             class="w-24 h-24 object-contain rounded-full bg-gray-100" 
                         />
@@ -94,7 +94,7 @@
                     <span class="break-all">{$tokenQuery.data.supply}</span>
                     
                     <span class="font-semibold">Token Type:</span>
-                    <span>{$tokenQuery.data.isToken2022 ? 'Token-2022' : 'Regular Token'}</span>
+                    <span>{$tokenQuery.data.isToken2022 ? 'Token-2022' : 'SPL Token'}</span>
                 </div>
             </Collapse>
         </div>

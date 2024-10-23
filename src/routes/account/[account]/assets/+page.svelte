@@ -31,13 +31,20 @@
         $assets.data?.pages[$assets.data.pages.length - 1].total > 0;
 
     $: isOnePage = $assets.data?.pages.length == 1;
+
+    // Function to check if an asset is not a token (same as in layout)
+    const isNonTokenAsset = (asset) => {
+        return !('amount' in asset && 'decimals' in asset && 'mint' in asset);
+    };
+
+    $: assetPages = $assets.data?.pages ?? [];
 </script>
 
 <div class="grid grid-cols-3 gap-3 md:grid-cols-5">
-    {#each $assets.data?.pages || [] as page}
-        {#each page.items as asset}
-            {@const image = asset.content.files.find(
-                (file) => file.mime.startsWith("image") && file.uri
+    {#each assetPages as page}
+        {#each page.items?.filter(isNonTokenAsset) ?? [] as asset}
+            {@const image = asset.content?.files?.find(
+                (file) => file.mime?.startsWith("image") && file.uri
             )}
 
             {#if asset.burnt !== true}

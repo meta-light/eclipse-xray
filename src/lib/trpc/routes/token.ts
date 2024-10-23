@@ -9,9 +9,10 @@ import { Umi } from '@metaplex-foundation/umi';
 import { Buffer } from 'buffer';
 import axios from 'axios';
 import { ACCOUNT_SIZE } from "@solana/spl-token";
-
-const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
-const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
+import { fetchMetadata } from '@metaplex-foundation/mpl-token-metadata';
+import { publicKey } from '@metaplex-foundation/umi';
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/xray/config";
 
 export interface TokenData {
   address: string;
@@ -24,12 +25,13 @@ export interface TokenData {
     name: string;
     symbol: string;
     uri: string;
+    image?: string;
   };
   externalMetadata?: {
     image?: string;
     description?: string;
     [key: string]: any;
-  } | Record<string, never>;
+  } | Record<string, never> | null;
 }
 
 async function fetchMetadataFromUri(uri: string): Promise<any> {
@@ -40,7 +42,9 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
             try {
                 const url = gateway + ipfsHash;
                 const response = await axios.get(url, { timeout: 5000 });
-                if (response.data) {return response.data;}
+                if (response.data) {
+                    return response.data;
+                }
             } catch (error) {
                 console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
             }
@@ -55,6 +59,10 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
             }
         } catch (error) {
             console.error(`Error fetching metadata from URI: ${uri}`, error instanceof Error ? error.message : String(error));
+            if (axios.isAxiosError(error) && error.response) {
+                console.error('Response status:', error.response.status);
+                console.error('Response data:', error.response.data);
+            }
         }
         return null;
     }
@@ -88,12 +96,14 @@ export const token = t.procedure
             try {
                 tokenPublicKey = new PublicKey(token);
             } catch (error) {
+                console.error(`Invalid token address: ${token}`, error);
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
                     message: `Invalid token address: "${token}". Must be a valid base58-encoded string.`,
                 });
             }
             const [url, connection, umi] = await getRPCUrlAndConnection(isMainnet);
+
             const accountInfo = await connection.getAccountInfo(tokenPublicKey);
             if (!accountInfo) {
                 throw new TRPCError({
@@ -104,6 +114,7 @@ export const token = t.procedure
             const isToken2022 = accountInfo.owner.toBase58() === TOKEN_2022_PROGRAM_ID;
             const isTokenProgram = accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID;
             if (!isToken2022 && !isTokenProgram) {
+                console.error(`Invalid token program: ${accountInfo.owner.toBase58()}`);
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
                     message: `Invalid token account: ${token}. Not owned by Token or Token-2022 program.`,
@@ -129,11 +140,11 @@ export const token = t.procedure
             };
 
             let metadata: { name: string; symbol: string; uri: string } | undefined;
-            let externalMetadata: any | undefined;
+            let externalMetadata: any = null;
+            
             if (isToken2022 && accountInfo.data.length > ACCOUNT_SIZE) {
                 const extensionData = accountInfo.data.slice(ACCOUNT_SIZE);
                 const uri = parseToken2022Metadata(extensionData);
-                
                 if (uri) {
                     try {
                         externalMetadata = await fetchMetadataFromUri(uri);
@@ -150,6 +161,30 @@ export const token = t.procedure
                         console.error('Error fetching external metadata:', error);
                     }
                 }
+            } else {
+                try {
+                    const umiPublicKey = publicKey(tokenPublicKey.toBase58());
+                    const [metadataPda] = findMetadataPda(umi, { mint: umiPublicKey });
+                    const metadataAccount = await fetchMetadata(umi, metadataPda);
+                    
+                    if (metadataAccount) {
+                        metadata = {
+                            name: metadataAccount.name,
+                            symbol: metadataAccount.symbol,
+                            uri: metadataAccount.uri,
+                        };
+                        externalMetadata = {};
+                        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+                        const uriLower = metadataAccount.uri.toLowerCase();
+                        if (imageExtensions.some(ext => uriLower.endsWith(ext))) {
+                            externalMetadata.image = metadataAccount.uri;
+                        }
+                    } else {
+                        console.log('No metadata account found');
+                    }
+                } catch (error) {
+                    console.error('Error fetching Metaplex metadata:', error);
+                }
             }
 
             const tokenData: TokenData = {
@@ -159,8 +194,8 @@ export const token = t.procedure
                 isToken2022,
                 freezeAuthority: mintInfo.freezeAuthority?.toBase58(),
                 mintAuthority: mintInfo.mintAuthority?.toBase58(),
-                metadata: metadata,
-                externalMetadata: externalMetadata,
+                metadata: metadata || undefined,
+                externalMetadata: externalMetadata, // This will be null if no metadata was found
             };
 
             return tokenData;

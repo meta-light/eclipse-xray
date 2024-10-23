@@ -53,6 +53,15 @@
     }
 
     onMount(fetchAccountData);
+
+    function formatBalance(balance: number, decimals: number): string {
+        const formattedBalance = balance / Math.pow(10, decimals);
+        if (Number.isInteger(formattedBalance)) {
+            return formattedBalance.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        } else {
+            return formattedBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: decimals });
+        }
+    }
 </script>
 
 <div class="container mx-auto px-4">
@@ -84,8 +93,7 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-bold">{(token.balance / Math.pow(10, tokenData?.decimals || 9)).toFixed(tokenData?.decimals || 9)}</p>
-                                    <p class="text-sm text-gray-500">Decimals: {tokenData?.decimals || 'Unknown'}</p>
+                                    <p class="font-bold">{formatBalance(token.balance, tokenData?.decimals || 9)}</p>
                                     {#if token.isToken2022}
                                         <span class="text-xs text-blue-500">Token-2022</span>
                                     {/if}
@@ -108,10 +116,11 @@
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-bold">{(token.balance / Math.pow(10, tokenData?.decimals || 9)).toFixed(tokenData?.decimals || 9)}</p>
-                                        <p class="text-sm text-gray-500">Decimals: {tokenData?.decimals || 'Unknown'}</p>
+                                        <p class="font-bold">{formatBalance(token.balance, tokenData?.decimals || 9)}</p>
                                         {#if token.isToken2022}
                                             <span class="text-xs text-blue-500">Token-2022</span>
+                                        {:else if !token.isToken2022}
+                                            <span class="text-xs text-green-500">SPL Token</span>
                                         {/if}
                                     </div>
                                 </div>

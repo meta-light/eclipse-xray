@@ -132,8 +132,8 @@
         "name": "Invariant",
         "description": "The most efficient AMM DEX with concentrated liquidity built on Eclipse.",
         "icon": "/media/dapps/invariant.jpg",
-        "link": "https://invariant.app/swap",
-        "network": "pre-launch"
+        "link": "https://eclipse.invariant.app/",
+        "network": "mainnet"
     },
     {
         "name": "Beacon Protocol",

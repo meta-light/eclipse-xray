@@ -19,14 +19,8 @@
         try {
             const pubkey = new PublicKey(address);
             const allUserDomains = await parser.getAllUserDomains(pubkey);
-            
-            console.log("All domains owned by this address:", allUserDomains);
-
             if (allUserDomains.length > 0) {
                 username = allUserDomains[0].toString();
-                // console.log("First AllDomains username:", username);
-            } else {
-                // console.log("No AllDomains username found for this address");
             }
         } catch (error) {
             console.error("Error fetching AllDomains username:", error);
