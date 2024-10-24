@@ -4,7 +4,7 @@
     import { page } from "$app/stores";
     import IntersectionObserver from "svelte-intersection-observer";
 
-    const ETH = 'So11111111111111111111111111111111111111112'; // ETH address on your Solana fork
+    const ETH = 'So11111111111111111111111111111111111111112';
 
     export let address: string | undefined = undefined;
     export let token: any | undefined = undefined;

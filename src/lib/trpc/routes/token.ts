@@ -42,9 +42,7 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
             try {
                 const url = gateway + ipfsHash;
                 const response = await axios.get(url, { timeout: 5000 });
-                if (response.data) {
-                    return response.data;
-                }
+                if (response.data) {return response.data;}
             } catch (error) {
                 console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
             }

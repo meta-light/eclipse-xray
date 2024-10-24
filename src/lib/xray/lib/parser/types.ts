@@ -2,6 +2,7 @@ import type { EnrichedTransaction } from "helius-sdk";
 import { Source, TransactionType } from "helius-sdk";
 import * as parser from "./parsers";
 import { PublicKey } from '@solana/web3.js';
+import { ATA_PROGRAM_ID, TOKEN_PROGRAM_ID, SWAP_PROGRAM_ID } from "../../config";
 
 export const SOL = "So11111111111111111111111111111111111111112";
 
@@ -17,8 +18,6 @@ export enum ProtonSupportedType {
     SWAP,
     TRANSFER,
     UNKNOWN,
-    BORROW_FOX,
-    LOAN_FOX,
     TOKEN_MINT,
     EXECUTE_TRANSACTION,
     COMPRESSED_NFT_MINT,
@@ -53,7 +52,6 @@ export enum ProtonSupportedType {
     CREATE_ORDER,
     UPDATE_ORDER,
     FILL_ORDER,
-    UPGRADE_FOX_REQUEST,
     MIGRATE_TO_PNFT,
     COMPRESSED_NFT_BURN,
 }
@@ -79,14 +77,9 @@ export enum ProtonSupportedActionType {
     "NFT_MINT",
     "AIRDROP",
     "BURN",
-    "BURN_NFT",
     "FREEZE",
     "TOKEN_MINT",
-    "BORROW_FOX",
-    "LOAN_FOX",
     "EXECUTE_TRANSACTION",
-    "XNFT_INSTALL",
-    "XNFT_UNINSTALL",
     "COMPRESSED_NFT_MINT",
     "COMPRESSED_NFT_TRANSFER",
     "COMPRESSED_NFT_UPDATE_METADATA",
@@ -100,11 +93,6 @@ export enum ProtonSupportedActionType {
     "ADD_ITEM",
     "UPDATE_ITEM",
     "CANCEL_OFFER",
-    "LEND_FOR_NFT",
-    "REQUEST_LOAN",
-    "CANCEL_LOAN_REQUEST",
-    "BORROW_SOL_FOR_NFT",
-    "REBORROW_SOL_FOR_NFT",
     "CLAIM_NFT",
     "UPDATE_OFFER",
     "FORECLOSE_LOAN",
@@ -119,34 +107,12 @@ export enum ProtonSupportedActionType {
     "CREATE_ORDER",
     "UPDATE_ORDER",
     "FILL_ORDER",
-    "UPGRADE_FOX_REQUEST",
-    "MIGRATE_TO_PNFT",
     "COMPRESSED_NFT_BURN",
 }
 
-export const ProtonCustomActionLabelTypes = {
-    AIRDROP: "Airdropped",
-    BURN: "Burned",
-    BURN_NFT: "Burned NFT",
-    COMPRESSED_NFT_BURN: "Burned NFT",
-    FREEZE: "Frozen",
-    XNFT_INSTALL: "xNFT Install",
-    XNFT_UNINSTALL: "xNFT Uninstall",
-};
-
-export type ProtonParser = (
-    transaction: EnrichedTransaction,
-    address?: string
-) => ProtonTransaction;
-
-export interface ProtonTransactionAction {
-    actionType: ProtonActionType;
-    from: string | null;
-    to: string;
-    sent?: string;
-    received?: string;
-    amount: number;
-}
+export const ProtonCustomActionLabelTypes = {AIRDROP: "Airdropped", BURN: "Burned", BURN_NFT: "Burned NFT", COMPRESSED_NFT_BURN: "Burned NFT", FREEZE: "Frozen"};
+export type ProtonParser = (transaction: EnrichedTransaction, address?: string) => ProtonTransaction;
+export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
 
 export interface ProtonTransaction {
     type: ProtonType | TransactionType | ProtonActionType;
@@ -163,16 +129,8 @@ export interface ProtonTransaction {
     customType: CustomTransactionType;
 }
 
-export interface ProtonAccount {
-    account: string;
-    changes: ProtonAccountChange[];
-}
-
-export interface ProtonAccountChange {
-    mint: string;
-    amount: number;
-}
-
+export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
+export interface ProtonAccountChange {mint: string; amount: number;}
 export type ProtonParsers = Record<string, ProtonParser>;
 
 export const protonParsers = {
@@ -207,7 +165,6 @@ export enum CustomTransactionType {
   TOKEN_TRANSFER = 'TOKEN_TRANSFER',
   SWAP = 'SWAP',
   TOKEN_AIRDROP = 'TOKEN_AIRDROP',
-  // Add more types as needed
 }
 
 export const unknownProtonTransaction: ProtonTransaction = {
@@ -224,23 +181,15 @@ export const unknownProtonTransaction: ProtonTransaction = {
 
 export function determineCustomTransactionType(transaction: EnrichedTransaction): CustomTransactionType {
   const { instructions, accountKeys } = transaction;
-
-  // Check for Token Airdrop
-  if (isTokenAirdrop(transaction)) {
-    return CustomTransactionType.TOKEN_AIRDROP;
-  }
-
-  // Check for Transfer
+  if (isTokenAirdrop(transaction)) {return CustomTransactionType.TOKEN_AIRDROP;}
   if (instructions.length === 1 && 
       instructions[0].programId === PublicKey.default.toBase58() &&
       isParsedInstruction(instructions[0]) &&
       instructions[0].parsed.type === 'transfer') {
     return CustomTransactionType.TRANSFER;
   }
-
-  // Check for Token Transfer
   if (instructions.some(instr => 
-      instr.programId === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' &&
+      instr.programId === TOKEN_PROGRAM_ID &&
       'parsed' in instr &&
       typeof instr.parsed === 'object' &&
       instr.parsed !== null &&
@@ -256,31 +205,15 @@ export function determineCustomTransactionType(transaction: EnrichedTransaction)
       instr.parsed.info.tokenAmount.uiAmount === 1)) {
     return CustomTransactionType.NFT_TRANSFER;
   }
-
-  // Check for Swap (this is a simplified check and might need to be more specific)
-  if (instructions.length > 2 && 
-      instructions.some(instr => instr.programId === 'SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8')) {
-    return CustomTransactionType.SWAP;
-  }
-
-  // Add more type checks as needed
-
+  if (instructions.length > 2 && instructions.some(instr => instr.programId === SWAP_PROGRAM_ID)) {return CustomTransactionType.SWAP;}
   return CustomTransactionType.UNKNOWN;
 }
 
 function isTokenAirdrop(transaction: EnrichedTransaction): boolean {
   const { instructions, accountKeys } = transaction;
-  
-  // Check if the Associated Token Account program is used
-  const ataProgram = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
-  const tokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
-  
-  const hasAtaInstruction = instructions.some(instr => 
-    'programId' in instr && instr.programId === ataProgram
-  );
-  
+  const hasAtaInstruction = instructions.some(instr => 'programId' in instr && instr.programId === ATA_PROGRAM_ID);
   const hasTokenTransfer = instructions.some(instr => 
-    'programId' in instr && instr.programId === tokenProgram &&
+    'programId' in instr && instr.programId === TOKEN_PROGRAM_ID &&
     'parsed' in instr && 
     typeof instr.parsed === 'object' &&
     instr.parsed !== null &&

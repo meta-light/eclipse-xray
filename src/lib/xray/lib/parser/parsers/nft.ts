@@ -15,7 +15,7 @@ import type {
     ProtonTransactionAction,
 } from "../types";
 
-import { traverseAccountData } from "../utils/account-data";
+import { traverseAccountData } from "../utils";
 
 const generateDefaultTransaction = (type: TransactionType) => ({
     ...unknownProtonTransaction,

@@ -5,9 +5,9 @@ import type {
     ProtonParser,
     ProtonTransactionAction,
 } from "../types";
-import { traverseAccountData } from "../utils/account-data";
-import { traverseNativeTransfers } from "../utils/native-transfers";
-import { traverseTokenTransfers } from "../utils/token-transfers";
+import { traverseAccountData } from "../utils";
+import { traverseNativeTransfers } from "../utils";
+import { traverseTokenTransfers } from "../utils";
 
 export const parseTokenMint: ProtonParser = (
     transaction: EnrichedTransaction,

@@ -5,7 +5,7 @@ import type {
     ProtonTransaction,
     ProtonTransactionAction,
 } from "../types";
-import { traverseAccountData } from "../utils/account-data";
+import { traverseAccountData } from "../utils";
 
 interface TempTokenTransfer extends TokenTransfer {
     tokenAmount: number;

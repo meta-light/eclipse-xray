@@ -5,10 +5,10 @@ import type {
     ProtonTransaction,
     ProtonTransactionAction,
 } from "../types";
-import { traverseAccountData } from "../utils/account-data";
+import { traverseAccountData } from "../utils";
 
-import { traverseNativeTransfers } from "../utils/native-transfers";
-import { traverseTokenTransfers } from "../utils/token-transfers";
+import { traverseNativeTransfers } from "../utils";
+import { traverseTokenTransfers } from "../utils";
 
 export const parseUnknown = (
     transaction: EnrichedTransaction,

@@ -9,10 +9,10 @@ import type {
 } from "../types";
 import { SOL } from "../types";
 
-import { traverseAccountData } from "../utils/account-data";
-import { traverseNativeTransfers } from "../utils/native-transfers";
-import { rentTransferCheck } from "../utils/rent-transfer-check";
-import { traverseTokenTransfers } from "../utils/token-transfers";
+import { traverseAccountData } from "../utils";
+import { traverseNativeTransfers } from "../utils";
+import { rentTransferCheck } from "../utils";
+import { traverseTokenTransfers } from "../utils";
 
 interface TempTokenTransfer extends TokenTransfer {
     tokenAmount: number;

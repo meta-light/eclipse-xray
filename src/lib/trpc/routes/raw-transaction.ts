@@ -16,16 +16,28 @@ export const rawTransaction = t.procedure
     .query(async ({ input, ctx }) => {
         const { transaction, network } = input;
         
-        const rpcUrl = getRPCUrl(network);
-        const fallbackRpcUrl = getFallbackRPCUrl(network);
+        let index = 0;
+        let rpcUrl = getRPCUrl(network, index);
+        let fallbackRpcUrl = getFallbackRPCUrl(network, index);
         
         const connection = new Connection(rpcUrl, "confirmed");
         
         try {
             const txSignature = transaction;
-            const tx = await connection.getTransaction(txSignature, {
+            let tx = await connection.getTransaction(txSignature, {
                 maxSupportedTransactionVersion: 0,
             });
+
+            while (!tx && index < 3) { // Retry up to 3 times
+                index++;
+                rpcUrl = getRPCUrl(network, index);
+                fallbackRpcUrl = getFallbackRPCUrl(network, index);
+
+                const retryConnection = new Connection(rpcUrl, "confirmed");
+                tx = await retryConnection.getTransaction(txSignature, {
+                    maxSupportedTransactionVersion: 0,
+                });
+            }
 
             if (!tx) {
                 // If the primary RPC fails, try the fallback

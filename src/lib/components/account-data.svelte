@@ -3,7 +3,6 @@
     import Namor from "./providers/namor-provider.svelte";
     import TokenProvider from "./providers/token-provider.svelte";
     import { fade } from "svelte/transition";
-    import shortenString from "$lib/util/shorten-string";
     import CopyButton from "./copy-button.svelte";
     import ShortenAddress from "./shorten-address.svelte";
     export let data: ProtonAccount;
@@ -22,6 +21,9 @@
                                 </a>
                                 <CopyButton text={data.account} />
                             </div>
+                            {#if data.label}
+                                <div class="text-xs text-gray-500">{data.label}</div>
+                            {/if}
                         </div>
                     </div>
 
