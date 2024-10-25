@@ -1,7 +1,7 @@
 import { t } from "$lib/trpc/t";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl } from "$lib/utils";
 import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
 
 export const assets = t.procedure

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { t } from "$lib/trpc/t";
-import { getRPCUrl, getFallbackRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl, getFallbackRPCUrl } from "$lib/utils";
 import { Connection } from "@solana/web3.js";
 
 export const rawTransaction = t.procedure

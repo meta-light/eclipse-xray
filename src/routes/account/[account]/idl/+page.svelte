@@ -1,8 +1,8 @@
 <script>
-    import { idlStore } from "$lib/util/stores/idl";
+    import { idlStore } from "$lib/stores";
     // @ts-ignore
     import formatHighlight from "json-format-highlight";
-    import { copyToClipboard } from "$lib/util/clipboard";
+    import { copyToClipboard } from "$lib/utils";
     import CopyButton from "$lib/components/copy-button.svelte";
 
     let formattedIdl = "";

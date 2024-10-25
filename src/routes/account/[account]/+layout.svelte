@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     // @ts-ignore
-    import { idlStore } from "$lib/util/stores/idl";
+    import { idlStore } from "$lib/stores";
     import type { Idl } from "@coral-xyz/anchor";
 
     import { PROGRAM_ID as ACCOUNT_COMPRESSION_ID } from "@solana/spl-account-compression";
@@ -24,10 +24,7 @@
         isMainnetValue ? "mainnet" : "devnet",
     ]);
 
-    const assets = client.assets.createQuery({
-        account,
-        isMainnet: isMainnetValue,
-    });
+    const assets = client.assets.createQuery({account, isMainnet: isMainnetValue});
 
     $: endsWith = (str: string) => $page.url.pathname.endsWith(str);
     $: isProgram = $accountInfo?.data?.value?.executable ?? false;

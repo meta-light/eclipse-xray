@@ -1,5 +1,5 @@
 <script lang="ts">
-    import formatMoney from "$lib/util/format-money";
+    import { formatMoney } from "$lib/utils";
     import { page } from "$app/stores";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { fade } from "svelte/transition";

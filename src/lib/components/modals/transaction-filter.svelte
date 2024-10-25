@@ -1,7 +1,7 @@
 <script lang="ts">
     import { hideModal } from "$lib/modals";
     import { transactionActionsMetadata } from "$lib/types";
-    import { filterStore } from "$lib/util/stores/filter";
+    import { filterStore } from "$lib/stores";
     const handleClick = (key: string) => {$filterStore = key; hideModal();};
     const filterEntries = Object.entries(transactionActionsMetadata);
     $: filterList = filterEntries.filter(([key, value]) => value.filterLabel);

@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { UINiftyAsset } from "$lib/types";
-    import { getRPCUrl } from "$lib/util/get-rpc-url";
+    import { getRPCUrl } from "$lib/utils";
     import IntersectionObserver from "svelte-intersection-observer";
 
     export let address: string | undefined = undefined;

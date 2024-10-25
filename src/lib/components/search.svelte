@@ -26,7 +26,7 @@
     import { showModal } from "$lib/modals";
     import Icon from "$lib/components/icon.svelte";
     import { recentSearchesKey } from "$lib/config";
-    import shortenString from "../util/shorten-string";
+    import { shortenString } from "$lib/utils";
     export let inputEl: HTMLInputElement | null = null;
     export let searchError = "";
     export let size = "sm" as "sm" | "lg";

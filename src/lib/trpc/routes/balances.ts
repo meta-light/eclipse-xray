@@ -2,7 +2,7 @@ import { t } from "$lib/trpc/t";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
 import { z } from "zod";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl } from "$lib/utils";
 
 export const balances = t.procedure
     .input(z.tuple([z.string(), z.boolean()]))

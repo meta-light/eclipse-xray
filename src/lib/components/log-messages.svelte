@@ -9,7 +9,7 @@
 </style>
 
 <script lang="ts">
-    import { parseProgramLogs } from "$lib/util/program-logs";
+    import { parseProgramLogs } from "$lib/utils";
     export let logs: string[];
     const parsedLogs = parseProgramLogs(logs);
     const totalComputeUnits = parsedLogs.reduce((sum, log) => sum + log.computeUnits, 0);

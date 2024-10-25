@@ -1,5 +1,5 @@
 import { t } from "$lib/trpc/t";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl } from "$lib/utils";
 import { ConcurrentMerkleTreeAccount } from "@solana/spl-account-compression";
 import { PublicKey, Connection } from "@solana/web3.js";
 import { z } from "zod";

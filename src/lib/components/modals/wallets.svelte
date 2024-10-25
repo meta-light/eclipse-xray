@@ -1,6 +1,6 @@
 <script lang="ts">
     export let addresses: Array<string>;
-    import shortenString from "$lib/util/shorten-string";
+    import { shortenString, } from "$lib/utils";
 </script>
 
 {#each addresses as address}

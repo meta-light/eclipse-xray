@@ -24,7 +24,7 @@
     import { trpcWithQuery } from "$lib/trpc/client";
     import { onMount } from "svelte";
     import { tweened } from "svelte/motion";
-    import formatMoney from "$lib/util/format-money";
+    import { formatMoney } from "$lib/utils";
     import CopyButton from "$lib/components/copy-button.svelte";
     import Username from "$lib/components/providers/username-provider.svelte";
     import ShortenAddress from "./shorten-address.svelte";

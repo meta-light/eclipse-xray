@@ -1,6 +1,6 @@
 <script lang="ts">
     import { getSolanaName } from "$lib/lib";
-    import shortenString from "$lib/util/shorten-string";
+    import { shortenString } from "$lib/utils";
     export let text: string = "";
     let shortened: string = "";
     let shortenedOriginal: string = "";

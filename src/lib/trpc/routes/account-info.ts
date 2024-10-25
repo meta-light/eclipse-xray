@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { t } from "$lib/trpc/t";
 import { LAMPORTS_PER_SOL, PublicKey, Connection } from "@solana/web3.js";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl } from "$lib/utils";
 
 export const accountInfo = t.procedure
     .input(z.tuple([z.string(), z.literal("mainnet").or(z.literal("devnet"))]))

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { onMount } from "svelte";
-    import { getRPCUrl } from "$lib/util/get-rpc-url";
+    import { getRPCUrl } from "$lib/utils";
     import { Connection, PublicKey } from "@solana/web3.js";
     import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
     import TokenProvider from "$lib/components/providers/token-provider.svelte";

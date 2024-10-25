@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import Transactions from "$lib/components/transactions.svelte";
-    import { filterStore } from "$lib/util/stores/filter";
+    import { filterStore } from "$lib/stores";
     const { account } = $page.params;
 </script>
 

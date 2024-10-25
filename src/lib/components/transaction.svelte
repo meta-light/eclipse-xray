@@ -3,12 +3,12 @@
     import { ProtonCustomActionLabelTypes } from "$lib/types";
     import { transactionActionsMetadata } from "$lib/config";
     import { fade, fly } from "svelte/transition";
-    import formatDate from "$lib/util/format-date";
+    import { formatDate } from "$lib/utils";
     export let transaction: ProtonTransaction;
     import Icon from "$lib/components/icon.svelte";
     import { TransactionType } from "helius-sdk";
     import IntersectionObserver from "svelte-intersection-observer";
-    import shortenString from "../util/shorten-string";
+    import { shortenString } from "$lib/utils";
     import TokenProvider from "./providers/token-provider.svelte";
 
     let element: HTMLDivElement;

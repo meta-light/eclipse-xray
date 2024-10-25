@@ -1,7 +1,7 @@
 import { t } from "$lib/trpc/t";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl } from "$lib/utils";
 import { MintLayout } from "@solana/spl-token";
 import { TRPCError } from '@trpc/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';

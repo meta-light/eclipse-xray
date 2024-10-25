@@ -1,1 +1,0 @@
-export default (sellerFeeBasisPoints: number): string => `${sellerFeeBasisPoints / 100}%`;

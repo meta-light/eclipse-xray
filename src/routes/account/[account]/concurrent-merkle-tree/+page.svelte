@@ -4,7 +4,7 @@
     import IconCard from "$lib/components/icon-card.svelte";
     import Icon from "$lib/components/icon.svelte";
     import { trpcWithQuery } from "$lib/trpc/client";
-    import shortenString from "$lib/util/shorten-string";
+    import { shortenString } from "$lib/utils";
     import { PublicKey } from "@solana/web3.js";
 
     const client = trpcWithQuery($page);

@@ -1,6 +1,6 @@
 import { t } from "$lib/trpc/t";
 import { z } from "zod";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl } from "$lib/utils";
 import type { UITokenMetadata } from "$lib/types";
 
 export const asset = t.procedure

@@ -1,7 +1,7 @@
 import { t } from "$lib/trpc/t";
 import { Connection } from "@solana/web3.js";
 import { z } from "zod";
-import { getRPCUrl } from "$lib/util/get-rpc-url";
+import { getRPCUrl } from "$lib/utils";
 
 export const tps = t.procedure.input(z.boolean()).query(async ({ input }) => {
     const connection = new Connection(getRPCUrl(input ? "mainnet" : "devnet"), "confirmed");

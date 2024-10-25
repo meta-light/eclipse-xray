@@ -4,7 +4,7 @@
     import { onMount } from "svelte";
     import { Connection, PublicKey } from "@solana/web3.js";
     import { TldParser } from "@onsol/tldparser";
-    import { getRPCUrl } from "$lib/util/get-rpc-url";
+    import { getRPCUrl } from "$lib/utils";
 
     export let address: string;
     let username: string | null = null;

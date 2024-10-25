@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Icon as IconType } from "$lib/types";
-    import { copyToClipboard } from "$lib/util/clipboard";
+    import { copyToClipboard } from "$lib/utils";
     import Icon from "$lib/components/icon.svelte";
     let copied = false;
     export let text: string = "";

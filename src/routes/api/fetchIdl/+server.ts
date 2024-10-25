@@ -1,4 +1,4 @@
-import { grabIdl } from "$lib/util/grab-idl";
+import { grabIdl } from "$lib/utils";
 
 export async function GET({ url }) {
     const account = url.searchParams.get("account");

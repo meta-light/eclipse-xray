@@ -11,7 +11,7 @@
     import JSON from "$lib/components/json.svelte";
     import PageLoader from "./_loader.svelte";
     import { onMount } from 'svelte';
-    import { getRPCUrl } from "$lib/util/get-rpc-url";
+    import { getRPCUrl } from "$lib/utils";
 
     const address = $page.params.asset;
     const params = new URLSearchParams(window.location.search);
