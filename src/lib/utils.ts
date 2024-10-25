@@ -2,7 +2,7 @@ import type { ProtonTransactionAction } from "./types";
 import { type ProtonAccount, SOL } from "./types";
 import type { TokenTransfer, NativeTransfer, AccountData } from "helius-sdk";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { publicKeyMappings } from "../../config";
+import { publicKeyMappings } from "./config";
 
 interface TempTokenTransfer extends TokenTransfer {tokenAmount: number;}
 

@@ -1,8 +1,5 @@
-// https://github.com/solana-labs/explorer/blob/master/app/components/account/ConcurrentMerkleTreeCard.tsx
-
 import { t } from "$lib/trpc/t";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
-import { connect } from "$lib/xray";
 import { ConcurrentMerkleTreeAccount } from "@solana/spl-account-compression";
 import { PublicKey, Connection } from "@solana/web3.js";
 import { z } from "zod";

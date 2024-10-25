@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getSolanaName } from "$lib/xray";
+    import { getSolanaName } from "$lib/lib";
     import shortenString from "$lib/util/shorten-string";
     export let text: string = "";
     let shortened: string = "";

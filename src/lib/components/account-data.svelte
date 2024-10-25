@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ProtonAccount } from "$lib/xray";
+    import type { ProtonAccount } from "$lib/types";
     import Namor from "./providers/namor-provider.svelte";
     import TokenProvider from "./providers/token-provider.svelte";
     import { fade } from "svelte/transition";

@@ -12,7 +12,7 @@ import { ACCOUNT_SIZE } from "@solana/spl-token";
 import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import { fetchMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { publicKey } from '@metaplex-foundation/umi';
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/xray/config";
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/config";
 
 export interface TokenData {
   address: string;
@@ -42,7 +42,9 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
             try {
                 const url = gateway + ipfsHash;
                 const response = await axios.get(url, { timeout: 5000 });
-                if (response.data) {return response.data;}
+                if (response.data) {
+                    return response.data;
+                }
             } catch (error) {
                 console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
             }
@@ -171,17 +173,53 @@ export const token = t.procedure
                             symbol: metadataAccount.symbol,
                             uri: metadataAccount.uri,
                         };
-                        externalMetadata = {};
+                        
+                        // Check if the URI is a direct image link or JSON metadata
                         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
                         const uriLower = metadataAccount.uri.toLowerCase();
+                        
                         if (imageExtensions.some(ext => uriLower.endsWith(ext))) {
-                            externalMetadata.image = metadataAccount.uri;
+                            // URI is a direct image link
+                            externalMetadata = {
+                                image: metadataAccount.uri,
+                                name: metadataAccount.name,
+                                symbol: metadataAccount.symbol,
+                            };
+                        } else {
+                            // Attempt to fetch JSON metadata
+                            externalMetadata = await fetchMetadataFromUri(metadataAccount.uri);
+                        }
+
+                        if (!externalMetadata) {
+                            console.warn('Failed to fetch or parse external metadata from URI:', metadataAccount.uri);
+                            // Fallback to on-chain data
+                            externalMetadata = {
+                                name: metadataAccount.name,
+                                symbol: metadataAccount.symbol,
+                            };
                         }
                     } else {
-                        console.log('No metadata account found');
+                        // Attempt to parse metadata from the token account data
+                        const parsedMetadata = parseTokenAccountMetadata(accountInfo.data);
+                        if (parsedMetadata) {
+                            metadata = parsedMetadata;
+                            // Check if the parsed URI is a direct image link
+                            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+                            const uriLower = parsedMetadata.uri.toLowerCase();
+                            
+                            if (imageExtensions.some(ext => uriLower.endsWith(ext))) {
+                                externalMetadata = {
+                                    image: parsedMetadata.uri,
+                                    name: parsedMetadata.name,
+                                    symbol: parsedMetadata.symbol,
+                                };
+                            } else {
+                                externalMetadata = await fetchMetadataFromUri(parsedMetadata.uri);
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.error('Error fetching Metaplex metadata:', error);
+                    console.error('Error fetching or parsing metadata:', error);
                 }
             }
 
@@ -193,7 +231,7 @@ export const token = t.procedure
                 freezeAuthority: mintInfo.freezeAuthority?.toBase58(),
                 mintAuthority: mintInfo.mintAuthority?.toBase58(),
                 metadata: metadata || undefined,
-                externalMetadata: externalMetadata, // This will be null if no metadata was found
+                externalMetadata: externalMetadata,
             };
 
             return tokenData;
@@ -215,4 +253,23 @@ async function getRPCUrlAndConnection(isMainnet: boolean): Promise<[string, Conn
     const connection = new Connection(url, "confirmed");
     const umi = createUmi(url);
     return [url, connection, umi];
+}
+
+// Helper function to parse metadata from token account data
+function parseTokenAccountMetadata(data: Buffer): { name: string; symbol: string; uri: string } | null {
+    try {
+        const nameLength = data[0];
+        const name = data.slice(1, 1 + nameLength).toString('utf8').replace(/\0/g, '');
+        
+        const symbolLength = data[1 + nameLength];
+        const symbol = data.slice(1 + nameLength + 1, 1 + nameLength + 1 + symbolLength).toString('utf8').replace(/\0/g, '');
+        
+        const uriLength = data.readUInt16LE(1 + nameLength + 1 + symbolLength);
+        const uri = data.slice(1 + nameLength + 1 + symbolLength + 2, 1 + nameLength + 1 + symbolLength + 2 + uriLength).toString('utf8').replace(/\0/g, '');
+        
+        return { name, symbol, uri };
+    } catch (error) {
+        console.error('Error parsing token account metadata:', error);
+        return null;
+    }
 }

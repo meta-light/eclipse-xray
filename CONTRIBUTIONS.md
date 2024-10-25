@@ -22,7 +22,7 @@ To submit, open a PR and leave a semi-detailed note about the dApp you are addin
 ## Labeling Programs
 Programs can be labeled via Eclipse XRAY's config file or directly in the [Eclipse Program Registry](https://github.com/Eclipse-Laboratories-Inc/program-registry). 
 ### Contributing to Eclipse XRAY Config: 
-Contributions to `src/lib/xray/config.ts` should be reflect the following example:
+Contributions to `src/lib/config.ts` should be reflect the following example:
 ```ts
     "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv": "SWITCHBOARD MAINNET PROGRAM",
 ```

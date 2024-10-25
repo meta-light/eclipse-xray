@@ -1,7 +1,7 @@
 <script lang="ts">
-    import type { ProtonActionType, ProtonTransaction } from "$lib/xray";
-    import { ProtonCustomActionLabelTypes } from "$lib/xray";
-    import { transactionActionsMetadata } from "$lib/types";
+    import type { ProtonTransaction } from "$lib/types";
+    import { ProtonCustomActionLabelTypes } from "$lib/types";
+    import { transactionActionsMetadata } from "$lib/config";
     import { fade, fly } from "svelte/transition";
     import formatDate from "$lib/util/format-date";
     export let transaction: ProtonTransaction;

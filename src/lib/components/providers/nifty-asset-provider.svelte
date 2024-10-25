@@ -1,7 +1,5 @@
 <script lang="ts">
     import type { UINiftyAsset } from "$lib/types";
-    import { SOL } from "$lib/xray";
-    import { page } from "$app/stores";
     import { getRPCUrl } from "$lib/util/get-rpc-url";
     import IntersectionObserver from "svelte-intersection-observer";
 

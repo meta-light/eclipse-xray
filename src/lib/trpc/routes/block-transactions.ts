@@ -1,19 +1,10 @@
 //@ts-nocheck
 import type { EnrichedTransaction } from "helius-sdk";
-
 import { t } from "$lib/trpc/t";
 import { z } from "zod";
-
-import { parseTransaction } from "$lib/xray";
-
-import {
-    VOTE_PROGRAM_ID,
-    type ConfirmedTransactionMeta,
-    type TransactionSignature,
-    Connection,
-} from "@solana/web3.js";
+import { parseTransaction } from "$lib/parsers";
+import { VOTE_PROGRAM_ID, type ConfirmedTransactionMeta, type TransactionSignature, Connection } from "@solana/web3.js";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
-
 import { HELIUS_API_KEY } from "$env/static/private";
 
 type TransactionWithInvocations = {

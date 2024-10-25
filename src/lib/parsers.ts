@@ -1,21 +1,293 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import type { EnrichedTransaction, TokenTransfer, CompressedNftEvent, NFTEvent } from "helius-sdk";
+import { TransactionType } from "helius-sdk";
+import type { ProtonActionType, ProtonTransaction, ProtonAccount, ProtonParser, ProtonTransactionAction } from "./types";
+import { traverseAccountData, traverseNativeTransfers, traverseTokenTransfers } from "./utils";
+import { unknownProtonTransaction, SOL } from "./types";
 
-import {
-    TransactionType,
-    type CompressedNftEvent,
-    type EnrichedTransaction,
-    type NFTEvent,
-} from "helius-sdk";
+interface TempTokenTransfer extends TokenTransfer {tokenAmount: number;}
 
-import { SOL, unknownProtonTransaction } from "../types";
+import type { ProtonType } from "./types";
+import { protonParsers } from "./types";
 
-import type {
-    ProtonAccount,
-    ProtonParser,
-    ProtonTransactionAction,
-} from "../types";
+export * from "./types";
 
-import { traverseAccountData } from "../utils";
+export const parseTransaction: ProtonParser = (transaction, address) => {
+    let parser: ProtonParser = protonParsers.UNKNOWN;
+    const transactionType = transaction.type as ProtonType;
+    if (typeof protonParsers[transactionType] === "undefined") {
+        return protonParsers.UNKNOWN(transaction, address);
+    }
+
+    parser = protonParsers[transactionType];
+
+    try {
+        return parser(transaction, address);
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error);
+
+        return protonParsers.UNKNOWN(transaction, address);
+    }
+};
+
+export const parseTokenMint: ProtonParser = (transaction: EnrichedTransaction, address: string | undefined) => {
+    const {signature, timestamp, accountData, tokenTransfers, nativeTransfers, type, source} = transaction;
+    const fee = transaction.fee / LAMPORTS_PER_SOL;
+    if (tokenTransfers === null || nativeTransfers === null) {return {accounts: [], actions: [], fee, primaryUser: "", signature, source, timestamp, type, customType: type};}
+    const primaryUser = nativeTransfers[0]?.fromUserAccount || "";
+    const actions: ProtonTransactionAction[] = [];
+    const accounts: ProtonAccount[] = [];
+    traverseTokenTransfers(tokenTransfers, actions, address);
+    traverseNativeTransfers(nativeTransfers, actions, address);
+    traverseAccountData(accountData, accounts);
+    return {accounts, actions, fee, primaryUser, signature, source, timestamp, type, customType: type};
+};
+
+export const parseBurn = (transaction: EnrichedTransaction, address: string | undefined): ProtonTransaction => {
+    const {tokenTransfers = [], nativeTransfers = [], accountData = [], signature, timestamp, type, source} = transaction;
+    const fee = transaction.fee / LAMPORTS_PER_SOL;
+    if (tokenTransfers === null || nativeTransfers === null) {
+        return {
+            accounts: [],
+            actions: [],
+            fee,
+            primaryUser: "",
+            signature,
+            source,
+            timestamp,
+            type: "BURN",
+        };
+    }
+    const primaryUser = tokenTransfers[0]?.fromUserAccount || "";
+    const actions: ProtonTransactionAction[] = [];
+    const accounts: ProtonAccount[] = [];
+    for (let i = 0; i < tokenTransfers.length; i++) {
+        const tx = tokenTransfers[i] as TempTokenTransfer;
+        const from = tx.fromUserAccount || "";
+        const to = tx.toUserAccount || "";
+        const amount = tx.tokenAmount;
+        let actionType = "";
+        if (!address) {
+            if (to === "") {const sent = tx.mint; actions.push({actionType: type as ProtonActionType, amount, from, sent, to});} 
+            else {actions.push({actionType: "TRANSFER", amount, from, sent: tx.mint, to});}
+        } 
+        else {
+            if (to === "") {const sent = tx.mint; actions.push({actionType: type as ProtonActionType, amount, from, sent, to});} 
+            else {
+                if (tx.fromUserAccount === address) {actionType = "SENT";} 
+                else if (tx.toUserAccount === address) {actionType = "RECEIVED";}
+                if (actionType === "SENT") {const sent = tx.mint; actions.push({actionType, amount, from, sent, to});} 
+                else if (actionType === "RECEIVED") {const received = tx.mint; actions.push({actionType, amount, from, received, to});}
+            }
+        }
+    }
+    traverseNativeTransfers(nativeTransfers, actions, address);
+    traverseAccountData(accountData, accounts);
+    return {
+        accounts,
+        actions,
+        fee,
+        primaryUser,
+        signature,
+        source,
+        timestamp,
+        type,
+    };
+};
+
+
+
+export const parseUnknown = (
+    transaction: EnrichedTransaction,
+    address: string | undefined
+): ProtonTransaction => {
+    const {
+        signature,
+        timestamp,
+        type,
+        source,
+        accountData,
+        tokenTransfers,
+        nativeTransfers,
+        instructions,
+    } = transaction;
+
+    const fee = transaction.fee / LAMPORTS_PER_SOL;
+
+    if (tokenTransfers === null || nativeTransfers === null) {
+        return {
+            accounts: [],
+            actions: [],
+            fee,
+            primaryUser: "",
+            signature,
+            source,
+            timestamp,
+            type,
+        };
+    }
+
+    const primaryUser =
+        tokenTransfers[0]?.fromUserAccount ||
+        nativeTransfers[0]?.fromUserAccount ||
+        "";
+
+    const actions: ProtonTransactionAction[] = [];
+    const accounts: ProtonAccount[] = [];
+
+    traverseAccountData(accountData, accounts);
+
+    if (
+        instructions &&
+        instructions[0].programId ===
+            "xnft5aaToUM4UFETUQfj7NUDUBdvYHTVhNFThEYTm55"
+    ) {
+        let type = "XNFT_INSTALL" as TransactionType;
+        if (instructions[0].accounts.length === 6) {
+            type = "XNFT_INSTALL" as TransactionType;
+        } else if (instructions[0].accounts.length === 3) {
+            type = "XNFT_UNINSTALL" as TransactionType;
+        }
+        return {
+            accounts,
+            actions,
+            fee,
+            primaryUser,
+            signature,
+            source,
+            timestamp,
+            type,
+        };
+    }
+
+    traverseTokenTransfers(tokenTransfers, actions, address);
+    traverseNativeTransfers(nativeTransfers, actions, address);
+
+    return {
+        accounts,
+        actions,
+        fee,
+        primaryUser,
+        signature,
+        source,
+        timestamp,
+        type,
+    };
+};
+
+
+
+
+export const parseTransfer = (
+    transaction: EnrichedTransaction,
+    address: string | undefined
+): ProtonTransaction => {
+    const {
+        signature,
+        timestamp,
+        accountData,
+        tokenTransfers,
+        nativeTransfers,
+        type,
+        source,
+    } = transaction;
+
+    const fee = transaction.fee / LAMPORTS_PER_SOL;
+
+    if (tokenTransfers === null || nativeTransfers === null) {
+        return {
+            accounts: [],
+            actions: [],
+            fee,
+            primaryUser: "",
+            signature,
+            source,
+            timestamp,
+            type,
+        };
+    }
+
+    const primaryUser = tokenTransfers[0]?.fromUserAccount || "";
+    const actions: ProtonTransactionAction[] = [];
+    const accounts: ProtonAccount[] = [];
+
+    traverseTokenTransfers(tokenTransfers, actions, address);
+    traverseNativeTransfers(nativeTransfers, actions, address);
+    traverseAccountData(accountData, accounts);
+
+    return {
+        accounts,
+        actions,
+        fee,
+        primaryUser,
+        signature,
+        source,
+        timestamp,
+        type,
+    };
+};
+
+
+
+interface TempTokenTransfer extends TokenTransfer {
+    tokenAmount: number;
+}
+
+export const parseSwap = (
+    transaction: EnrichedTransaction,
+    address: string | undefined
+): ProtonTransaction => {
+    const {
+        type,
+        source,
+        signature,
+        timestamp,
+        tokenTransfers,
+        nativeTransfers,
+        accountData,
+    } = transaction;
+    const fee = transaction.fee / LAMPORTS_PER_SOL;
+
+    if (tokenTransfers === null || nativeTransfers === null) {
+        return {
+            accounts: [],
+            actions: [],
+            fee,
+            primaryUser: "",
+            signature,
+            source,
+            timestamp,
+            type,
+        };
+    }
+
+    const primaryUser = tokenTransfers[0].fromUserAccount || "";
+    const actions: ProtonTransactionAction[] = [];
+    const accounts: ProtonAccount[] = [];
+
+    if (source === "HADESWAP") {
+        traverseTokenTransfers(tokenTransfers, actions, address);
+        traverseNativeTransfers(nativeTransfers, actions, address);
+    } else {
+        traverseTokenTransfers(tokenTransfers, actions, address);
+    }
+    traverseAccountData(accountData, accounts);
+
+    return {
+        accounts,
+        actions,
+        fee,
+        primaryUser,
+        signature,
+        source,
+        timestamp,
+        type,
+    };
+};
+
+
+
 
 const generateDefaultTransaction = (type: TransactionType) => ({
     ...unknownProtonTransaction,
@@ -576,3 +848,157 @@ export const parseCompressedNftBurn: ProtonParser = (transaction, address) => {
         type,
     };
 };
+
+
+
+
+interface TempTokenTransfer extends TokenTransfer {
+    tokenAmount: number;
+}
+
+export const parseBorrowFox = (
+    transaction: EnrichedTransaction,
+    address: string | undefined
+): ProtonTransaction => {
+    const { type, source, signature, timestamp, tokenTransfers, accountData } =
+        transaction;
+    const fee = transaction.fee / LAMPORTS_PER_SOL;
+    const actions: ProtonTransactionAction[] = [];
+    const accounts: ProtonAccount[] = [];
+
+    if (tokenTransfers === null) {
+        return {
+            accounts,
+            actions,
+            fee,
+            primaryUser: "",
+            signature,
+            source,
+            timestamp,
+            type,
+        };
+    }
+
+    const primaryUser = tokenTransfers[0]?.fromUserAccount || "";
+
+    for (let i = 0; i < tokenTransfers.length; i++) {
+        const tx = tokenTransfers[i] as TempTokenTransfer;
+
+        const from = tx?.fromUserAccount || "";
+
+        const to = tx?.toUserAccount || "";
+
+        const amount = tx?.tokenAmount;
+
+        // This is the first transfer, which is the foxy transfer
+        if (i === 0) {
+            if (!address) {
+                const sent = tx?.mint;
+                actions.push({
+                    actionType: "TRANSFER",
+                    amount,
+                    from,
+                    sent,
+                    to,
+                });
+            } else {
+                const actionType =
+                    tx.fromUserAccount === address
+                        ? "TRANSFER_SENT"
+                        : "TRANSFER_RECEIVED";
+
+                if (actionType === "TRANSFER_SENT") {
+                    const sent = tx?.mint;
+                    actions.push({
+                        actionType,
+                        amount,
+                        from,
+                        sent,
+                        to,
+                    });
+                } else if (actionType === "TRANSFER_RECEIVED") {
+                    const received = tx?.mint;
+                    actions.push({
+                        actionType,
+                        amount,
+                        from,
+                        received,
+                        to,
+                    });
+                }
+            }
+            // This is the second transfer, which is the foxy burn
+        } else if (i === 1) {
+            const sent = tx?.mint;
+            actions.push({
+                actionType: "BURN",
+                amount,
+                from,
+                sent,
+                to,
+            });
+        }
+    }
+
+    traverseAccountData(accountData, accounts);
+
+    return {
+        accounts,
+        actions,
+        fee,
+        primaryUser,
+        signature,
+        source,
+        timestamp,
+        type,
+    };
+};
+
+export const parseLoanFox = (
+    transaction: EnrichedTransaction
+): ProtonTransaction => {
+    const { signature, timestamp, type, source, accountData } = transaction;
+    const fee = transaction.fee / LAMPORTS_PER_SOL;
+    const actions: ProtonTransactionAction[] = [];
+    const accounts: ProtonAccount[] = [];
+
+    if (!accountData) {
+        return {
+            accounts,
+            actions,
+            fee,
+            primaryUser: "",
+            signature,
+            source,
+            timestamp,
+            type,
+        };
+    }
+
+    const primaryUser = accountData[0]?.account || "";
+    const sent = accountData[8]?.account;
+
+    actions.push({
+        actionType: "FREEZE",
+        amount: 0,
+        from: primaryUser,
+        sent,
+        to: "",
+    });
+
+    traverseAccountData(accountData, accounts);
+
+    return {
+        accounts,
+        actions,
+        fee,
+        primaryUser,
+        signature,
+        source,
+        timestamp,
+        type,
+    };
+};
+
+
+

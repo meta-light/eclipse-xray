@@ -18,7 +18,6 @@ import { duneQuery } from "$lib/trpc/routes/dune-query";
 import { pythPrice } from "$lib/trpc/routes/pyth-price";
 import { programs } from "$lib/trpc/routes/programs";
 export const t = initTRPC.context<Context>().create();
-
 export const router = t.router({
     accountInfo,
     asset,
@@ -39,5 +38,4 @@ export const router = t.router({
     transaction,
     transactions,
 });
-
 export type Router = typeof router;

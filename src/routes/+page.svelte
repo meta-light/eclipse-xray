@@ -5,16 +5,13 @@
     import Icon from "$lib/components/icon.svelte";
     import Search from "$lib/components/search.svelte";
     import IntersectionObserver from "svelte-intersection-observer";
-    import featuredDapps from "../config/dapps.json";
-
+    import featuredDapps from "../lib/dapps.json";
     let searchError = "";
     let exploreELement: HTMLElement;
     let isFocused = false;
     let clearSearch = () => null;
     let focusInput = () => null;
     onMount(() => {setTimeout(() => {focusInput();}, 100);});
-
-    // Filter and randomly select 3 mainnet dApps
     const mainnetDapps = featuredDapps.filter(dapp => dapp.network === "mainnet");
     const randomMainnetDapps: any[] = [];
     while (randomMainnetDapps.length < 3 && mainnetDapps.length > 0) {

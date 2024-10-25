@@ -1,360 +1,236 @@
-import type { Modal, TransactionActionMetadata } from "$lib/types";
-import type { ProtonActionType } from "$lib/xray";
-
+import type { Modal, ProtonActionType, TransactionActionMetadata } from "$lib/types";
 import Help from "$lib/components/modals/help.svelte";
 import Menu from "$lib/components/modals/menu.svelte";
 import TransactionFilter from "$lib/components/modals/transaction-filter.svelte";
 import WalletSelector from "$lib/components/modals/wallets.svelte";
-
 export const recentSearchesKey = "xray:searches";
 
-import { CustomTransactionType } from './types/transaction-types';
-
-export const transactionActionsMetadata: Record<CustomTransactionType, TransactionActionMetadata> = {
-  [CustomTransactionType.TRANSFER]: {
-    icon: "arrowRight",
-    label: "Transfer",
-  },
-  [CustomTransactionType.NFT_TRANSFER]: {
-    icon: "image",
-    label: "NFT Transfer",
-  },
-  [CustomTransactionType.TOKEN_TRANSFER]: {
-    icon: "coins",
-    label: "Token Transfer",
-  },
-  [CustomTransactionType.SWAP]: {
-    icon: "swap",
-    label: "Swap",
-  },
-  [CustomTransactionType.AIRDROP]: {
-    icon: "gift",
-    label: "Airdrop",
-  },
-  [CustomTransactionType.MINT]: {
-    icon: "plus",
-    label: "Mint",
-  },
-  [CustomTransactionType.BURN]: {
-    icon: "flame",
-    label: "Burn",
-  },
-  [CustomTransactionType.STAKE]: {
-    icon: "lock",
-    label: "Stake",
-  },
-  [CustomTransactionType.UNSTAKE]: {
-    icon: "unlock",
-    label: "Unstake",
-  },
-  [CustomTransactionType.LIST]: {
-    icon: "list",
-    label: "List",
-  },
-  [CustomTransactionType.DELIST]: {
-    icon: "close",
-    label: "Delist",
-  },
-  [CustomTransactionType.BUY]: {
-    icon: "sale",
-    label: "Buy",
-  },
-  [CustomTransactionType.SELL]: {
-    icon: "sale",
-    label: "Sell",
-  },
-  [CustomTransactionType.UNKNOWN]: {
-    icon: "box",
-    label: "Unknown Transaction",
-  },
-};
-
 export const modals: Record<string, Modal> = {
-    HELP: {
-        component: Help,
-        title: "Help",
-    },
-    MENU: {
-        component: Menu,
-        title: "XRAY",
-    },
-    SELECT_MULTI_WALLET: {
-        component: WalletSelector,
-        title: "Select Wallet",
-    },
-    TRANSACTION_FILTER: {
-        component: TransactionFilter,
-        title: "Filter",
-    },
+    HELP: {component: Help, title: "Help"},
+    MENU: {component: Menu, title: "XRAY"},
+    SELECT_MULTI_WALLET: {component: WalletSelector, title: "Select Wallet"},
+    TRANSACTION_FILTER: {component: TransactionFilter, title: "Filter",}
 };
 
-// export const transactionActionsMetadata: Record<
-//     ProtonActionType,
-//     TransactionActionMetadata
-// > = {
-//     ADD_ITEM: {
-//         icon: "plus",
-//         label: "Add Item",
-//     },
-//     AIRDROP: {
-//         icon: "gift",
-//         label: "Airdropped",
-//     },
-//     APPROVE_TRANSACTION: {
-//         icon: "check",
-//         label: "Approved Transaction",
-//     },
-//     BORROW_FOX: {
-//         icon: "openHand",
-//         label: "Borrow Fox",
-//     },
-//     BORROW_SOL_FOR_NFT: {
-//         icon: "customer",
-//         label: "Borrow SOL",
-//     },
-//     BURN: {
-//         filterLabel: "Burn",
-//         icon: "flame",
-//         label: "Burned",
-//     },
-//     BURN_NFT: {
-//         filterLabel: "NFT Burn",
-//         icon: "flame",
-//         label: "Burned NFT",
-//     },
-//     BUY_ITEM: {
-//         icon: "sale",
-//         label: "Buy Item",
-//     },
-//     CANCEL_LOAN_REQUEST: {
-//         icon: "close",
-//         label: "Cancel Loan Request",
-//     },
-//     CANCEL_OFFER: {
-//         icon: "close",
-//         label: "Cancel Offer",
-//     },
-//     CANCEL_ORDER: {
-//         icon: "close",
-//         label: "Cancel Order",
-//     },
-//     CLAIM_NFT: {
-//         icon: "squareCheck",
-//         label: "Claim NFT",
-//     },
-//     CLOSE_ITEM: {
-//         icon: "close",
-//         label: "Close Item",
-//     },
-//     CLOSE_ORDER: {
-//         icon: "close",
-//         label: "Close Item",
-//     },
-//     COMPRESSED_NFT_BURN: {
-//         icon: "flame",
-//         label: "Burned NFT",
-//     },
-//     COMPRESSED_NFT_MINT: {
-//         icon: "mint",
-//         label: "NFT Mint",
-//     },
-//     COMPRESSED_NFT_TRANSFER: {
-//         icon: "lightning",
-//         label: "Transfer",
-//     },
-//     COMPRESSED_NFT_UPDATE_METADATA: {
-//         icon: "arrowUp",
-//         label: "Update NFT Metadata",
-//     },
-//     CREATE_ORDER: {
-//         icon: "plus",
-//         label: "Create Order",
-//     },
-//     DELIST_ITEM: {
-//         icon: "close",
-//         label: "Delist Item",
-//     },
-//     EXECUTE_TRANSACTION: {
-//         filterLabel: "Multisig Transaction",
-//         icon: "squad",
-//         label: "Multisig Transaction",
-//     },
-//     FILL_ORDER: {
-//         icon: "squareCheck",
-//         label: "Fill Order",
-//     },
-//     FORECLOSE_LOAN: {
-//         icon: "squareCheck",
-//         label: "Foreclose Loan",
-//     },
-//     FREEZE: {
-//         icon: "cold",
-//         label: "Frozen",
-//     },
-//     LEND_FOR_NFT: {
-//         icon: "handshake",
-//         label: "Lend",
-//     },
-//     LIST_ITEM: {
-//         icon: "list",
-//         label: "List Item",
-//     },
-//     LOAN_FOX: {
-//         icon: "handshake",
-//         label: "Loan Fox",
-//     },
-//     MIGRATE_TO_PNFT: {
-//         icon: "arrowRight",
-//         label: "Migrate to pNFT",
-//     },
-//     NFT_BID: {
-//         icon: "sale",
-//         label: "NFT Bid",
-//     },
-//     NFT_BID_CANCELLED: {
-//         icon: "cancel",
-//         label: "Canceled NFT Bid",
-//     },
-//     NFT_BUY: {
-//         icon: "sale",
-//         label: "Bought",
-//     },
-//     NFT_CANCEL_LISTING: {
-//         icon: "cancel",
-//         label: "Canceled NFT Lising",
-//     },
-//     NFT_GLOBAL_BID: {
-//         icon: "sale",
-//         label: "NFT Global Bid",
-//     },
-//     NFT_LISTING: {
-//         filterLabel: "NFT List",
-//         icon: "sale",
-//         label: "Listed NFT",
-//     },
-//     NFT_MINT: {
-//         filterLabel: "NFT Mint",
-//         icon: "mint",
-//         label: "NFT Mint",
-//     },
-//     NFT_SALE: {
-//         filterLabel: "NFT Sale",
-//         icon: "sale",
-//         label: "NFT Sale",
-//     },
-//     NFT_SELL: {
-//         icon: "sale",
-//         label: "Sold",
-//     },
-//     OFFER_LOAN: {
-//         icon: "openHand",
-//         label: "Offer Loan",
-//     },
-//     REBORROW_SOL_FOR_NFT: {
-//         icon: "customer",
-//         label: "Reborrow SOL",
-//     },
-//     RECEIVED: {
-//         icon: "arrowDown",
-//         label: "Received",
-//     },
-//     REPAY_LOAN: {
-//         icon: "sale",
-//         label: "Repay Loan",
-//     },
-//     REQUEST_LOAN: {
-//         icon: "questionBubble",
-//         label: "Request Loan",
-//     },
-//     RESCIND_LOAN: {
-//         icon: "close",
-//         label: "Rescind Loan",
-//     },
-//     SENT: {
-//         icon: "arrowUp",
-//         label: "Sent",
-//     },
-//     SFT_MINT: {
-//         icon: "mint",
-//         label: "SFT Mint",
-//     },
-//     STAKE_SOL: {
-//         icon: "star",
-//         label: "Staked SOL",
-//     },
-//     STAKE_TOKEN: {
-//         icon: "star",
-//         label: "Staked Token",
-//     },
-//     SWAP: {
-//         filterLabel: "Swap",
-//         icon: "swap",
-//         label: "Swap",
-//     },
-//     SWAP_RECEIVED: {
-//         icon: "swap",
-//         label: "Swap",
-//     },
-//     SWAP_SENT: {
-//         icon: "swap",
-//         label: "Swap",
-//     },
-//     TAKE_LOAN: {
-//         icon: "handshake",
-//         label: "Take Loan",
-//     },
-//     TOKEN_MINT: {
-//         filterLabel: "Token Mint",
-//         icon: "coins",
-//         label: "Token Mint",
-//     },
-//     TRANSFER: {
-//         filterLabel: "Transfer",
-//         icon: "lightning",
-//         label: "Transfer",
-//     },
-//     TRANSFER_RECEIVED: {
-//         icon: "arrowDown",
-//         label: "Received",
-//     },
-//     TRANSFER_SENT: {
-//         icon: "arrowUp",
-//         label: "Sent",
-//     },
-//     UNKNOWN: {
-//         filterLabel: "Generic Transaction",
-//         icon: "box",
-//         label: "Generic Transaction",
-//     },
-//     UNSTAKE_TOKEN: {
-//         icon: "cancel",
-//         label: "Unstake Token",
-//     },
-//     UPDATE_ITEM: {
-//         icon: "arrowUp",
-//         label: "Update Item",
-//     },
-//     UPDATE_OFFER: {
-//         icon: "cycle",
-//         label: "Update Offer",
-//     },
-//     UPDATE_ORDER: {
-//         icon: "arrowUp",
-//         label: "Update Order",
-//     },
-//     UPGRADE_FOX_REQUEST: {
-//         icon: "arrowUp",
-//         label: "Upgrade Fox",
-//     },
-//     XNFT_INSTALL: {
-//         icon: "download",
-//         label: "xNFT Install",
-//     },
-//     XNFT_UNINSTALL: {
-//         icon: "trash",
-//         label: "xNFT Uninstall",
-//     },
-// };
+export const transactionActionsMetadata: Record<ProtonActionType, TransactionActionMetadata> = {
+    ADD_ITEM: {
+        icon: "plus",
+        label: "Add Item",
+    },
+    AIRDROP: {
+        icon: "gift",
+        label: "Airdropped",
+    },
+    APPROVE_TRANSACTION: {
+        icon: "check",
+        label: "Approved Transaction",
+    },
+    BURN: {
+        filterLabel: "Burn",
+        icon: "flame",
+        label: "Burned",
+    },
+    BURN_NFT: {
+        icon: "flame",
+        label: "Burn NFT",
+    },
+    BUY_ITEM: {
+        icon: "sale",
+        label: "Buy Item",
+    },
+    CANCEL_OFFER: {
+        icon: "close",
+        label: "Cancel Offer",
+    },
+    CANCEL_ORDER: {
+        icon: "close",
+        label: "Cancel Order",
+    },
+    CLAIM_NFT: {
+        icon: "squareCheck",
+        label: "Claim NFT",
+    },
+    CLOSE_ITEM: {
+        icon: "close",
+        label: "Close Item",
+    },
+    CLOSE_ORDER: {
+        icon: "close",
+        label: "Close Item",
+    },
+    COMPRESSED_NFT_BURN: {
+        icon: "flame",
+        label: "Burned NFT",
+    },
+    COMPRESSED_NFT_MINT: {
+        icon: "mint",
+        label: "NFT Mint",
+    },
+    COMPRESSED_NFT_TRANSFER: {
+        icon: "lightning",
+        label: "Transfer",
+    },
+    COMPRESSED_NFT_UPDATE_METADATA: {
+        icon: "arrowUp",
+        label: "Update NFT Metadata",
+    },
+    CREATE_ORDER: {
+        icon: "plus",
+        label: "Create Order",
+    },
+    DELIST_ITEM: {
+        icon: "close",
+        label: "Delist Item",
+    },
+    EXECUTE_TRANSACTION: {
+        filterLabel: "Multisig Transaction",
+        icon: "squad",
+        label: "Multisig Transaction",
+    },
+    FILL_ORDER: {
+        icon: "squareCheck",
+        label: "Fill Order",
+    },
+    FORECLOSE_LOAN: {
+        icon: "squareCheck",
+        label: "Foreclose Loan",
+    },
+    FREEZE: {
+        icon: "cold",
+        label: "Frozen",
+    },
+    LIST_ITEM: {
+        icon: "list",
+        label: "List Item",
+    },
+    NFT_BID: {
+        icon: "sale",
+        label: "NFT Bid",
+    },
+    NFT_BID_CANCELLED: {
+        icon: "cancel",
+        label: "Canceled NFT Bid",
+    },
+    NFT_BUY: {
+        icon: "sale",
+        label: "Bought",
+    },
+    NFT_CANCEL_LISTING: {
+        icon: "cancel",
+        label: "Canceled NFT Lising",
+    },
+    NFT_GLOBAL_BID: {
+        icon: "sale",
+        label: "NFT Global Bid",
+    },
+    NFT_LISTING: {
+        filterLabel: "NFT List",
+        icon: "sale",
+        label: "Listed NFT",
+    },
+    NFT_MINT: {
+        filterLabel: "NFT Mint",
+        icon: "mint",
+        label: "NFT Mint",
+    },
+    NFT_SALE: {
+        filterLabel: "NFT Sale",
+        icon: "sale",
+        label: "NFT Sale",
+    },
+    NFT_SELL: {
+        icon: "sale",
+        label: "Sold",
+    },
+    OFFER_LOAN: {
+        icon: "openHand",
+        label: "Offer Loan",
+    },
+    RECEIVED: {
+        icon: "arrowDown",
+        label: "Received",
+    },
+    REPAY_LOAN: {
+        icon: "sale",
+        label: "Repay Loan",
+    },
+    RESCIND_LOAN: {
+        icon: "close",
+        label: "Rescind Loan",
+    },
+    SENT: {
+        icon: "arrowUp",
+        label: "Sent",
+    },
+    SFT_MINT: {
+        icon: "mint",
+        label: "SFT Mint",
+    },
+    STAKE_SOL: {
+        icon: "star",
+        label: "Staked SOL",
+    },
+    STAKE_TOKEN: {
+        icon: "star",
+        label: "Staked Token",
+    },
+    SWAP: {
+        filterLabel: "Swap",
+        icon: "swap",
+        label: "Swap",
+    },
+    SWAP_RECEIVED: {
+        icon: "swap",
+        label: "Swap",
+    },
+    SWAP_SENT: {
+        icon: "swap",
+        label: "Swap",
+    },
+    TAKE_LOAN: {
+        icon: "handshake",
+        label: "Take Loan",
+    },
+    TOKEN_MINT: {
+        filterLabel: "Token Mint",
+        icon: "coins",
+        label: "Token Mint",
+    },
+    TRANSFER: {
+        filterLabel: "Transfer",
+        icon: "lightning",
+        label: "Transfer",
+    },
+    TRANSFER_RECEIVED: {
+        icon: "arrowDown",
+        label: "Received",
+    },
+    TRANSFER_SENT: {
+        icon: "arrowUp",
+        label: "Sent",
+    },
+    UNKNOWN: {
+        filterLabel: "Generic Transaction",
+        icon: "box",
+        label: "Generic Transaction",
+    },
+    UNSTAKE_TOKEN: {
+        icon: "cancel",
+        label: "Unstake Token",
+    },
+    UPDATE_ITEM: {
+        icon: "arrowUp",
+        label: "Update Item",
+    },
+    UPDATE_OFFER: {
+        icon: "cycle",
+        label: "Update Offer",
+    },
+    UPDATE_ORDER: {
+        icon: "arrowUp",
+        label: "Update Order",
+    },
+};
 
 export const enum IconPaths {
     arrowDown = '<path d="m5.214 14.522s4.505 4.502 6.259 6.255c.146.147.338.22.53.22s.384-.073.53-.22c1.754-1.752 6.249-6.244 6.249-6.244.144-.144.216-.334.217-.523 0-.193-.074-.386-.221-.534-.293-.293-.766-.294-1.057-.004l-4.968 4.968v-14.692c0-.414-.336-.75-.75-.75s-.75.336-.75.75v14.692l-4.979-4.978c-.289-.289-.761-.287-1.054.006-.148.148-.222.341-.221.534 0 .189.071.377.215.52z" fill-rule="nonzero"/>',
@@ -503,3 +379,25 @@ export const enum IconPaths {
 
     percentage = `<path fill-rule="evenodd" clip-rule="evenodd" d="M0.836838 0.836838C1.37266 0.301021 2.09938 2.12874e-08 2.85714 2.12874e-08C3.61491 2.12874e-08 4.34163 0.301021 4.87745 0.836838C5.41327 1.37266 5.71429 2.09938 5.71429 2.85714C5.71429 3.61491 5.41327 4.34163 4.87745 4.87745C4.34163 5.41327 3.61491 5.71429 2.85714 5.71429C2.09938 5.71429 1.37266 5.41327 0.836838 4.87745C0.301021 4.34163 2.12874e-08 3.61491 2.12874e-08 2.85714C2.12874e-08 2.09938 0.301021 1.37266 0.836838 0.836838ZM19.5816 0.418419C20.1395 0.976311 20.1395 1.88083 19.5816 2.43872L2.43872 19.5816C1.88083 20.1395 0.976311 20.1395 0.418419 19.5816C-0.139473 19.0237 -0.139473 18.1192 0.418419 17.5613L17.5613 0.418419C18.1192 -0.139473 19.0237 -0.139473 19.5816 0.418419ZM15.1226 15.1226C15.6584 14.5867 16.3851 14.2857 17.1429 14.2857C17.9006 14.2857 18.6273 14.5867 19.1632 15.1226C19.699 15.6584 20 16.3851 20 17.1429C20 17.9006 19.699 18.6273 19.1632 19.1632C18.6273 19.699 17.9006 20 17.1429 20C16.3851 20 15.6584 19.699 15.1226 19.1632C14.5867 18.6273 14.2857 17.9006 14.2857 17.1429C14.2857 16.3851 14.5867 15.6584 15.1226 15.1226Z"/>`,
 }
+
+export const publicKeyMappings = {
+  "11111111111111111111111111111111": "SYSTEM PROGRAM",
+  "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ": "PYTH MAINNET PROGRAM",
+  "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT": "PYTH MAINNET PRICE FEED",
+  "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv": "SWITCHBOARD MAINNET PROGRAM",
+  "br1xwubggTiEZ6b7iNZUwfA3psygFfaXGfZ1heaN9AW": "BRIDGE PROGRAM",
+  "DcZMKcjz34CcXF1vx7CkfARZdmEja2Kcwvspu1Zw6Zmn": "SHARP TRADE",
+  "4UsSbJQZJTfZDFrgvcPBRCSg5BbcQE6dobnriCafzj12": "LIFINITY",
+  "iNvTyprs4TX8m6UeUEkeqDFjAL9zRCRWcexK9Sd4WEU": "INVARIANT LP",
+  "ELexZoFHkSHYiAxw1jtY3se8RVPEjsL4HGqD4mfkMreZ": "SHARP TRADE INITIATE PARTNER", 
+  "PARrVs6F5egaNuz8g6pKJyU4ze3eX5xGZCFb3GLiVvu": "HEDGEHOG?",
+  "CMACYFENjoBMHzapRXyo1JZkVS6EtaDDzkjMrmQLvr4J": "MINT?",
+  "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d": "CREATE?",
+  "587DoLBH2H39i5bToWBc6zRgbD2iJZtc4Kb8nYsskYTq": "MINT?"
+};
+
+export const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+export const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+export const ATA_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+export const SOL = "So11111111111111111111111111111111111111112";
+export const SWAP_PROGRAM_ID = "SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8";

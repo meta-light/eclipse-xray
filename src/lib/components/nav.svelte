@@ -4,7 +4,7 @@
     import Icon from "$lib/components/icon.svelte";
     import Search from "$lib/components/search.svelte";
     import Stats from "$lib/components/stats.svelte";
-    import { showModal } from "$lib/state/stores/modals";
+    import { showModal } from "$lib/modals";
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";

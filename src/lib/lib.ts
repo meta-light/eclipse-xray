@@ -1,10 +1,17 @@
-import { isValidPublicKey } from "../index";
-import type { Connection, ParsedAccountData } from "@solana/web3.js";
-import { PublicKey } from "@solana/web3.js";
-import { TldParser } from "@onsol/tldparser";
-import { browser } from "$app/environment";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { publicKeyMappings } from "./config";
+import type { PublicKey as PublicKeyType, ParsedAccountData } from "@solana/web3.js";
 import { ASSET_PROGRAM_ID } from "@nifty-oss/asset";
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "../config";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "./config";
+
+const networks = {devnet: `https://staging-rpc.dev2.eclipsenetwork.xyz/`, mainnet: `https://mainnetbeta-rpc.eclipse.xyz`,};
+export type Network = keyof typeof networks;
+export const connect = (network: Network = "mainnet") => {let url = networks[network]; return new Connection(url, "confirmed");};
+
+// @ts-ignore
+export const getSolanaName = (publicKey) => publicKeyMappings[publicKey];
+
+export const isValidPublicKey = (address: string = ""): PublicKeyType | null => {try { return new PublicKey(address.trim());} catch (error) {return null;}};
 
 export interface SearchResult {url: string; address: string; type: SearchResultType; valid: boolean; search: string;}
 type SearchResultType = "token" | "account" | "transaction" | "nft" | null;

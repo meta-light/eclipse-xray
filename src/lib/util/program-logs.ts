@@ -1,5 +1,3 @@
-// https://github.com/solana-labs/explorer/blob/master/src/utils/program-logs.ts
-
 import { getProgramName } from "./program-name";
 
 export type LogMessage = {

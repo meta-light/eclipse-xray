@@ -23,7 +23,7 @@
 
     import { onMount, createEventDispatcher } from "svelte";
     import { walletStore } from "@svelte-on-solana/wallet-adapter-core";
-    import { showModal } from "$lib/state/stores/modals";
+    import { showModal } from "$lib/modals";
     import Icon from "$lib/components/icon.svelte";
     import { recentSearchesKey } from "$lib/config";
     import shortenString from "../util/shorten-string";

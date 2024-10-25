@@ -1,10 +1,7 @@
 import { z } from "zod";
-
 import { t } from "$lib/trpc/t";
-
-import { connect } from "$lib/xray";
 import { getRPCUrl, getFallbackRPCUrl } from "$lib/util/get-rpc-url";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 
 export const rawTransaction = t.procedure
     .input(

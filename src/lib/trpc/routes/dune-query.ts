@@ -1,4 +1,5 @@
 import { t } from "$lib/trpc/t";
+// @ts-ignore
 import { DUNE_KEY } from "$env/static/private";
 const query = { id: 3942875, path: 6633021 };
 export const duneQuery = t.procedure

@@ -1,6 +1,6 @@
 <script lang="ts">
     // @ts-nocheck
-    import type { ProtonTransaction } from "$lib/xray";
+    import type { ProtonTransaction } from "$lib/types";
     import { onMount } from "svelte";
     import { page } from "$app/stores";
     import { fly } from "svelte/transition";

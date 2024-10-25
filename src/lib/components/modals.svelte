@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { modalsStore, hideModal } from "$lib/state/stores/modals";
+    import { modalsStore, hideModal } from "$lib/modals";
     import { fly, fade } from "svelte/transition";
     import Icon from "$lib/components/icon.svelte";
 </script>

@@ -2,7 +2,7 @@
     /* eslint-disable */
     //@ts-nocheck
     import { page } from "$app/stores";
-    import type { ProtonTransaction } from "$lib/xray/lib/parser/types";
+    import type { ProtonTransaction } from "$lib/types";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { fly } from "svelte/transition";
     import IconCard from "$lib/components/icon-card.svelte";

@@ -18,7 +18,6 @@
         ethUsdPrice = $pythPriceQuery.data;
     }
 
-    // Add a function to format large numbers
     function formatLargeNumber(num: number): string {
         if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
         if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';

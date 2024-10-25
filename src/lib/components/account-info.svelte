@@ -1,9 +1,10 @@
 <script>
+    // @ts-nocheck
     import { onMount } from "svelte";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { tweened } from "svelte/motion";
     import { page } from "$app/stores";
-    import { SOL } from "$lib/xray";
+    import { SOL } from "$lib/config";
     import formatMoney from "$lib/util/format-money";
     import CopyButton from "$lib/components/copy-button.svelte";
     import Namor from "$lib/components/providers/namor-provider.svelte";

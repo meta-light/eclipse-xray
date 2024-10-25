@@ -37,13 +37,15 @@
                     isToken2022: ta.account.owner.equals(TOKEN_2022_PROGRAM_ID),
                 };
             }));
+            // Remove any existing ETH token (which would be incorrect)
+            tokens = tokens.filter(token => token.mint !== ETH);
+            // Add the correct ETH (native token) at the beginning of the list
             tokens.unshift({
                 mint: ETH,
                 tokenAccount: account,
                 balance: nativeBalance * 1e9,
                 isToken2022: false,
             });
-
         } catch (error) {
             console.error("Error fetching account data:", error);
             fetchError = error instanceof Error ? error.message : String(error);
@@ -76,30 +78,8 @@
         <div class="space-y-4">
             {#each tokens as token}
                 <TokenProvider address={token.mint}>
-                    <div slot="default" let:metadata let:tokenIsLoading let:tokenFailed let:isNFT let:token={tokenData}>
-                        {#if token.mint === ETH}
-                            <div class="bg-white shadow rounded-lg p-4 flex items-center justify-between">
-                                <div class="flex items-center space-x-4">
-                                    {#if metadata.image}
-                                        <img src={metadata.image} alt={metadata.name} class="w-10 h-10 rounded-full">
-                                    {:else}
-                                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                                            <span class="text-gray-500 text-xs">{metadata.name.substring(0, 2).toUpperCase()}</span>
-                                        </div>
-                                    {/if}
-                                    <div>
-                                        <h3 class="font-semibold">{metadata.name || "Unknown Token"}</h3>
-                                        <p class="text-sm text-gray-500">{token.mint}</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-bold">{formatBalance(token.balance, tokenData?.decimals || 9)}</p>
-                                    {#if token.isToken2022}
-                                        <span class="text-xs text-blue-500">Token-2022</span>
-                                    {/if}
-                                </div>
-                            </div>
-                        {:else if !isNFT}
+                    <div slot="default" let:metadata let:isNFT let:token={tokenData}>
+                        {#if !isNFT}
                             <a href="/token/{token.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}">
                                 <div class="bg-white shadow rounded-lg p-4 flex items-center justify-between">
                                     <div class="flex items-center space-x-4">
@@ -117,9 +97,11 @@
                                     </div>
                                     <div class="text-right">
                                         <p class="font-bold">{formatBalance(token.balance, tokenData?.decimals || 9)}</p>
-                                        {#if token.isToken2022}
+                                        {#if token.mint === ETH}
+                                            <span class="text-xs text-purple-500">Native ETH</span>
+                                        {:else if token.isToken2022}
                                             <span class="text-xs text-blue-500">Token-2022</span>
-                                        {:else if !token.isToken2022}
+                                        {:else}
                                             <span class="text-xs text-green-500">SPL Token</span>
                                         {/if}
                                     </div>

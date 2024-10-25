@@ -1,5 +1,5 @@
 import { json, type RequestEvent } from "@sveltejs/kit";
-import { search } from "$lib/xray";
+import { search } from "$lib/lib";
 import { Connection } from "@solana/web3.js";
 import { getRPCUrl } from "$lib/util/get-rpc-url";
 

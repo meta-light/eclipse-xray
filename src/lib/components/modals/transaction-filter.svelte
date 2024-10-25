@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { hideModal } from "$lib/state/stores/modals";
+    import { hideModal } from "$lib/modals";
     import { transactionActionsMetadata } from "$lib/types";
     import { filterStore } from "$lib/util/stores/filter";
     const handleClick = (key: string) => {$filterStore = key; hideModal();};

@@ -1,21 +1,8 @@
-export const pasteFromClipboard = async () => {
-    try {
-        const text = await navigator.clipboard.readText();
-
-        return text;
-    } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log(`ERROR`, error);
-    }
-
-    return "";
-};
+export const pasteFromClipboard = async () => {try {const text = await navigator.clipboard.readText(); return text;} catch (error) {console.log(`ERROR`, error);} return "";};
 
 export const copyToClipboard = async (text: string) => {
-    try {
-        await navigator.clipboard.writeText(text);
-    } catch (error) {
-        // Fallback method using hidden textarea element
+    try {await navigator.clipboard.writeText(text);} 
+    catch (error) {
         const el = document.createElement("textarea");
         el.value = text;
         el.setAttribute("readonly", "");

@@ -8,7 +8,7 @@
 
     import Icon from "$lib/components/icon.svelte";
     import AccountHeader from "$lib/components/account-header.svelte";
-    import { showModal } from "$lib/state/stores/modals";
+    import { showModal } from "$lib/modals";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { onMount, onDestroy } from "svelte";
 

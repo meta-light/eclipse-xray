@@ -8,7 +8,7 @@ import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { Umi } from '@metaplex-foundation/umi';
 import { Buffer } from 'buffer';
 import axios from 'axios';
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/xray/config";
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/config";
 import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import { fetchMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { publicKey } from '@metaplex-foundation/umi';

@@ -8,7 +8,6 @@ export const formatKey = (key: string) =>
 export const formatObject = (obj: any, indentLevel = 0): string => {
     const entries = Object.entries(obj).map(([key, value]) => {
         const formattedKey = formatKey(key);
-        // Apply bold style to top-level keys
         const boldClass = indentLevel === 0 ? "font-bold" : "";
         const valueClass = indentLevel > 0 ? "text-green-600" : "";
         const formattedValue =

@@ -28,7 +28,7 @@
     import CopyButton from "$lib/components/copy-button.svelte";
     import Username from "$lib/components/providers/username-provider.svelte";
     import ShortenAddress from "./shorten-address.svelte";
-    import { publicKeyMappings } from "$lib/xray/config";
+    import { publicKeyMappings } from "$lib/config";
 
     const client = trpcWithQuery($page);
     export let account: string = "";
