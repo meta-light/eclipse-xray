@@ -1,5 +1,5 @@
 import { t } from "$lib/trpc/t";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import { z } from "zod";
 import { getRPCUrl } from "$lib/utils";
 

@@ -1,5 +1,5 @@
 import type { ComponentType } from "svelte";
-import type { EnrichedTransaction } from "helius-sdk";
+import type { EnrichedTransaction, TokenTransfer } from "helius-sdk";
 import type { IconPaths, modals } from "$lib/config";
 import type { Asset } from "@nifty-oss/asset";
 import { Source, TransactionType } from "helius-sdk";
@@ -8,6 +8,7 @@ import { PublicKey } from '@solana/web3.js';
 import { ATA_PROGRAM_ID, TOKEN_PROGRAM_ID, SWAP_PROGRAM_ID } from "./config";
 export const SOL = "So11111111111111111111111111111111111111112";
 export * from "$lib/config";
+import { LOADER_IDS, isTokenAirdrop, isParsedInstruction } from "$lib/utils";
 
 export interface UIConfig {dev: boolean; devMode: boolean; isMocked: boolean; name: string; version: string;}
 export interface UIAccount {publicKey: string; transactions: Array<any>;}
@@ -15,6 +16,42 @@ export interface UITransaction {parsed: ProtonTransaction; raw: EnrichedTransact
 export interface UITokenMetadataAttribute {trait_type?: string; traitType?: string; value: string;}
 export interface UITokenMetadataCreators {address: string; share: number; verified: boolean;}
 export interface FileProperties {type: string; uri: string;}
+export interface TempTokenTransfer extends TokenTransfer {tokenAmount: number;}
+
+export type LogMessage = {text: string; prefix: string; style: "sky" | "success" | "error" | "tangerine" | "neutral";};
+export type InstructionLogs = {invokedProgram: string | null; programAddress: string; logs: LogMessage[]; computeUnits: number; truncated: boolean; failed: boolean;};
+export type ProgramInfo = {name: string;};
+export type LoaderName = (typeof LOADER_IDS)[keyof typeof LOADER_IDS];
+export type ProtonType = keyof typeof protonParsers;
+export type ProtonActionType = keyof typeof ProtonSupportedActionType;
+export type Icon = keyof typeof IconPaths;
+export interface TransactionActionMetadata {icon: Icon; label: string; filterLabel?: string;}
+export interface TransactionPage {result: Array<ProtonTransaction>; oldest: string;}
+export interface UITransactionActionGroup {label: string; icon: Icon; type: string; actions: ProtonTransactionAction[]; timestamp: number;}
+export interface TRPCTransactionsOutput {result: Array<ProtonTransaction>; oldest: string;}
+export interface Modal {title: string; component: ComponentType; showClose?: boolean; fullscreen?: boolean; props?: Record<string, any>;}
+export type Modals = keyof typeof modals;
+export type NullableProp<T> = T | null | undefined;
+export interface JupiterToken {name: string; symbol: string; address: string; decimals: number; logoURI: string;}
+export interface TokenMap {[symbol: string]: string;}
+export type RecognizedTokens = {[key: string]: string;};
+export interface CustomTransactionAction {type: CustomTransactionType; from?: string; to?: string; amount?: number;}
+export interface TempTokenTransfer extends TokenTransfer {tokenAmount: number;}
+export interface ParsedDateTime {clockHours: number; day: number; hours: number; minutes: number; month: string; seconds: number; suffix: string; year: number; formatted: string;}
+export type UIAccountToken = {id: string; decimals: number; balance: number; balanceInUSD: number; price: number; fullMetadata: any;};
+export type UISolAccountToken = {id: typeof SOL; balance: number; balanceInUSD: number; price: number;};
+export type UINiftyAsset = Asset & { json: any; amount?: string | number; owner?: string };
+export interface CustomTransaction {type: CustomTransactionType; signature: string; timestamp: number; source?: string; actions: CustomTransactionAction[];}
+export const ProtonCustomActionLabelTypes = {AIRDROP: "Airdropped", BURN: "Burned", BURN_NFT: "Burned NFT", COMPRESSED_NFT_BURN: "Burned NFT", FREEZE: "Frozen"};
+export type ProtonParser = (transaction: EnrichedTransaction, address?: string) => ProtonTransaction;
+export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
+export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
+export interface ProtonAccountChange {mint: string; amount: number;}
+export type ProtonParsers = Record<string, ProtonParser>;
+export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
+export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
+export interface ProtonAccountChange {mint: string; amount: number;}
+export const unknownProtonTransaction: ProtonTransaction = {accounts: [], actions: [], fee: 0, primaryUser: "", signature: "", source: Source.SYSTEM_PROGRAM, timestamp: 0, type: "UNKNOWN",};
 
 export interface UITokenMetadata {
     address: string;
@@ -43,84 +80,9 @@ export interface UITokenMetadata {
     mintExtensions?: object;
 }
 
-export type Icon = keyof typeof IconPaths;
-
-export interface TransactionActionMetadata {
-    icon: Icon;
-    label: string;
-    filterLabel?: string;
-}
-
-export interface TransactionPage {result: Array<ProtonTransaction>; oldest: string;}
-
-export interface UITransactionActionGroup {
-    label: string;
-    icon: Icon;
-    type: string;
-    actions: ProtonTransactionAction[];
-    timestamp: number;
-}
-
-export interface TRPCTransactionsOutput {
-    result: Array<ProtonTransaction>;
-    oldest: string;
-}
-
-export interface Modal {
-    title: string;
-    component: ComponentType;
-    showClose?: boolean;
-    fullscreen?: boolean;
-    props?: Record<string, any>;
-}
-
-export type Modals = keyof typeof modals;
-
-export type NullableProp<T> = T | null | undefined;
-
-export interface JupiterToken {
-    name: string;
-    symbol: string;
-    address: string;
-    decimals: number;
-    logoURI: string;
-}
-
-export interface TokenMap {
-    [symbol: string]: string;
-}
-
-export type RecognizedTokens = {
-    [key: string]: string;
-};
-
-export type UIAccountToken = {
-    id: string;
-    decimals: number;
-    balance: number;
-    balanceInUSD: number;
-    price: number;
-    fullMetadata: any;
-};
-export type UISolAccountToken = {
-    id: typeof SOL;
-    balance: number;
-    balanceInUSD: number;
-    price: number;
-};
-export type UINiftyAsset = Asset & { json: any; amount?: string | number; owner?: string };
-
 export interface TokenData {
-    metadata?: {
-        symbol: string;
-        name: string;
-        uri: string;
-        image?: string;
-    };
-    externalMetadata?: {
-        image?: string;
-        description?: string;
-    };
+    metadata?: {symbol: string; name: string; uri: string; image?: string;};
+    externalMetadata?: {image?: string; description?: string;};
     address: string;
     decimals: number;
     isToken2022: boolean;
@@ -147,24 +109,6 @@ export enum CustomTransactionType {
     UNKNOWN = 'UNKNOWN',
     BURN_NFT = 'BURN_NFT',
 }
-  
-export interface CustomTransaction {
-    type: CustomTransactionType;
-    signature: string;
-    timestamp: number;
-    source?: string;
-    actions: CustomTransactionAction[];
-}
-  
-export interface CustomTransactionAction {
-    type: CustomTransactionType;
-    from?: string;
-    to?: string;
-    amount?: number;
-}
-
-
-
 
 export enum ProtonSupportedType {
     BURN,
@@ -271,8 +215,6 @@ export enum ProtonSupportedActionType {
     "COMPRESSED_NFT_BURN",
 }
 
-export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
-
 export interface ProtonTransaction {
     type: ProtonType | TransactionType | ProtonActionType;
     primaryUser: string;
@@ -285,36 +227,12 @@ export interface ProtonTransaction {
     accounts: ProtonAccount[];
     raw?: EnrichedTransaction;
     metadata?: { [key: string]: any };
-    // customType: CustomTransactionType;
 }
-
-export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
-export interface ProtonAccountChange {mint: string; amount: number;}
-
-
-
-
-export const unknownProtonTransaction: ProtonTransaction = {
-    accounts: [],
-    actions: [],
-    fee: 0,
-    primaryUser: "",
-    signature: "",
-    source: Source.SYSTEM_PROGRAM,
-    timestamp: 0,
-    type: "UNKNOWN",
-    // customType: CustomTransactionType.UNKNOWN,
-};
 
 export function determineCustomTransactionType(transaction: EnrichedTransaction): CustomTransactionType {
   const { instructions, accountKeys } = transaction;
   if (isTokenAirdrop(transaction)) {return CustomTransactionType.TOKEN_AIRDROP;}
-  if (instructions.length === 1 && 
-      instructions[0].programId === PublicKey.default.toBase58() &&
-      isParsedInstruction(instructions[0]) &&
-      instructions[0].parsed.type === 'transfer') {
-    return CustomTransactionType.TRANSFER;
-  }
+  if (instructions.length === 1 &&  instructions[0].programId === PublicKey.default.toBase58() && isParsedInstruction(instructions[0]) && instructions[0].parsed.type === 'transfer') {return CustomTransactionType.TRANSFER;}
   if (instructions.some(instr => 
       instr.programId === TOKEN_PROGRAM_ID &&
       'parsed' in instr &&
@@ -336,10 +254,6 @@ export function determineCustomTransactionType(transaction: EnrichedTransaction)
   return CustomTransactionType.UNKNOWN;
 }
 
-export const ProtonCustomActionLabelTypes = {AIRDROP: "Airdropped", BURN: "Burned", BURN_NFT: "Burned NFT", COMPRESSED_NFT_BURN: "Burned NFT", FREEZE: "Frozen"};
-export type ProtonParser = (transaction: EnrichedTransaction, address?: string) => ProtonTransaction;
-export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
-
 export interface ProtonTransaction {
     type: ProtonType | TransactionType | ProtonActionType;
     primaryUser: string;
@@ -352,12 +266,7 @@ export interface ProtonTransaction {
     accounts: ProtonAccount[];
     raw?: EnrichedTransaction;
     metadata?: { [key: string]: any };
-    // customType: CustomTransactionType;
 }
-
-export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
-export interface ProtonAccountChange {mint: string; amount: number;}
-export type ProtonParsers = Record<string, ProtonParser>;
 
 export const protonParsers = {
     BORROW_FOX: parser.parseBorrowFox,
@@ -379,57 +288,4 @@ export const protonParsers = {
     TOKEN_MINT: parser.parseTokenMint,
     TRANSFER: parser.parseTransfer,
     UNKNOWN: parser.parseUnknown,
-};
-
-export type ProtonType = keyof typeof protonParsers;
-export type ProtonActionType = keyof typeof ProtonSupportedActionType;
-
-function isTokenAirdrop(transaction: EnrichedTransaction): boolean {
-  const { instructions, accountKeys } = transaction;
-  const hasAtaInstruction = instructions.some(instr => 'programId' in instr && instr.programId === ATA_PROGRAM_ID);
-  const hasTokenTransfer = instructions.some(instr => 
-    'programId' in instr && instr.programId === TOKEN_PROGRAM_ID &&
-    'parsed' in instr && 
-    typeof instr.parsed === 'object' &&
-    instr.parsed !== null &&
-    'type' in instr.parsed &&
-    instr.parsed.type === 'transfer'
-  );
-  
-  const newAccountCreated = transaction.meta?.postTokenBalances?.some((balance: any) => 
-    !transaction.meta?.preTokenBalances?.some((preBalance:any) => 
-      preBalance.accountIndex === balance.accountIndex
-    )
-  ) ?? false;
-  
-  return hasAtaInstruction && hasTokenTransfer && newAccountCreated;
-}
-
-// Add this type guard function
-function isParsedInstruction(instruction: any): instruction is { parsed: { type: string } } {
-  return 'parsed' in instruction && typeof instruction.parsed === 'object' && instruction.parsed !== null;
-}
-
-export function mapCustomTypeToProtonActionType(customType: CustomTransactionType): ProtonActionType {
-  switch (customType) {
-    case CustomTransactionType.TRANSFER:
-      return "TRANSFER";
-    case CustomTransactionType.NFT_TRANSFER:
-      return "COMPRESSED_NFT_TRANSFER";
-    case CustomTransactionType.TOKEN_TRANSFER:
-      return "TRANSFER";
-    case CustomTransactionType.SWAP:
-      return "SWAP";
-    case CustomTransactionType.TOKEN_AIRDROP:
-      return "AIRDROP";
-    default:
-      return "UNKNOWN";
-  }
-}
-
-export const recognizedTokens: RecognizedTokens = {
-  BONK: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-  FOXY: "FoXyMu5xwXre7zEoSvzViRk3nGawHUp9kUh97y2NDhcq",
-  SOL: "So11111111111111111111111111111111111111112",
-  USDC: "AKEWE7Bgh87GPp171b4cJPSSZfmZwQ3KaqYqXoKLNAEE",
 };

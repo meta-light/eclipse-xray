@@ -1,11 +1,10 @@
 <script>
-    // @ts-nocheck
     import { onMount } from "svelte";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { tweened } from "svelte/motion";
     import { page } from "$app/stores";
     import { SOL } from "$lib/config";
-    import formatMoney from "$lib/util/format-money";
+    import { formatMoney } from "$lib/utils";
     import CopyButton from "$lib/components/copy-button.svelte";
     import Namor from "$lib/components/providers/namor-provider.svelte";
     export let account = "";
@@ -14,6 +13,7 @@
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
     const accountInfo = client.accountInfo.createQuery([account, isMainnetValue ? "mainnet" : "devnet",]);
+    // @ts-ignore
     const price = client.price.createQuery(SOL);
     const balance = tweened(0, {duration: 1000,});
     let animate = false;
