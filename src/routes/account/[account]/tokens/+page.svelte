@@ -5,20 +5,25 @@
     import { Connection, PublicKey } from "@solana/web3.js";
     import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
     import TokenProvider from "$lib/components/providers/token-provider.svelte";
-    const ETH = 'So11111111111111111111111111111111111111112';
+    import { trpcWithQuery } from '$lib/trpc/client';
+    import { tokenMap, ETH  } from '$lib/config';
     const account = $page.params.account;
     let tokens: any[] = [];
     let nativeBalance: number | null = null;
     let fetchError: string | null = null;
     let isLoading = true;
     const isMainnetValue = $page.url.searchParams.get("network") !== "devnet";
+    const client = trpcWithQuery($page);
+    const pythPricesQuery = client.pythPrices.createQuery();
+    let prices: Record<string, number | null> = {};
+    $: if ($pythPricesQuery.data !== undefined) {prices = $pythPricesQuery.data;}
 
     async function fetchAccountData() {
         isLoading = true;
-        const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
-        const connection = new Connection(rpcUrl, "confirmed");
-        const pubkey = new PublicKey(account);
         try {
+            const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
+            const connection = new Connection(rpcUrl, "confirmed");
+            const pubkey = new PublicKey(account);
             const [balance, splTokenAccounts, token2022Accounts] = await Promise.all([
                 connection.getBalance(pubkey),
                 connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID }),
@@ -30,40 +35,33 @@
                 const data = new Uint8Array(ta.account.data);
                 const accountInfo = AccountLayout.decode(data);
                 const mintPubkey = new PublicKey(accountInfo.mint);                
-                return {
-                    mint: mintPubkey.toString(),
-                    tokenAccount: ta.pubkey.toString(),
-                    balance: Number(accountInfo.amount),
-                    isToken2022: ta.account.owner.equals(TOKEN_2022_PROGRAM_ID),
-                };
+                return {mint: mintPubkey.toString(), tokenAccount: ta.pubkey.toString(), balance: Number(accountInfo.amount), isToken2022: ta.account.owner.equals(TOKEN_2022_PROGRAM_ID)};
             }));
-            // Remove any existing ETH token (which would be incorrect)
             tokens = tokens.filter(token => token.mint !== ETH);
-            // Add the correct ETH (native token) at the beginning of the list
-            tokens.unshift({
-                mint: ETH,
-                tokenAccount: account,
-                balance: nativeBalance * 1e9,
-                isToken2022: false,
-            });
-        } catch (error) {
-            console.error("Error fetching account data:", error);
-            fetchError = error instanceof Error ? error.message : String(error);
-        } finally {
-            isLoading = false;
-        }
+            tokens.unshift({mint: ETH, tokenAccount: account, balance: nativeBalance * 1e9, isToken2022: false});
+        } 
+        catch (error) {console.error("Error fetching account data:", error); fetchError = error instanceof Error ? error.message : String(error);} 
+        finally {isLoading = false;}
     }
 
     onMount(fetchAccountData);
 
     function formatBalance(balance: number, decimals: number): string {
         const formattedBalance = balance / Math.pow(10, decimals);
-        if (Number.isInteger(formattedBalance)) {
-            return formattedBalance.toLocaleString('en-US', { maximumFractionDigits: 0 });
-        } else {
-            return formattedBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: decimals });
-        }
+        if (Number.isInteger(formattedBalance)) {return formattedBalance.toLocaleString('en-US', { maximumFractionDigits: 0 });} 
+        else {return formattedBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: decimals });}
     }
+
+    function getTokenPrice(metadata: any): number | null {
+        if (!metadata?.name) {return null;}
+        if (metadata.mint === ETH) {return prices['ETH'];}
+        const symbol = tokenMap[metadata.name] || tokenMap[metadata.symbol];
+        if (!symbol) {return null;}
+        const price = prices[symbol];
+        return price;
+    }
+
+    function formatUSD(amount: number): string {return new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'}).format(amount);}
 </script>
 
 <div class="container mx-auto px-4">
@@ -78,25 +76,36 @@
         <div class="space-y-4">
             {#each tokens as token}
                 <TokenProvider address={token.mint}>
-                    <div slot="default" let:metadata let:isNFT let:token={tokenData}>
+                    <div slot="default" let:metadata let:isNFT let:token={tokenData} let:tokenIsLoading={isMetadataLoading}>
                         {#if !isNFT}
                             <a href="/token/{token.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}">
                                 <div class="bg-white shadow rounded-lg p-4 flex items-center justify-between">
                                     <div class="flex items-center space-x-4">
-                                        {#if metadata.image}
-                                            <img src={metadata.image} alt={metadata.name} class="w-10 h-10 rounded-full">
+                                        {#if isMetadataLoading}
+                                            <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                                            <div>
+                                                <div class="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2"></div>
+                                                <div class="h-3 w-32 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
                                         {:else}
-                                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                                                <span class="text-gray-500 text-xs">{metadata.name.substring(0, 2).toUpperCase()}</span>
+                                            {#if metadata?.image}
+                                                <img src={metadata.image} alt={metadata.name} class="w-10 h-10 rounded-full">
+                                            {:else}
+                                                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                                    <span class="text-gray-500 text-xs">{(metadata?.name || "??").substring(0, 2).toUpperCase()}</span>
+                                                </div>
+                                            {/if}
+                                            <div>
+                                                <h3 class="font-semibold">{metadata?.name || "Unknown Token"}</h3>
+                                                <p class="text-sm text-gray-500">{token.mint}</p>
                                             </div>
                                         {/if}
-                                        <div>
-                                            <h3 class="font-semibold">{metadata.name || "Unknown Token"}</h3>
-                                            <p class="text-sm text-gray-500">{token.mint}</p>
-                                        </div>
                                     </div>
                                     <div class="text-right">
                                         <p class="font-bold">{formatBalance(token.balance, tokenData?.decimals || 9)}</p>
+                                        {#if getTokenPrice(metadata)}
+                                            <p class="text-sm text-gray-600">{formatUSD((getTokenPrice(metadata) || 0) * (token.balance / Math.pow(10, tokenData?.decimals || 9)))}</p>
+                                        {/if}
                                         {#if token.mint === ETH}
                                             <span class="text-xs text-purple-500">Native ETH</span>
                                         {:else if token.isToken2022}

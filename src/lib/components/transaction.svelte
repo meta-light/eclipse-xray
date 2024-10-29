@@ -10,7 +10,6 @@
     import IntersectionObserver from "svelte-intersection-observer";
     import { shortenString } from "$lib/utils";
     import TokenProvider from "./providers/token-provider.svelte";
-
     let element: HTMLDivElement;
     let intersecting = false;
     const params = new URLSearchParams(window.location.search);
@@ -54,14 +53,8 @@
                 </div>
             </div>
         </div>
-
         {#each actions as action, idx}
-            {@const address = action?.actionType?.includes("SENT")
-                ? action.sent || ""
-                : action?.actionType?.includes("RECEIVED")
-                ? action.received || ""
-                : action.sent || action.received || ""}
-
+            {@const address = action?.actionType?.includes("SENT") ? action.sent || "" : action?.actionType?.includes("RECEIVED") ? action.received || "" : action.sent || action.received || ""}
             {#if action.actionType !== "UNKNOWN"}
                 <IntersectionObserver once={true} rootMargin="100px" {element} bind:intersecting>
                     <div bind:this={element} />
@@ -95,7 +88,6 @@
                                                     {/if}
                                                 </a>
                                             </div>
-
                                             <div class="pointer-events-none col-span-10 flex items-center justify-between md:col-span-11">
                                                 <div>
                                                     <h4 class="text-lg font-semibold md:text-sm">{metadata?.name || "Unknown"}</h4>

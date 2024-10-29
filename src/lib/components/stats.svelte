@@ -3,6 +3,7 @@
     import { page } from "$app/stores";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { fade } from "svelte/transition";
+    import { formatLargeNumber } from "$lib/utils";
     const client = trpcWithQuery($page);
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
@@ -10,20 +11,10 @@
     const tps = client.tps.createQuery(isMainnetValue);
     const slot = client.currentSlot.createQuery([isMainnetValue]);
     const duneQueryResult = client.duneQuery.createQuery();
-    
-    const pythPriceQuery = client.pythPrice.createQuery();
+    const pythPricesQuery = client.pythPrices.createQuery();
+    let prices: Record<string, number | null> = {};
     let ethUsdPrice: number | null = null;
-
-    $: if ($pythPriceQuery.data !== undefined) {
-        ethUsdPrice = $pythPriceQuery.data;
-    }
-
-    function formatLargeNumber(num: number): string {
-        if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-        if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-        if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-        return num.toString();
-    }
+    $: if ($pythPricesQuery.data !== undefined) {prices = $pythPricesQuery.data; ethUsdPrice = prices['ETH'];}
 </script>
 
 <div class="flex h-10 w-full items-center justify-center text-xs px-2">
@@ -39,7 +30,7 @@
             {/if}
         </div>
         <div>
-            {#if !$pythPriceQuery.isLoading && ethUsdPrice !== null}
+            {#if !$pythPricesQuery.isLoading && ethUsdPrice !== null}
                 <div in:fade={{duration: 500}}>
                     <span class="font-bold">ETH:</span>
                     <span class="opacity-50">{formatMoney(ethUsdPrice)}</span>

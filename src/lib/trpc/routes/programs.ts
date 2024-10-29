@@ -1,9 +1,7 @@
 import axios from "axios";
 import { t } from "$lib/trpc/t";
 import yaml from "js-yaml";
-
 const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Eclipse-Laboratories-Inc/program-registry/main/programs.yaml';
-
 export const programs = t.procedure
     .query(async () => {
         try {

@@ -158,3 +158,23 @@ export const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 export const ATA_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
 export const SOL = "So11111111111111111111111111111111111111112";
 export const SWAP_PROGRAM_ID = "SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8";
+export const ETH = "So11111111111111111111111111111111111111112";
+
+export const tokenMap: Record<string, string> = {
+  'Solana': 'SOL',
+  'SOL': 'SOL',
+  'Ethereum': 'ETH',
+  'ETH': 'ETH',
+  'Wrapped ETH': 'ETH',
+  'USD Coin': 'USDC',
+  'USDC': 'USDC',
+  'dogwifhat': 'WIF',
+  'WIF': 'WIF'
+};
+
+export const priceFeedIds = {
+  SOL: "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+  ETH: "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+  USDC: "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+  WIF: "0x4ca4beeca86f0d164160323817a4e42b10010a724c2217c6ee41b54cd4cc61fc"
+};

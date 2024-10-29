@@ -10,23 +10,10 @@ export const balances = t.procedure
         const [account, isMainnet] = input;
         const connection = new Connection(getRPCUrl(isMainnet ? "mainnet" : "devnet"), "confirmed");
         const pubkey = new PublicKey(account);
-
-        const [solBalance, tokenAccounts] = await Promise.all([
-            connection.getBalance(pubkey),
-            connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID }),
-        ]);
-
+        const [solBalance, tokenAccounts] = await Promise.all([connection.getBalance(pubkey), connection.getTokenAccountsByOwner(pubkey, { programId: TOKEN_PROGRAM_ID })]);
         const tokens = tokenAccounts.value.map((ta) => {
             const accountInfo = AccountLayout.decode(ta.account.data);
-            return {
-                amount: accountInfo.amount.toString(),
-                decimals: accountInfo.delegateOption ? accountInfo.delegate : 0,
-                mint: new PublicKey(accountInfo.mint).toString(),
-            };
+            return {amount: accountInfo.amount.toString(), decimals: accountInfo.delegateOption ? accountInfo.delegate : 0, mint: new PublicKey(accountInfo.mint).toString()};
         });
-
-        return {
-            nativeBalance: solBalance,
-            tokens,
-        };
+        return {nativeBalance: solBalance, tokens,};
     });

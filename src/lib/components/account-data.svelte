@@ -26,7 +26,6 @@
                             {/if}
                         </div>
                     </div>
-
                     <div class="mb-3 mt-1 border border-x-0 border-t-0" />
                 </div>
             </Namor>
@@ -38,7 +37,6 @@
                                 <div class="col-span-2 p-1 md:col-span-1">
                                     <div class="aspect-square w-full rounded-full bg-secondary" />
                                 </div>
-
                                 <div class="col-span-10 flex items-center justify-between md:col-span-11">
                                     <div>
                                         <div class="mb-2 h-3 w-32 animate-pulse rounded-full bg-secondary" />
@@ -55,7 +53,6 @@
                                             <div style="background-image: url('{metadata.image}')" class="aspect-square w-6 rounded-lg bg-cover object-contain" />
                                         </a>
                                     </div>
-
                                     <div class="pointer-events-none col-span-10 flex items-center justify-between md:col-span-11">
                                         <div>
                                             <a href="/token/{metadata.address}" class="pointer-events-auto text-xs text-neutral hover:link-success">

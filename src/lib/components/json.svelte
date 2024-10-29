@@ -14,14 +14,10 @@
     <div class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg p-1">
         <div class="col-span-2 p-1 md:col-span-1">
             <!-- {#if label !== "token" && label !== "update-cNFT"}
-                <div class="center h-10 w-10 rounded-full bg-gray-200">
-                    <Icon id="json" size="sm" fill="black" stroke="" />
-                </div>
+                <div class="center h-10 w-10 rounded-full bg-gray-200"><Icon id="json" size="sm" fill="black" stroke=""/></div>
             {/if} -->
         </div>
-        <div
-            class="col-span-10 flex items-center justify-between pr-1 md:col-span-11"
-        >
+        <div class="col-span-10 flex items-center justify-between pr-1 md:col-span-11">
             <div>
                 <h4 class="text-lg font-semibold md:text-sm">
                     {#if label === "proton"}
@@ -48,10 +44,7 @@
                 {/if}
                 <CopyButton text={JSON.stringify(data, null, 2)} />
                 {#if label !== "token" && label !== "update-cNFT"}
-                    <button
-                        class="btn-ghost btn-sm btn"
-                        on:click={() => (showCode = !showCode)}
-                    >
+                    <button class="btn-ghost btn-sm btn" on:click={() => (showCode = !showCode)}>
                         {#if showCode}
                             <Icon id="cancel" size="md"/>
                         {:else}

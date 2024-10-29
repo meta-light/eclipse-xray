@@ -9,11 +9,7 @@
     export let label: string = "";
     export let success: string = "";
     export let size = "sm" as "xs" | "sm";
-    const copy = () => {
-        copyToClipboard(text);
-        copied = true;
-        setTimeout(() => {copied = false;}, 1000);
-    };
+    const copy = () => {copyToClipboard(text); copied = true; setTimeout(() => {copied = false;}, 1000);}
 </script>
 
 <button class="btn-xs btn {classList}" class:btn-success={copied} class:btn-ghost={!copied} on:click={copy}>

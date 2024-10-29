@@ -5,22 +5,8 @@
 </style>
 
 <script lang="ts">
-    type SearchResultType =
-        | "token"
-        | "account"
-        | "transaction"
-        | "bonfida-domain"
-        | "ans-domain"
-        | null;
-
-    interface SearchResult {
-        url: string;
-        address: string;
-        type: SearchResultType;
-        valid: boolean;
-        search: string;
-    }
-
+    type SearchResultType = "token" | "account" | "transaction" | "bonfida-domain" | "ans-domain" | null;
+    interface SearchResult {url: string; address: string; type: SearchResultType; valid: boolean; search: string;}
     import { onMount, createEventDispatcher } from "svelte";
     import { walletStore } from "@svelte-on-solana/wallet-adapter-core";
     import { showModal } from "$lib/modals";
@@ -40,7 +26,8 @@
     const dispatch = createEventDispatcher();
     const searchFailed = () => {isSearching = false; showModal("HELP");};
     const getRecentSearches = () => JSON.parse(localStorage.getItem(recentSearchesKey) || "[]") as SearchResult[];
-    const addRecent = (value: SearchResult) => {if (!value.search) {return;}
+    const addRecent = (value: SearchResult) => {
+        if (!value.search) {return;}
         const stored = getRecentSearches();
         const exists = stored.find(({ url }) => {return url === value.url;});
         if (exists) {return;}
@@ -52,24 +39,13 @@
     const selectSearch = (data: SearchResult) => {addRecent(data); loadSearch(data);};
     const newSearch = async () => {
         searchError = "";
-        if (!inputValue.trim()) {
-            showModal("HELP"); // Show the help modal for empty searches
-            return;
-        }
+        if (!inputValue.trim()) {showModal("HELP"); return;}
         isSearching = true;
-        try {
-            const response = await fetch(`/api/search/${inputValue}?network=${isMainnetValue ? "mainnet" : "devnet"}`);
-            const data = await response.json();
-            if (!data.valid) {searchFailed(); return;}
-            selectSearch(data);
-        } catch (error) {
-            searchFailed();
-        }
+        try {const response = await fetch(`/api/search/${inputValue}?network=${isMainnetValue ? "mainnet" : "devnet"}`); const data = await response.json(); if (!data.valid) {searchFailed(); return;} selectSearch(data);} 
+        catch (error) {searchFailed();}
     };
-
     let isMainnetValue = true;
     let placeholder = "Search";
-
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
         const network = params.get("network");
@@ -78,30 +54,15 @@
         isBackpack = window?.localStorage?.getItem("walletAdapter") === '"Backpack"';
         updatePlaceholder();
     });
-
-    function updatePlaceholder() {
-        placeholder = size === "lg" 
-            ? "Input an Eclipse address or transaction signature..." 
-            : "Search";
-    }
-
-    $: if (size) {
-        updatePlaceholder();
-    }
-
+    function updatePlaceholder() {placeholder = size === "lg" ? "Input an Eclipse address or transaction signature..." : "Search";}
+    $: if (size) {updatePlaceholder();}
     $: if ($walletStore.connected && !connected) {
         focusInput();
         const params = new URLSearchParams(window.location.search);
         const network = params.get("network");
         isMainnetValue = network !== "devnet";
         inputValue = $walletStore.publicKey?.toBase58() || "";
-        addRecent({
-            address: inputValue,
-            search: inputValue,
-            type: "account",
-            url: `/account/${inputValue}?network=${isMainnetValue ? "mainnet" : "devnet"}`,
-            valid: true,
-        });
+        addRecent({address: inputValue, search: inputValue, type: "account", url: `/account/${inputValue}?network=${isMainnetValue ? "mainnet" : "devnet"}`, valid: true});
         window.location.href = `/account/${inputValue}`;
         connected = true;
     }
@@ -133,44 +94,21 @@
                     {#each recent as recentSearch}
                         {#if recentSearch}
                             <li class="m1-ds2 relative z-30 w-full truncate px-0 hover:opacity-60">
-                                <a
-                                    class="block w-full max-w-full text-ellipsis rounded-lg px-1 py-2 text-left hover:bg-secondary"
-                                    data-sveltekit-reload
-                                    href={`${recentSearch.url}?network=${isMainnetValue ? "mainnet" : "devnet"}`}
-                                >
+                                <a class="block w-full max-w-full text-ellipsis rounded-lg px-1 py-2 text-left hover:bg-secondary" data-sveltekit-reload href={`${recentSearch.url}?network=${isMainnetValue ? "mainnet" : "devnet"}`}>
                                     <div class="flex">
-                                        <div />
                                         <div>
-                                            <p class="text-micro text-xs opacity-50">
-                                                {shortenString(recentSearch?.address)}
-                                            </p>
-                                            <p class="text-micro text-xs">
-                                                {recentSearch?.search}
-                                            </p>
+                                            <p class="text-micro text-xs opacity-50">{shortenString(recentSearch?.address)}</p>
+                                            <p class="text-micro text-xs">{recentSearch?.search}</p>
                                         </div>
                                     </div>
                                 </a>
                             </li>
                         {/if}
                     {/each}
-                {:else}
-                    <i class="pt-2 text-xs opacity-50">Paste an address to get started.</i>
-                {/if}
+                {:else}<i class="pt-2 text-xs opacity-50">Paste an address to get started.</i>{/if}
             </ul>
         {/if}
     </div>
-
-    <button class="btn-ghost btn-sm btn absolute bottom-1/2 right-4 translate-y-1/2 px-2 text-white" class:loading={isSearching} on:click={newSearch}>
-        {#if !isSearching}
-            <Icon id="search" />
-        {/if}
-    </button>
+    <button class="btn-ghost btn-sm btn absolute bottom-1/2 right-4 translate-y-1/2 px-2 text-white" class:loading={isSearching} on:click={newSearch}>{#if !isSearching}<Icon id="search"/>{/if}</button>
 </div>
-
-{#if size === "lg"}
-    <div class="relative z-10 py-2">
-        <button class="bg-faint btn-outline btn col-span-1 mb-4 w-full" on:click|preventDefault={newSearch}>
-            <span class="text-sm text-white">Explore</span>
-        </button>
-    </div>
-{/if}
+{#if size === "lg"}<div class="relative z-10 py-2"><button class="bg-faint btn-outline btn col-span-1 mb-4 w-full" on:click|preventDefault={newSearch}><span class="text-sm text-white">Explore</span></button></div>{/if}

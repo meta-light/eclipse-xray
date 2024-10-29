@@ -15,44 +15,15 @@ type TransactionWithInvocations = {
 };
 
 const voteFilter = VOTE_PROGRAM_ID.toBase58();
-
 export const blockTransactions = t.procedure
-    .input(
-        z.object({
-            cursor: z.string().optional(),
-            isMainnet: z.boolean(),
-            limit: z.number().min(1).max(100).optional(),
-            slot: z.number(),
-        })
-    )
+    .input(z.object({cursor: z.string().optional(), isMainnet: z.boolean(), limit: z.number().min(1).max(100).optional(), slot: z.number(),}))
     .query(async ({ input }) => {
-        const connection = new Connection(
-            getRPCUrl(input.isMainnet ? "mainnet" : "devnet"),
-            "confirmed"
-        );
-
-        const block = await connection.getBlock(input.slot, {
-            maxSupportedTransactionVersion: 0,
-        });
-
-        if (!block) {
-            throw new Error("Block not found");
-        }
-
+        const connection = new Connection(getRPCUrl(input.isMainnet ? "mainnet" : "devnet"), "confirmed");
+        const block = await connection.getBlock(input.slot, {maxSupportedTransactionVersion: 0,});
+        if (!block) {throw new Error("Block not found");}
         const transactions = block.transactions.map((tx, index) => {
             const { transaction, meta } = tx;
-            return {
-                err: meta?.err,
-                fee: meta?.fee,
-                index,
-                signature: transaction.signatures[0],
-                slot: block.parentSlot,
-            };
+            return {err: meta?.err, fee: meta?.fee, index, signature: transaction.signatures[0], slot: block.parentSlot};
         });
-
-        return {
-            blockHeight: block.blockHeight,
-            blockTime: block.blockTime,
-            transactions,
-        };
+        return {blockHeight: block.blockHeight, blockTime: block.blockTime, transactions};
     });

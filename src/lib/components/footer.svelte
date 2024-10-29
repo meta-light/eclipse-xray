@@ -1,7 +1,4 @@
-<script>
-    import Icon from "$lib/components/icon.svelte";
-</script>
-
+<script>import Icon from "$lib/components/icon.svelte";</script>
 <footer class="footer mt-0 grid w-full grid-cols-2 items-center border-t border-black bg-white p-3">
     <div class="col-span-1 flex items-center">
         <a class="btn-ghost btn flex items-center text-left" href="https://eclipse.xyz/" rel="noreferrer" target="_blank">
@@ -16,12 +13,8 @@
     </div>
     <div class="col-span-1 flex w-full justify-end">
         <div class="mr-12">
-            <a href="https://discord.com/invite/eclipse-labs" class="btn-ghost btn">
-                <Icon id="discord" size="md" fill="black" />
-            </a>
-            <a href="https://x.com/EclipseFND" class="btn-ghost btn">
-                <Icon id="twitter" size="md" fill="black" />
-            </a>
+            <a href="https://discord.com/invite/eclipse-labs" class="btn-ghost btn"><Icon id="discord" size="md" fill="black" /></a>
+            <a href="https://x.com/EclipseFND" class="btn-ghost btn"><Icon id="twitter" size="md" fill="black" /></a>
         </div>
     </div>
 </footer>

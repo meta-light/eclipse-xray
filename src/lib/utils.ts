@@ -254,6 +254,13 @@ export const formatDate = (timestamp: number) => {
     return Intl.DateTimeFormat(undefined, {day: "numeric", hour: "numeric", minute: "numeric", month: "numeric", year: "2-digit"}).format(date);
 };
 
+export function formatLargeNumber(num: number): string {
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    return num.toString();
+}
+
 export enum PROGRAM_NAMES {
     ADDRESS_LOOKUP_TABLE = "Address Lookup Table Program",
     COMPUTE_BUDGET = "Compute Budget Program",

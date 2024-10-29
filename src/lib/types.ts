@@ -18,6 +18,19 @@ export interface UITokenMetadataCreators {address: string; share: number; verifi
 export interface FileProperties {type: string; uri: string;}
 export interface TempTokenTransfer extends TokenTransfer {tokenAmount: number;}
 
+export const metadata: UITokenMetadata = {
+    address: "",
+    attributes: [],
+    collectionKey: "",
+    creators: [],
+    delegate: "",
+    description: "",
+    image: "",
+    name: "",
+    owner: "",
+    sellerFeeBasisPoints: 0,
+};
+
 export type LogMessage = {text: string; prefix: string; style: "sky" | "success" | "error" | "tangerine" | "neutral";};
 export type InstructionLogs = {invokedProgram: string | null; programAddress: string; logs: LogMessage[]; computeUnits: number; truncated: boolean; failed: boolean;};
 export type ProgramInfo = {name: string;};

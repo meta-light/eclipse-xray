@@ -109,8 +109,8 @@
         "name": "Orca",
         "description": "Orca is the go-to place to trade tokens and provide liquidity on Eclipse",
         "icon": "/media/dapps/orca.jpg",
-        "link": "https://www.orca.so/",
-        "network": "pre-launch"
+        "link": "https://www.orca.so/?chainId=eclipse/",
+        "network": "mainnet"
     },
     {
         "name": "KOI KOI",

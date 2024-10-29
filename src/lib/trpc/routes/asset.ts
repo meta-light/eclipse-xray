@@ -8,26 +8,9 @@ export const asset = t.procedure
     .query(async ({ input }) => {
         const [asset, isMainnet] = input;
         const url = getRPCUrl(isMainnet ? "mainnet" : "devnet");
-
-        const response = await fetch(url, {
-            body: JSON.stringify({
-                id: "asset",
-                jsonrpc: "2.0",
-                method: "getAsset",
-                params: [
-                    asset,
-                    { encoding: "jsonParsed" }
-                ]
-            }),
-            headers: {
-                "Content-Type": "application/json",
-            },
-            method: "POST",
-        });
-
+        const response = await fetch(url, {body: JSON.stringify({id: "asset", jsonrpc: "2.0", method: "getAsset", params: [asset, { encoding: "jsonParsed" }]}), headers: {"Content-Type": "application/json"}, method: "POST",});
         const data = await response.json();
         let metadata: UITokenMetadata | undefined;
-
         if (data?.result) {
             const result = data.result;
             metadata = {
@@ -47,7 +30,6 @@ export const asset = t.procedure
                 owner: result.owner || "",
                 sellerFeeBasisPoints: result.data?.sellerFeeBasisPoints || 0,
             };
-
             if (metadata.compressed) {
                 metadata.assetHash = result.compression?.assetHash;
                 metadata.creatorHash = result.compression?.creatorHash;
@@ -57,6 +39,5 @@ export const asset = t.procedure
                 metadata.tree = result.compression?.tree;
             }
         }
-
         return metadata ?? data?.result;
     });

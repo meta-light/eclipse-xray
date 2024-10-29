@@ -1,22 +1,8 @@
 <style>
-    .username-block {
-        opacity: 90%;
-    }
-
-    .username-block:nth-child(3n + 2) {
-        background-color: #dbeafe;
-        color: #2563eb;
-    }
-
-    .username-block:nth-child(3n + 1) {
-        background-color: #fef08a;
-        color: #ca8a04;
-    }
-
-    .username-block:nth-child(3n + 3) {
-        background-color: #bbf7d0;
-        color: #16a34a;
-    }
+    .username-block {opacity: 90%;}
+    .username-block:nth-child(3n + 2) {background-color: #dbeafe; color: #2563eb;}
+    .username-block:nth-child(3n + 1) {background-color: #fef08a; color: #ca8a04;}
+    .username-block:nth-child(3n + 3) {background-color: #bbf7d0; color: #16a34a;}
 </style>
 
 <script lang="ts">
@@ -29,7 +15,6 @@
     import Username from "$lib/components/providers/username-provider.svelte";
     import ShortenAddress from "./shorten-address.svelte";
     import { publicKeyMappings } from "$lib/config";
-
     const client = trpcWithQuery($page);
     export let account: string = "";
     export let link: string = "";
@@ -41,22 +26,13 @@
     let animate = false;
     let programName: string | null = null;
     let programRepo: string | null = null;
-
     const programsQuery = client.programs.createQuery();
 
-    onMount(async () => {
-        if (account in publicKeyMappings && typeof account === 'string') {
-            programName = publicKeyMappings[account as keyof typeof publicKeyMappings];
-        };
-        animate = true;
-    });
+    onMount(async () => {if (account in publicKeyMappings && typeof account === 'string') {programName = publicKeyMappings[account as keyof typeof publicKeyMappings];}; animate = true;});
 
     $: if ($programsQuery.data && !programName) {
         const matchingProgram = $programsQuery.data.find(program => program.program_address === account);
-        if (matchingProgram) {
-            programName = matchingProgram.name;
-            programRepo = matchingProgram.repo;
-        }
+        if (matchingProgram) {programName = matchingProgram.name; programRepo = matchingProgram.repo;}
     }
 
     $: if ($accountInfo?.data?.balance) {balance.set($accountInfo.data.balance);}
@@ -71,21 +47,13 @@
     }
 
     let ethUsdPrice: number | null = null;
-    const pythPriceQuery = client.pythPrice.createQuery();
-
-    $: if ($pythPriceQuery.data !== undefined) {
-        ethUsdPrice = $pythPriceQuery.data;
-    }
-
+    const pythPricesQuery = client.pythPrices.createQuery();
+    let prices: Record<string, number | null> = {};
+    $: if ($pythPricesQuery.data !== undefined) {prices = $pythPricesQuery.data; ethUsdPrice = prices['ETH'];}
     $: worth = $balance * (ethUsdPrice ?? 0);
-
     let localIsLoading = true;
 
-    onMount(() => {
-        setTimeout(() => {
-            localIsLoading = false;
-        }, 5000);
-    });
+    onMount(() => {setTimeout(() => {localIsLoading = false;}, 5000);});
 </script>
 
 <Username address={account} let:username let:isLoading>
@@ -96,7 +64,6 @@
                     <h3 class="relative m-0 text-lg font-bold md:text-2xl">
                         <ShortenAddress address={account} />
                     </h3>
-                    <!-- Add program name with repo link if available -->
                     {#if programName}
                         <span class="ml-2 text-sm font-normal opacity-70">
                             {#if programRepo}
@@ -112,8 +79,7 @@
                             <CopyButton text={link} icon="link" />
                         </div>
                     </div>
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="badge-outline badge relative mx-2 flex cursor-default px-4 py-2 opacity-90" on:click={toggleNetwork}>
+                    <div  class="badge-outline badge relative mx-2 flex cursor-pointer px-4 py-2 opacity-90" on:click={toggleNetwork} on:keydown={e => e.key === 'Enter' && toggleNetwork()} role="button" tabindex="0">
                         {isMainnetValue ? "mainnet" : "devnet"}
                     </div>
                 </div>
@@ -122,8 +88,7 @@
                         <span class="">{$balance.toFixed(6)}</span>
                         <span class="opacity-50">ETH</span>
                     </h1>
-
-                    {#if ethUsdPrice !== null}
+                    {#if !$pythPricesQuery.isLoading && ethUsdPrice !== null}
                         <span class="ml-1 text-xs opacity-50 md:block">{formatMoney(worth)} USD</span>
                     {:else}
                         <div class="pulse my-2 h-2 w-20 rounded-lg bg-secondary" />
@@ -132,17 +97,11 @@
             </div>
             {#if localIsLoading && isLoading}
                 <div class="flex flex-wrap gap-2 pt-2">
-                    {#each [1, 2, 3] as _}
-                        <div class="username-block inline-block h-6 w-[72px] animate-pulse rounded-full px-3 py-1 text-xs font-extrabold" />
-                    {/each}
+                    {#each [1, 2, 3] as _}<div class="username-block inline-block h-6 w-[72px] animate-pulse rounded-full px-3 py-1 text-xs font-extrabold" />{/each}
                 </div>
             {:else}
                 <div class="flex flex-wrap gap-2 pt-2">
-                    {#if username}
-                        <div class="username-block inline-block rounded-full px-3 py-1 text-xs font-extrabold">
-                            {username}
-                        </div>
-                    {/if}
+                    {#if username}<div class="username-block inline-block rounded-full px-3 py-1 text-xs font-extrabold">{username}</div>{/if}
                 </div>
             {/if}
         </div>

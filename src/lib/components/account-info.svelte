@@ -46,9 +46,7 @@
                     <span class="">{$balance.toFixed(6)}</span>
                     <span class="opacity-50">ETH</span>
                 </h1>
-                {#if !$price?.isLoading}
-                    <span class="ml-1 hidden text-xs opacity-50 md:block">{formatMoney(worth)} USD</span>
-                {/if}
+                {#if !$price?.isLoading}<span class="ml-1 hidden text-xs opacity-50 md:block">{formatMoney(worth)} USD</span>{/if}
             </div>
         </div>
     </div>
