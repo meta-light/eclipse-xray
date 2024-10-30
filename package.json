@@ -7,7 +7,7 @@
         "node": "18.x"
     },
     "scripts": {
-        "dev": "dotenv -- vite dev",
+        "dev": "vite dev",
         "build": "vite build",
         "preview": "vite preview"
     },

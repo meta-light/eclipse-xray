@@ -8,14 +8,16 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
     build: {
         target: "es2020",
+        rollupOptions: {
+            external: ['crypto'],
+        }
     },
-
     define: {
         APP_NAME: JSON.stringify(pkg.name),
         APP_VERSION: JSON.stringify(pkg.version),
         "process.env.NODE_DEBUG": false,
+        'global.crypto': 'crypto'
     },
-
     optimizeDeps: {
         esbuildOptions: {
             define: {
@@ -25,25 +27,31 @@ export default defineConfig(({ mode }) => ({
                 NodeGlobalsPolyfillPlugin({
                     buffer: true,
                     process: true,
+                    crypto: true
                 })
             ],
             target: "es2020",
         },
     },
-
     plugins: [
         sveltekit(),
         NodeModulesPolyfillPlugin(),
         NodeGlobalsPolyfillPlugin({
             buffer: true,
             process: true,
+            crypto: true
         }),
     ],
     resolve: {
         alias: {
             $lib: path.resolve("./src/lib"),
             crypto: 'crypto-browserify',
-            '@eclipse/crypto-shim': path.resolve('./src/crypto-shim.ts'),
-        },
-    },
+            stream: 'stream-browserify',
+            assert: 'assert',
+            http: 'stream-http',
+            https: 'https-browserify',
+            os: 'os-browserify',
+            url: 'url'
+        }
+    }
 }));
