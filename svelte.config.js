@@ -6,12 +6,10 @@ const config = {
     kit: {
         adapter: adapter(),
     },
-
     preprocess: [
         preprocess({
             postcss: true,
         }),
     ],
 };
-
 export default config;
