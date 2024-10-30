@@ -1,7 +1,1 @@
-[ ] Nifty Asset Integration - https://docs.eclipse.xyz/developers/nfts/nifty-asset
-[ ] AllDomains Integration - https://docs.eclipse.xyz/developers/developer-tooling/decentralized-identities/alldomains
-
-- Interate Nifty Asset into both token and NFT queries
-- Finish Alldomains integration
 - Finish working on fallback RPC method
-- Dapps page

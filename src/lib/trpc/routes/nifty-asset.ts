@@ -12,6 +12,8 @@ import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/config";
 import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import { fetchMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { publicKey } from '@metaplex-foundation/umi';
+import { niftyAsset as niftyAssetClient } from '@nifty-oss/asset';
+import { fetchAsset } from '@nifty-oss/asset';
 
 export interface NiftyAsset {
     mint: string;
@@ -107,7 +109,7 @@ export const niftyAsset = t.procedure
                     catch (error) {console.error('Error fetching external metadata:', error);}
                 }
             } 
-            else {
+            if (!metadata) {
                 try {
                     const umiPublicKey = publicKey(tokenPublicKey.toBase58());
                     const [metadataPda] = findMetadataPda(umi, { mint: umiPublicKey });
@@ -122,6 +124,19 @@ export const niftyAsset = t.procedure
                     else {console.log('No metadata account found');}
                 } 
                 catch (error) {console.error('Error fetching Metaplex metadata:', error);}
+            }
+            if (!metadata) {
+                try {
+                    const niftyMetadata = await fetchNiftyAssetMetadata(umi, tokenPublicKey.toBase58());
+                    if (niftyMetadata) {
+                        metadata = {name: niftyMetadata.name, symbol: niftyMetadata.symbol, uri: niftyMetadata.uri};
+                        if (niftyMetadata.uri) {
+                            try {externalMetadata = await fetchMetadataFromUri(niftyMetadata.uri);} 
+                            catch (error) {console.error('Error fetching external metadata from Nifty Asset URI:', error);}
+                        }
+                    }
+                } 
+                catch (error) {console.error('Error fetching Nifty Asset metadata:', error);}
             }
             const niftyAssetData: NiftyAsset = {
                 mint: token,
@@ -171,3 +186,24 @@ export const nfts = t.procedure
         } 
         catch (error) {console.error("Error fetching tokens:", error); throw new Error("Failed to fetch tokens");}
     });
+
+async function fetchNiftyAssetMetadata(umi: Umi, mint: string) {
+    try {
+        umi.use(niftyAssetClient());
+        const asset = await fetchAsset(umi, publicKey(mint));
+        if (!asset) return null;
+        console.log('Nifty Asset data:', JSON.stringify(asset, null, 2));
+        const metadata = {name: '', symbol: '', uri: ''};
+        if (typeof asset === 'object') {
+            if ('name' in asset && typeof asset.name === 'string') {metadata.name = asset.name;}
+            if ('uri' in asset && typeof asset.uri === 'string') {metadata.uri = asset.uri;} 
+            else if ('content' in asset && typeof asset.content === 'object' && asset.content && 'uri' in asset.content) {metadata.uri = String(asset.content.uri);}
+            if ('metadata' in asset && typeof asset.metadata === 'object' && asset.metadata) {
+                const assetMetadata = asset.metadata as Record<string, unknown>;
+                if ('symbol' in assetMetadata && typeof assetMetadata.symbol === 'string') {metadata.symbol = assetMetadata.symbol;}
+            }
+        }
+        return metadata;
+    } 
+    catch (error) {console.error('Error in fetchNiftyAssetMetadata:', error); return null;}
+}

@@ -82,7 +82,7 @@
         "description": "Multichain play-to-airdrop top-down 2D survival RPG based in dungeons of Cryptara built by IntoTheVerse powered by SVM Eclipse. Coming soon to MoveVM!",
         "icon": "/media/dapps/cryptara.jpg",
         "link": "https://t.co/bHwam6SZhq",
-        "network": "pre-launch"
+        "network": "mainnet"
     },
     {
         "name": "Let's Cook",
@@ -143,14 +143,14 @@
     {
         "name": "Openbook",
         "description": "Openbook is a decentralized exchange for the Eclipse ecosystem.",
-        "icon": "",
+        "icon": "/media/dapps/openbook.png",
         "link": "https://openbook-dex-ui-eclipse.fly.dev/#/market/8GmrrARv2SQ5Z8eKnrvJ9VrcZHDoeGmRfR5MY5jmqfuM",
         "network": "devnet"
     },
     {
         "name": "Clone Markets",
         "description": "Clone Markets is a decentralized exchange for the Eclipse ecosystem.",
-        "icon": "",
+        "icon": "/media/dapps/clone.jpg",
         "link": "https://e-markets.clone.so/",
         "network": "devnet"
     },
