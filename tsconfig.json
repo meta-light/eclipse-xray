@@ -8,7 +8,12 @@
         "ignoreDeprecations": "5.0",
         "importsNotUsedAsValues": "error",
         "resolveJsonModule": true,
-        "strict": true
+        "strict": true,
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/types"
+        ],
+        "types": ["node"]
     },
     "extends": "./.svelte-kit/tsconfig.json",
     "include": [
@@ -16,10 +21,13 @@
         "src/**/*.d.ts",
         "src/**/*.js",
         "src/**/*.ts",
-        "src/**/*.svelte"
+        "src/**/*.svelte",
+        "src/types/**/*.d.ts"
     ],
     "exclude": [
         "dist",
-        "node_modules"
+        "node_modules",
+        "**/*.scss",
+        "**/*.sass"
     ]
 }

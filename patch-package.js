@@ -8,6 +8,6 @@ const __dirname = path.dirname(__filename);
 const filePath = path.join(__dirname, 'node_modules', '@solana', 'spl-type-length-value', 'lib', 'esm', 'splDiscriminate.js');
 
 let content = fs.readFileSync(filePath, 'utf8');
-content = content.replace("import { createHash } from 'crypto';", "import { createHash } from '../../../../../src/crypto-shim.js';");
+content = content.replace("import { createHash } from 'crypto';", "import { createHash } from '../../../../../src/crypto-shim.ts';");
 
 fs.writeFileSync(filePath, content);

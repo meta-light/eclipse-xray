@@ -42,7 +42,9 @@ export default defineConfig(({ mode }) => ({
     resolve: {
         alias: {
             $lib: path.resolve("./src/lib"),
-            crypto: 'crypto-browserify'
+            crypto: 'crypto-browserify',
+            '@solana/spl-type-length-value': path.resolve('./node_modules/@solana/spl-type-length-value'),
+            'src/crypto-shim.js': path.resolve('./src/crypto-shim.ts')
         },
     },
 }));
