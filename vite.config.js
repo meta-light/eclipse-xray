@@ -9,13 +9,11 @@ export default defineConfig(({ mode }) => ({
     build: {
         target: "es2020",
     },
-
     define: {
         APP_NAME: JSON.stringify(pkg.name),
         APP_VERSION: JSON.stringify(pkg.version),
         "process.env.NODE_DEBUG": false,
     },
-
     optimizeDeps: {
         esbuildOptions: {
             define: {
@@ -30,7 +28,6 @@ export default defineConfig(({ mode }) => ({
             target: "es2020",
         },
     },
-
     plugins: [
         sveltekit(),
         NodeModulesPolyfillPlugin(),
