@@ -22,7 +22,6 @@
     $: lastPage = transactionPages[transactionPages.length - 1];
     $: lastPageHasTransactions = lastPage ? lastPage.result?.length > 0 : false;
 </script>
-
 {#if $transactions.isLoading}
     {#each Array(3) as _}
         <div class="py-2">

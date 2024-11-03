@@ -7,5 +7,4 @@
     let result: string = "";
     $: {result = getSolanaName(text) || shortenString(text); shortened = shortenString(result, 8); shortenedOriginal = shortenString(text, 6);}
 </script>
-
 <slot {result} {shortened} {shortenedOriginal}/>

@@ -13,9 +13,9 @@
 <div class="mb-3" in:fade={{duration: 500}}>
     <div class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg p-1">
         <div class="col-span-2 p-1 md:col-span-1">
-            <!-- {#if label !== "token" && label !== "update-cNFT"}
+            {#if label !== "token" && label !== "update-cNFT"}
                 <div class="center h-10 w-10 rounded-full bg-gray-200"><Icon id="json" size="sm" fill="black" stroke=""/></div>
-            {/if} -->
+            {/if}
         </div>
         <div class="col-span-10 flex items-center justify-between pr-1 md:col-span-11">
             <div>

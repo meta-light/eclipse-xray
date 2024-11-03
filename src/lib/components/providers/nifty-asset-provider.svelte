@@ -9,7 +9,6 @@
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
-
     async function fetchNFTData() {
         if (!address) return;
         const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
@@ -27,7 +26,6 @@
     $: loading = status.isLoading;
     $: failed = status.isError;
 </script>
-
 <div>
     <IntersectionObserver once={true} {element} bind:intersecting>
         <div bind:this={element}/>

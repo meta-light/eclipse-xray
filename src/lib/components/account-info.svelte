@@ -21,7 +21,6 @@
     $: if ($accountInfo?.data?.balance) {balance.set($accountInfo.data.balance);}
     $: worth = $balance * $price?.data;
 </script>
-
 <Namor text={account} let:result>
     <div class="content mt-2 flex items-center px-3 md:hidden">
         <h1 class="my-1 text-lg">

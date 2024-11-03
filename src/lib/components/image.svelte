@@ -14,7 +14,6 @@
         img.onerror = () => {loading = false; failed = true;};
     });
 </script>
-
 {#if loading}
     <img src="https://samherbert.net/svg-loaders/svg-loaders/bars.svg" class="{className} scale-[0.25] opacity-50" {alt}/>
 {:else if failed}

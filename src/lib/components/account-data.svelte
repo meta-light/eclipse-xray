@@ -21,9 +21,7 @@
                                 </a>
                                 <CopyButton text={data.account} />
                             </div>
-                            {#if data.label}
-                                <div class="text-xs text-gray-500">{data.label}</div>
-                            {/if}
+                            {#if data.label}<div class="text-xs text-gray-500">{data.label}</div>{/if}
                         </div>
                     </div>
                     <div class="mb-3 mt-1 border border-x-0 border-t-0" />
@@ -61,17 +59,11 @@
                                         </div>
                                         <div class="mr-2">
                                             {#if change.amount > 0}
-                                                <h3 class="text-bold text-sm text-success">
-                                                    + {change.amount}
-                                                </h3>
+                                                <h3 class="text-bold text-sm text-success">+ {change.amount}</h3>
                                             {:else if change.amount < 0}
-                                                <h3 class="text-bold text-sm text-error">
-                                                    {change.amount}
-                                                </h3>
+                                                <h3 class="text-bold text-sm text-error">{change.amount}</h3>
                                             {:else}
-                                                <h3 class="text-bold text-sm">
-                                                    {change.amount}
-                                                </h3>
+                                                <h3 class="text-bold text-sm">{change.amount}</h3>
                                             {/if}
                                         </div>
                                     </div>

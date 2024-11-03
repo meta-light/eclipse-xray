@@ -14,7 +14,7 @@
     import CopyButton from "$lib/components/copy-button.svelte";
     import Username from "$lib/components/providers/username-provider.svelte";
     import ShortenAddress from "./shorten-address.svelte";
-    import { publicKeyMappings } from "$lib/config";
+    import { PROGRAM_INFO_BY_ID } from "$lib/config";
     const client = trpcWithQuery($page);
     export let account: string = "";
     export let link: string = "";
@@ -28,7 +28,12 @@
     let programRepo: string | null = null;
     const programsQuery = client.programs.createQuery();
 
-    onMount(async () => {if (account in publicKeyMappings && typeof account === 'string') {programName = publicKeyMappings[account as keyof typeof publicKeyMappings];}; animate = true;});
+    onMount(async () => {
+        if (account in PROGRAM_INFO_BY_ID) {
+            programName = PROGRAM_INFO_BY_ID[account].name;
+        }
+        animate = true;
+    });
 
     $: if ($programsQuery.data && !programName) {
         const matchingProgram = $programsQuery.data.find(program => program.program_address === account);

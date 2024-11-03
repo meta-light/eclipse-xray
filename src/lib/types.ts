@@ -1,14 +1,15 @@
 import type { ComponentType } from "svelte";
 import type { EnrichedTransaction, TokenTransfer } from "helius-sdk";
-import type { IconPaths, modals } from "$lib/config";
+import type { modals, networks, PROGRAM_INFO_BY_ID } from "$lib/config";
+import type { IconPaths } from "$lib/ui";
 import type { Asset } from "@nifty-oss/asset";
 import { Source, TransactionType } from "helius-sdk";
 import * as parser from "./parsers";
 import { PublicKey } from '@solana/web3.js';
-import { ATA_PROGRAM_ID, TOKEN_PROGRAM_ID, SWAP_PROGRAM_ID } from "./config";
-export const SOL = "So11111111111111111111111111111111111111112";
+import { TOKEN_PROGRAM_ID, SWAP_PROGRAM_ID } from "./config";
+import { ETH } from "$lib/config";
 export * from "$lib/config";
-import { LOADER_IDS, isTokenAirdrop, isParsedInstruction } from "$lib/utils";
+import { isTokenAirdrop, isParsedInstruction } from "$lib/utils";
 
 export interface UIConfig {dev: boolean; devMode: boolean; isMocked: boolean; name: string; version: string;}
 export interface UIAccount {publicKey: string; transactions: Array<any>;}
@@ -17,6 +18,7 @@ export interface UITokenMetadataAttribute {trait_type?: string; traitType?: stri
 export interface UITokenMetadataCreators {address: string; share: number; verified: boolean;}
 export interface FileProperties {type: string; uri: string;}
 export interface TempTokenTransfer extends TokenTransfer {tokenAmount: number;}
+export type Network = keyof typeof networks;
 
 export const metadata: UITokenMetadata = {
     address: "",
@@ -31,10 +33,10 @@ export const metadata: UITokenMetadata = {
     sellerFeeBasisPoints: 0,
 };
 
+export type SearchResultType = "token" | "account" | "transaction" | "nft" | null;
 export type LogMessage = {text: string; prefix: string; style: "sky" | "success" | "error" | "tangerine" | "neutral";};
 export type InstructionLogs = {invokedProgram: string | null; programAddress: string; logs: LogMessage[]; computeUnits: number; truncated: boolean; failed: boolean;};
-export type ProgramInfo = {name: string;};
-export type LoaderName = (typeof LOADER_IDS)[keyof typeof LOADER_IDS];
+export type LoaderName = keyof typeof PROGRAM_INFO_BY_ID;
 export type ProtonType = keyof typeof protonParsers;
 export type ProtonActionType = keyof typeof ProtonSupportedActionType;
 export type Icon = keyof typeof IconPaths;
@@ -45,25 +47,20 @@ export interface TRPCTransactionsOutput {result: Array<ProtonTransaction>; oldes
 export interface Modal {title: string; component: ComponentType; showClose?: boolean; fullscreen?: boolean; props?: Record<string, any>;}
 export type Modals = keyof typeof modals;
 export type NullableProp<T> = T | null | undefined;
-export interface JupiterToken {name: string; symbol: string; address: string; decimals: number; logoURI: string;}
 export interface TokenMap {[symbol: string]: string;}
 export type RecognizedTokens = {[key: string]: string;};
 export interface CustomTransactionAction {type: CustomTransactionType; from?: string; to?: string; amount?: number;}
-export interface TempTokenTransfer extends TokenTransfer {tokenAmount: number;}
 export interface ParsedDateTime {clockHours: number; day: number; hours: number; minutes: number; month: string; seconds: number; suffix: string; year: number; formatted: string;}
 export type UIAccountToken = {id: string; decimals: number; balance: number; balanceInUSD: number; price: number; fullMetadata: any;};
-export type UISolAccountToken = {id: typeof SOL; balance: number; balanceInUSD: number; price: number;};
+export type UISolAccountToken = {id: typeof ETH; balance: number; balanceInUSD: number; price: number;};
 export type UINiftyAsset = Asset & { json: any; amount?: string | number; owner?: string };
 export interface CustomTransaction {type: CustomTransactionType; signature: string; timestamp: number; source?: string; actions: CustomTransactionAction[];}
 export const ProtonCustomActionLabelTypes = {AIRDROP: "Airdropped", BURN: "Burned", BURN_NFT: "Burned NFT", COMPRESSED_NFT_BURN: "Burned NFT", FREEZE: "Frozen"};
 export type ProtonParser = (transaction: EnrichedTransaction, address?: string) => ProtonTransaction;
-export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
-export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
 export interface ProtonAccountChange {mint: string; amount: number;}
 export type ProtonParsers = Record<string, ProtonParser>;
 export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
 export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
-export interface ProtonAccountChange {mint: string; amount: number;}
 export const unknownProtonTransaction: ProtonTransaction = {accounts: [], actions: [], fee: 0, primaryUser: "", signature: "", source: Source.SYSTEM_PROGRAM, timestamp: 0, type: "UNKNOWN",};
 
 export interface UITokenMetadata {
@@ -243,7 +240,7 @@ export interface ProtonTransaction {
 }
 
 export function determineCustomTransactionType(transaction: EnrichedTransaction): CustomTransactionType {
-  const { instructions, accountKeys } = transaction;
+  const { instructions } = transaction;
   if (isTokenAirdrop(transaction)) {return CustomTransactionType.TOKEN_AIRDROP;}
   if (instructions.length === 1 &&  instructions[0].programId === PublicKey.default.toBase58() && isParsedInstruction(instructions[0]) && instructions[0].parsed.type === 'transfer') {return CustomTransactionType.TRANSFER;}
   if (instructions.some(instr => 
@@ -267,29 +264,13 @@ export function determineCustomTransactionType(transaction: EnrichedTransaction)
   return CustomTransactionType.UNKNOWN;
 }
 
-export interface ProtonTransaction {
-    type: ProtonType | TransactionType | ProtonActionType;
-    primaryUser: string;
-    fee: number;
-    signature: string;
-    timestamp: number;
-    blockTime?: number;
-    source: Source;
-    actions: ProtonTransactionAction[];
-    accounts: ProtonAccount[];
-    raw?: EnrichedTransaction;
-    metadata?: { [key: string]: any };
-}
-
 export const protonParsers = {
-    BORROW_FOX: parser.parseBorrowFox,
     BURN: parser.parseBurn,
     BURN_NFT: parser.parseBurn,
     COMPRESSED_NFT_BURN: parser.parseCompressedNftBurn,
     COMPRESSED_NFT_MINT: parser.parseCompressedNftMint,
     COMPRESSED_NFT_TRANSFER: parser.parseCompressedNftTransfer,
     EXECUTE_TRANSACTION: parser.parseTransfer,
-    LOAN_FOX: parser.parseLoanFox,
     NFT_BID: parser.parseNftBid,
     NFT_BID_CANCELLED: parser.parseNftCancelBid,
     NFT_CANCEL_LISTING: parser.parseNftCancelList,
@@ -302,3 +283,16 @@ export const protonParsers = {
     TRANSFER: parser.parseTransfer,
     UNKNOWN: parser.parseUnknown,
 };
+
+export interface TokenConfig {
+    symbol: string;
+    priceFeedId: string;
+    aliases?: string[];
+    mint?: string;
+}
+
+export interface ProgramInfo {
+    name: string;
+    category?: 'SYSTEM' | 'NFT' | 'DEFI' | 'ORACLE' | 'BRIDGE' | 'UTILITY';
+    deprecated?: boolean;
+}

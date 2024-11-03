@@ -6,7 +6,6 @@
     export let sectionAditionalInfo: NullableProp<string | number> = null;
     export let showDetails = true;
 </script>
-
 <div class="collapse-arrow collapse rounded-lg border">
     <input type="checkbox" bind:checked={showDetails} />
     <div class="collapse-title grid grid-cols-12 items-center gap-3 p-1 py-3">

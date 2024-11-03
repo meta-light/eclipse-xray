@@ -23,5 +23,4 @@
     }
     onMount(() => {fetchAllDomainsUsername(address);});
 </script>
-
 <slot {username} {isLoading} />

@@ -1,12 +1,9 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import type { EnrichedTransaction, TokenTransfer, CompressedNftEvent, NFTEvent } from "helius-sdk";
+import type { EnrichedTransaction, CompressedNftEvent, NFTEvent } from "helius-sdk";
 import { TransactionType } from "helius-sdk";
-import type { ProtonActionType, ProtonTransaction, ProtonAccount, ProtonParser, ProtonTransactionAction, TempTokenTransfer } from "./types";
+import type { ProtonActionType, ProtonTransaction, ProtonAccount, ProtonParser, ProtonTransactionAction, TempTokenTransfer, ProtonType } from "./types";
 import { traverseAccountData, traverseNativeTransfers, traverseTokenTransfers } from "./utils";
-import { unknownProtonTransaction, SOL } from "./types";
-import type { ProtonType } from "./types";
-import { protonParsers } from "./types";
-export * from "./types";
+import { unknownProtonTransaction, SOL, protonParsers } from "./types";
 
 export const parseTransaction: ProtonParser = (transaction, address) => {
     let parser: ProtonParser = protonParsers.UNKNOWN;
@@ -67,12 +64,6 @@ export const parseUnknown = (transaction: EnrichedTransaction, address: string |
     const actions: ProtonTransactionAction[] = [];
     const accounts: ProtonAccount[] = [];
     traverseAccountData(accountData, accounts);
-    if (instructions && instructions[0].programId === "xnft5aaToUM4UFETUQfj7NUDUBdvYHTVhNFThEYTm55") {
-        let type = "XNFT_INSTALL" as TransactionType;
-        if (instructions[0].accounts.length === 6) {type = "XNFT_INSTALL" as TransactionType;} 
-        else if (instructions[0].accounts.length === 3) {type = "XNFT_UNINSTALL" as TransactionType;}
-        return {accounts, actions, fee, primaryUser, signature, source, timestamp, type};
-    }
     traverseTokenTransfers(tokenTransfers, actions, address);
     traverseNativeTransfers(nativeTransfers, actions, address);
     return {accounts, actions, fee, primaryUser, signature, source, timestamp, type};

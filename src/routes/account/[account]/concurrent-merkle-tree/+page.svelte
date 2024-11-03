@@ -6,70 +6,41 @@
     import { trpcWithQuery } from "$lib/trpc/client";
     import { shortenString } from "$lib/utils";
     import { PublicKey } from "@solana/web3.js";
-
     const client = trpcWithQuery($page);
-
     const account = $page.params.account;
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
-    const cmt = client.concurrentMerkleTree.createQuery({
-        address: account,
-        isMainnet: isMainnetValue,
-    });
-
+    const cmt = client.concurrentMerkleTree.createQuery({address: account, isMainnet: isMainnetValue,});
     $: currentRoot = new PublicKey($cmt.data?.root.data || []);
 </script>
 
 {#if $cmt.data}
     <div class="mb-3">
-        <div
-            class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg border p-1 py-3"
-        >
+        <div class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg border p-1 py-3">
             <div class="col-span-2 p-1 md:col-span-1">
                 <div class="center ml-1 h-10 w-10 rounded-full bg-secondary">
-                    <Icon
-                        id="key"
-                        size="sm"
-                    />
+                    <Icon id="key" size="sm"/>
                 </div>
             </div>
-            <div
-                class="col-span-10 flex items-center justify-between pr-1 md:col-span-11"
-            >
+            <div class="col-span-10 flex items-center justify-between pr-1 md:col-span-11">
                 <div>
                     <h4 class="text-lg font-semibold md:text-sm">Authority</h4>
-                    <h3 class="mr-2 text-xs opacity-50">
-                        The account authroized to modify the tree's state.
-                    </h3>
+                    <h3 class="mr-2 text-xs opacity-50">The account authroized to modify the tree's state.</h3>
                 </div>
                 <div class="flex items-center">
                     <CopyButton text={$cmt.data?.authority} />
-                    <a
-                        data-sveltekit-reload
-                        href="/account/{$cmt.data
-                            ?.authority}?network=${isMainnetValue
-                            ? 'mainnet'
-                            : 'devnet'}"
-                        class="pointer-events-auto text-xs hover:link-success md:text-sm"
-                    >
+                    <a data-sveltekit-reload href="/account/{$cmt.data ?.authority}?network=${isMainnetValue ? 'mainnet' : 'devnet'}" class="pointer-events-auto text-xs hover:link-success md:text-sm">
                         {shortenString($cmt.data?.authority)}
                     </a>
                 </div>
             </div>
         </div>
         <div>
-            <div
-                class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg border p-1 py-3"
-            >
+            <div class="mt-3 grid grid-cols-12 items-center gap-3 rounded-lg border p-1 py-3">
                 <div class="col-span-2 p-1 md:col-span-1">
-                    <div
-                        class="center ml-1 h-10 w-10 rounded-full bg-secondary"
-                    >
-                        <Icon
-                            id="box"
-                            size="sm"
-                        />
+                    <div class="center ml-1 h-10 w-10 rounded-full bg-secondary">
+                        <Icon id="box" size="sm"/>
                     </div>
                 </div>
                 <div

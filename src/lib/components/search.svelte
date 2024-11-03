@@ -67,7 +67,6 @@
         connected = true;
     }
 </script>
-
 <div class="relative z-30 my-2 w-full">
     <div class="dropdown w-full">
         <input

@@ -6,7 +6,7 @@
     import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, AccountLayout } from "@solana/spl-token";
     import TokenProvider from "$lib/components/providers/token-provider.svelte";
     import { trpcWithQuery } from '$lib/trpc/client';
-    import { tokenMap, ETH  } from '$lib/config';
+    import { tokenConfig, ETH  } from '$lib/config';
     const account = $page.params.account;
     let tokens: any[] = [];
     let nativeBalance: number | null = null;
@@ -17,9 +17,13 @@
     const pythPricesQuery = client.pythPrices.createQuery();
     let prices: Record<string, number | null> = {};
     $: if ($pythPricesQuery.data !== undefined) {prices = $pythPricesQuery.data;}
+    let isMetadataLoading = false;
+    let loadingTokens = new Set<string>();
 
     async function fetchAccountData() {
         isLoading = true;
+        loadingTokens.clear();
+        isMetadataLoading = false;
         try {
             const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");
             const connection = new Connection(rpcUrl, "confirmed");
@@ -55,28 +59,36 @@
     function getTokenPrice(metadata: any): number | null {
         if (!metadata?.name) {return null;}
         if (metadata.mint === ETH) {return prices['ETH'];}
-        const symbol = tokenMap[metadata.name] || tokenMap[metadata.symbol];
-        if (!symbol) {return null;}
-        const price = prices[symbol];
-        return price;
+        const tokenConfigEntry = Object.values(tokenConfig).find(config => config.symbol === metadata.symbol || config.aliases?.includes(metadata.name) || config.mint === metadata.mint);
+        if (!tokenConfigEntry) {return null;}
+        return prices[tokenConfigEntry.symbol];
     }
 
     function formatUSD(amount: number): string {return new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'}).format(amount);}
+
+    function handleMetadataLoading(event: CustomEvent, tokenMint: string) {
+        if (event.detail) {loadingTokens.add(tokenMint);} 
+        else {loadingTokens.delete(tokenMint);}
+        loadingTokens = loadingTokens;
+        isMetadataLoading = loadingTokens.size > 0;
+    }
 </script>
 
 <div class="container mx-auto px-4">
     <h2 class="text-2xl font-bold mb-4">Account Tokens</h2>
-    {#if isLoading}
-        <p>Loading...</p>
+    {#if isLoading || isMetadataLoading}
+        <div class="flex justify-center items-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
     {:else if fetchError}
         <p class="text-red-500">Error loading tokens: {fetchError}</p>
     {:else if tokens.length === 0}
         <p>No tokens found for this account.</p>
     {:else}
         <div class="space-y-4">
-            {#each tokens as token}
-                <TokenProvider address={token.mint}>
-                    <div slot="default" let:metadata let:isNFT let:token={tokenData} let:tokenIsLoading={isMetadataLoading}>
+            {#each tokens as token (token.mint)}
+                <TokenProvider address={token.mint} on:metadataLoading={(e) => handleMetadataLoading(e, token.mint)}>
+                    <div slot="default" let:metadata let:isNFT let:token={tokenData}>
                         {#if !isNFT}
                             <a href="/token/{token.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}">
                                 <div class="bg-white shadow rounded-lg p-4 flex items-center justify-between">

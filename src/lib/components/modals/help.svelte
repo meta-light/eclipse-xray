@@ -3,7 +3,6 @@
     import Icon from "$lib/components/icon.svelte";
     const supportedSearches: Array<[IconType, string]> = [["person", "Wallet/Account addresses"], ["coins", "Token addresses"], ["lightning", "Transaction signatures"]];
 </script>
-
 <p class="mb-3">Use the search bar to look up any of the following:</p>
 <strong class="uppercase">Supported Searches</strong>
 {#each supportedSearches as [icon, text]}

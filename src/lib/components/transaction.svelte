@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { ProtonTransaction } from "$lib/types";
     import { ProtonCustomActionLabelTypes } from "$lib/types";
-    import { transactionActionsMetadata } from "$lib/config";
+    import { transactionActionsMetadata } from "$lib/ui";
     import { fade, fly } from "svelte/transition";
     import { formatDate } from "$lib/utils";
     export let transaction: ProtonTransaction;

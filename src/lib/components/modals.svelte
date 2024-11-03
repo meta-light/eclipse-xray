@@ -3,7 +3,6 @@
     import { fly, fade } from "svelte/transition";
     import Icon from "$lib/components/icon.svelte";
 </script>
-
 {#if $modalsStore}
     <dialog class="modal modal-open bg-transparent" aria-modal="true" in:fade={{ duration: 250 }}>
         <div class="h-full w-full" role="presentation" on:click|self={hideModal} on:keydown|self={hideModal}>

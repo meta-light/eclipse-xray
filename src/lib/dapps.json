@@ -81,7 +81,7 @@
         "name": "Cryptara Conquest",
         "description": "Multichain play-to-airdrop top-down 2D survival RPG based in dungeons of Cryptara built by IntoTheVerse powered by SVM Eclipse. Coming soon to MoveVM!",
         "icon": "/media/dapps/cryptara.jpg",
-        "link": "https://t.co/bHwam6SZhq",
+        "link": "https://alpha.eclipse-testnet.cryptara.world/",
         "network": "mainnet"
     },
     {
@@ -166,6 +166,13 @@
         "description": "An intent-centric interoperability protocol.",
         "icon": "/media/dapps/owlto.jpg",
         "link": "https://owlto.finance/",
+        "network": "mainnet"
+    },
+    {
+        "name": "tETH",
+        "description": "Eclipse Native Liquid ReStaking Token",
+        "icon": "/media/dapps/eclipse.jpg",
+        "link": "https://teth.eclipse.xyz/",
         "network": "mainnet"
     }
 ]

@@ -3,55 +3,33 @@
     // @ts-ignore
     import { idlStore } from "$lib/stores";
     import type { Idl } from "@coral-xyz/anchor";
-
     import { PROGRAM_ID as ACCOUNT_COMPRESSION_ID } from "@solana/spl-account-compression";
-
     import Icon from "$lib/components/icon.svelte";
     import AccountHeader from "$lib/components/account-header.svelte";
     import { showModal } from "$lib/modals";
     import { trpcWithQuery } from "$lib/trpc/client";
     import { onMount, onDestroy } from "svelte";
-
     const client = trpcWithQuery($page);
-
     const account = $page.params.account;
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network === "mainnet";
     const selectedNetwork = `network=${isMainnetValue ? "mainnet" : "devnet"}`;
-    const accountInfo = client.accountInfo.createQuery([
-        account,
-        isMainnetValue ? "mainnet" : "devnet",
-    ]);
-
+    const accountInfo = client.accountInfo.createQuery([account, isMainnetValue ? "mainnet" : "devnet"]);
     const assets = client.assets.createQuery({account, isMainnet: isMainnetValue});
-
     $: endsWith = (str: string) => $page.url.pathname.endsWith(str);
     $: isProgram = $accountInfo?.data?.value?.executable ?? false;
-
-    $: isNonTokenAsset = (asset: any) => {
-        return !('amount' in asset && 'decimals' in asset && 'mint' in asset);
-    };
-
+    $: isNonTokenAsset = (asset: any) => {return !('amount' in asset && 'decimals' in asset && 'mint' in asset);};
     $: nonTokenAssets = $assets.data?.assets?.filter(isNonTokenAsset) ?? [];
-
     $: hasNonTokenAssets = nonTokenAssets.length > 0;
-
     let programIDL: Idl | null = null;
-
-    const unsubscribe = idlStore.subscribe((value) => {
-        programIDL = value;
-    });
+    const unsubscribe = idlStore.subscribe((value) => {programIDL = value;});
 
     onMount(async () => {
         try {
-            const response = await fetch(
-                `/api/fetchIdl?account=${account}&isMainnetValue=${isMainnetValue}`
-            );
-
+            const response = await fetch(`/api/fetchIdl?account=${account}&isMainnetValue=${isMainnetValue}`);
             if (response.ok) {
                 const data = await response.json();
-
                 if (data.idl) {
                     idlStore.set(data.idl);
                 } else {
