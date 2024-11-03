@@ -3,7 +3,7 @@ import { ATA_PROGRAM_ID, TOKEN_PROGRAM_ID, PROGRAM_INFO_BY_ID } from "./config";
 import { PublicKey, Keypair, Connection, Transaction, VersionedTransaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { idlStore } from "$lib/stores";
-import type { InstructionLogs, ProtonTransactionAction, ProtonAccount, TempTokenTransfer, ParsedDateTime, ProtonActionType } from "$lib/types";
+import type { InstructionLogs, ProtonTransactionAction, ProtonAccount, TempTokenTransfer, ParsedDateTime, ProtonActionType, ProgramDetails } from "$lib/types";
 import { CustomTransactionType, SOL } from "$lib/types";
 
 export const getMimeType = async (url: string) => {try {const response = await fetch(url, { method: "HEAD" }); if (!response.ok) {console.error(`Failed to fetch MIME type: ${response.status} ${response.statusText}`); return null;} return response.headers.get("Content-Type");}  catch (error: any) {return null;}};
@@ -258,16 +258,6 @@ export function mapCustomTypeToProtonActionType(customType: CustomTransactionTyp
         case CustomTransactionType.TOKEN_AIRDROP: return "AIRDROP";
         default: return "UNKNOWN";
     }
-}
-
-export interface ProgramDetails {
-    name: string;
-    category?: 'SYSTEM' | 'NFT' | 'DEFI' | 'ORACLE' | 'BRIDGE' | 'UTILITY';
-    version?: string;
-    deprecated?: boolean;
-    website?: string;
-    repo?: string;
-    description?: string;
 }
 
 export function programLabel(address: string): string {return PROGRAM_INFO_BY_ID[address]?.name || address;}

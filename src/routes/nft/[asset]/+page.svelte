@@ -12,44 +12,12 @@
     import PageLoader from "./_loader.svelte";
     import { onMount } from 'svelte';
     import { getRPCUrl } from "$lib/utils";
-
+    import type { NiftyAsset } from "$lib/types";
     const address = $page.params.asset;
     const params = new URLSearchParams(window.location.search);
     const network = params.get("network");
     const isMainnetValue = network !== "devnet";
     const client = trpcWithQuery($page);
-
-    interface NiftyAsset {
-        mint: string;
-        address: string;
-        owner?: string;
-        decimals: number;
-        isNFT: boolean;
-        supply: string;
-        isToken2022: boolean;
-        freezeAuthority?: string;
-        mintAuthority?: string;
-        metadata?: {
-            symbol: string;
-            name: string;
-            uri: string;
-        };
-        externalMetadata: {
-            image?: string;
-            description?: string;
-            name?: string;
-            symbol?: string;
-            attributes?: Array<{ trait_type: string; value: string }>;
-            creators?: Array<{ address: string; share: number }>;
-            properties?: {
-                files?: Array<{ uri: string; type: string }>;
-                category?: string;
-                [key: string]: any;
-            };
-            [key: string]: any;
-        }
-    }
-
     $: niftyAssetQuery = client.niftyAsset.createQuery([address, isMainnetValue]);
     let asset: NiftyAsset;
     let mediaUrl: string | null = null;
@@ -69,7 +37,6 @@
     let nfts: any[] = [];
     let fetchError: string | null = null;
 
-    interface Token { isNFT: boolean; mint: string; tokenAccount: string; amount: number; decimals: number; }
 
     async function fetchAccountData(account: string) {
         const rpcUrl = getRPCUrl(isMainnetValue ? "mainnet" : "devnet");

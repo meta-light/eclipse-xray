@@ -14,28 +14,7 @@ import { fetchMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { publicKey } from '@metaplex-foundation/umi';
 import { niftyAsset as niftyAssetClient } from '@nifty-oss/asset';
 import { fetchAsset } from '@nifty-oss/asset';
-
-export interface NiftyAsset {
-    mint: string;
-    address: string;
-    owner?: string;
-    decimals: number;
-    isNFT: boolean;
-    supply: string;
-    isToken2022: boolean;
-    freezeAuthority?: string;
-    mintAuthority?: string;
-    metadata?: {
-        symbol: string;
-        name: string;
-        uri: string;
-    };
-    externalMetadata?: {
-        image?: string;
-        description?: string;
-        [key: string]: any;
-    } | Record<string, never>;
-}
+import type { NiftyAssetTwo } from "$lib/types";
 
 async function fetchMetadataFromUri(uri: string): Promise<any> {
     const ipfsGateways = ['https://gateway.pinata.cloud/ipfs/', 'https://cloudflare-ipfs.com/ipfs/', 'https://ipfs.io/ipfs/'];
@@ -69,7 +48,7 @@ function parseToken2022Metadata(extensionData: Buffer): string | undefined {
 
 export const niftyAsset = t.procedure
     .input(z.tuple([z.string(), z.boolean()]))
-    .query(async ({ input }): Promise<NiftyAsset> => {
+    .query(async ({ input }): Promise<NiftyAssetTwo> => {
         const [token, isMainnet] = input;
         try {
             let tokenPublicKey: PublicKey;
@@ -138,7 +117,7 @@ export const niftyAsset = t.procedure
                 } 
                 catch (error) {console.error('Error fetching Nifty Asset metadata:', error);}
             }
-            const niftyAssetData: NiftyAsset = {
+            const niftyAssetData: NiftyAssetTwo = {
                 mint: token,
                 address: token,
                 decimals: mintInfo.decimals,

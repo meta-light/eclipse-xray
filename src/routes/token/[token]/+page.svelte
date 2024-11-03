@@ -18,6 +18,7 @@
     import { trpcWithQuery } from "$lib/trpc/client";
     import Collapse from "$lib/components/collapse.svelte";
     import JSON from "$lib/components/json.svelte";
+    import type { ExternalMetadata } from "$lib/types";
     import Transactions from "$lib/components/transactions.svelte";
     import PageLoader from "./_loader.svelte";
     import CopyButton from "$lib/components/copy-button.svelte";
@@ -28,13 +29,6 @@
     const client = trpcWithQuery($page);
     $: tokenQuery = client.token.createQuery([address, isMainnetValue]);
     $: if ($tokenQuery.error) {console.error("Token query error:", $tokenQuery.error);}
-
-    interface ExternalMetadata {
-        image?: string;
-        description?: string;
-        [key: string]: any;
-    }
-
     $: externalMetadata = $tokenQuery.data?.externalMetadata as ExternalMetadata | undefined;
 </script>
 

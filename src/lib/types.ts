@@ -10,6 +10,8 @@ import { TOKEN_PROGRAM_ID, SWAP_PROGRAM_ID } from "./config";
 import { ETH } from "$lib/config";
 export * from "$lib/config";
 import { isTokenAirdrop, isParsedInstruction } from "$lib/utils";
+import { type ConfirmedTransactionMeta, type TransactionSignature } from "@solana/web3.js";
+
 
 export interface UIConfig {dev: boolean; devMode: boolean; isMocked: boolean; name: string; version: string;}
 export interface UIAccount {publicKey: string; transactions: Array<any>;}
@@ -33,7 +35,6 @@ export const metadata: UITokenMetadata = {
     sellerFeeBasisPoints: 0,
 };
 
-export type SearchResultType = "token" | "account" | "transaction" | "nft" | null;
 export type LogMessage = {text: string; prefix: string; style: "sky" | "success" | "error" | "tangerine" | "neutral";};
 export type InstructionLogs = {invokedProgram: string | null; programAddress: string; logs: LogMessage[]; computeUnits: number; truncated: boolean; failed: boolean;};
 export type LoaderName = keyof typeof PROGRAM_INFO_BY_ID;
@@ -61,7 +62,102 @@ export interface ProtonAccountChange {mint: string; amount: number;}
 export type ProtonParsers = Record<string, ProtonParser>;
 export interface ProtonTransactionAction {actionType: ProtonActionType; from: string | null; to: string; sent?: string; received?: string; amount: number;}
 export interface ProtonAccount {account: string; changes: ProtonAccountChange[]; label?: string;}
-export const unknownProtonTransaction: ProtonTransaction = {accounts: [], actions: [], fee: 0, primaryUser: "", signature: "", source: Source.SYSTEM_PROGRAM, timestamp: 0, type: "UNKNOWN",};
+export const unknownProtonTransaction: ProtonTransaction = {accounts: [], actions: [], fee: 0, primaryUser: "", signature: "", source: Source.SYSTEM_PROGRAM, timestamp: 0, type: "UNKNOWN"};
+export interface TokenConfig {symbol: string; priceFeedId: string; aliases?: string[]; mint?: string;}
+export interface ProgramInfo {name: string; category?: 'SYSTEM' | 'NFT' | 'DEFI' | 'ORACLE' | 'BRIDGE' | 'UTILITY'; deprecated?: boolean;}
+export type TransactionWithInvocations = {index: number; signature?: TransactionSignature | undefined; meta: ConfirmedTransactionMeta | null; invocations: Map<string, number>;};
+export interface SearchResult {url: string; address: string; type: SearchResultType; valid: boolean; search: string;}
+export type SearchResultType = "token" | "account" | "transaction" | "nft" | null;
+export interface Token { isNFT: boolean; mint: string; tokenAccount: string; amount: number; decimals: number; }
+
+export interface NiftyAsset {
+    mint: string;
+    address: string;
+    owner?: string;
+    decimals: number;
+    isNFT: boolean;
+    supply: string;
+    isToken2022: boolean;
+    freezeAuthority?: string;
+    mintAuthority?: string;
+    metadata?: {
+        symbol: string;
+        name: string;
+        uri: string;
+    };
+    externalMetadata: {
+        image?: string;
+        description?: string;
+        name?: string;
+        symbol?: string;
+        attributes?: Array<{ trait_type: string; value: string }>;
+        creators?: Array<{ address: string; share: number }>;
+        properties?: {
+            files?: Array<{ uri: string; type: string }>;
+            category?: string;
+            [key: string]: any;
+        };
+        [key: string]: any;
+    }
+}
+
+export interface NiftyAssetTwo {
+    mint: string;
+    address: string;
+    owner?: string;
+    decimals: number;
+    isNFT: boolean;
+    supply: string;
+    isToken2022: boolean;
+    freezeAuthority?: string;
+    mintAuthority?: string;
+    metadata?: {
+        symbol: string;
+        name: string;
+        uri: string;
+    };
+    externalMetadata?: {
+        image?: string;
+        description?: string;
+        [key: string]: any;
+    } | Record<string, never>;
+}
+
+export interface TokenData {
+    address: string;
+    decimals: number;
+    supply: string;
+    isToken2022: boolean;
+    freezeAuthority?: string;
+    mintAuthority?: string;
+    metadata?: {
+      name: string;
+      symbol: string;
+      uri: string;
+      image?: string;
+    };
+    externalMetadata?: {
+      image?: string;
+      description?: string;
+      [key: string]: any;
+    } | Record<string, never> | null;
+  }
+
+export interface ProgramDetails {
+    name: string;
+    category?: 'SYSTEM' | 'NFT' | 'DEFI' | 'ORACLE' | 'BRIDGE' | 'UTILITY';
+    version?: string;
+    deprecated?: boolean;
+    website?: string;
+    repo?: string;
+    description?: string;
+}
+
+export interface ExternalMetadata {
+    image?: string;
+    description?: string;
+    [key: string]: any;
+}
 
 export interface UITokenMetadata {
     address: string;
@@ -90,15 +186,15 @@ export interface UITokenMetadata {
     mintExtensions?: object;
 }
 
-export interface TokenData {
+export interface TokenDataTwo {
     metadata?: {symbol: string; name: string; uri: string; image?: string;};
     externalMetadata?: {image?: string; description?: string;};
     address: string;
     decimals: number;
     isToken2022: boolean;
     supply: string;
-    freezeAuthority: string;
-    mintAuthority: string;
+    freezeAuthority?: string;
+    mintAuthority?: string;
 }
 
 export enum CustomTransactionType {
@@ -283,16 +379,3 @@ export const protonParsers = {
     TRANSFER: parser.parseTransfer,
     UNKNOWN: parser.parseUnknown,
 };
-
-export interface TokenConfig {
-    symbol: string;
-    priceFeedId: string;
-    aliases?: string[];
-    mint?: string;
-}
-
-export interface ProgramInfo {
-    name: string;
-    category?: 'SYSTEM' | 'NFT' | 'DEFI' | 'ORACLE' | 'BRIDGE' | 'UTILITY';
-    deprecated?: boolean;
-}

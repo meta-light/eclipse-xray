@@ -2,7 +2,7 @@
 Eclipse XRAY has 3 ways for community members to contribute: Adding dApps, Labeling Programs, and Writing Code. 
 
 ## Adding dApps
-dApps can be added to `src/config/dapps.json` in the following format:
+dApps can be added to `src/lib/dapps.json` in the following format:
 ```
     {
         "name": "My dApp",
@@ -22,11 +22,19 @@ To submit, open a PR and leave a semi-detailed note about the dApp you are addin
 ## Labeling Programs
 Programs can be labeled via Eclipse XRAY's config file or directly in the [Eclipse Program Registry](https://github.com/Eclipse-Laboratories-Inc/program-registry). 
 ### Contributing to Eclipse XRAY Config: 
-Contributions to `src/lib/config.ts` should be reflect the following example:
+Contributions to `src/lib/config.ts` should be reflect the following examples:
+
+For Program IDs:
 ```ts
-    "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv": "SWITCHBOARD MAINNET PROGRAM",
+    "BPFLoaderUpgradeab1e11111111111111111111111": { name: "BPF Loader Upgradeable", category: "SYSTEM" },
+```
+
+For Tokens and Pyth Price Feeds: 
+```ts
+      SOL: {symbol: 'SOL', priceFeedId: '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d', aliases: ['Solana'], mint: 'BeRUj3h7BqkbdfFU7FBNYbodgf8GCHodzKvF9aVjNNfL'},
 ```
 To submit, open a PR and leave a semi-detailed note about the program address you are adding, and any public listing of the listed address. 
+
 ### Contributing to the Eclipse Program Registry:
 Visit https://github.com/Eclipse-Laboratories-Inc/program-registry and submit a PR in the following format: 
 ```yaml

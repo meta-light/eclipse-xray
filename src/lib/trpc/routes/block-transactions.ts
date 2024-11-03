@@ -6,13 +6,7 @@ import { parseTransaction } from "$lib/parsers";
 import { VOTE_PROGRAM_ID, type ConfirmedTransactionMeta, type TransactionSignature, Connection } from "@solana/web3.js";
 import { getRPCUrl } from "$lib/utils";
 import { HELIUS_API_KEY } from "$env/static/private";
-
-type TransactionWithInvocations = {
-    index: number;
-    signature?: TransactionSignature | undefined;
-    meta: ConfirmedTransactionMeta | null;
-    invocations: Map<string, number>;
-};
+import type { TransactionWithInvocations } from "$lib/types";
 
 const voteFilter = VOTE_PROGRAM_ID.toBase58();
 export const blockTransactions = t.procedure

@@ -1,18 +1,15 @@
 <style>
-    .input {
-        background: rgba(0, 0, 0, 0.95);
-    }
+    .input {background: rgba(0, 0, 0, 0.95);}
 </style>
 
 <script lang="ts">
-    type SearchResultType = "token" | "account" | "transaction" | "bonfida-domain" | "ans-domain" | null;
-    interface SearchResult {url: string; address: string; type: SearchResultType; valid: boolean; search: string;}
     import { onMount, createEventDispatcher } from "svelte";
     import { walletStore } from "@svelte-on-solana/wallet-adapter-core";
     import { showModal } from "$lib/modals";
     import Icon from "$lib/components/icon.svelte";
     import { recentSearchesKey } from "$lib/config";
     import { shortenString } from "$lib/utils";
+    import type { SearchResult } from "$lib/types";
     export let inputEl: HTMLInputElement | null = null;
     export let searchError = "";
     export let size = "sm" as "sm" | "lg";

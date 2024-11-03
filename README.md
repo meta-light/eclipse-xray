@@ -34,7 +34,6 @@ npm run build
 |                           |                                                                                                                                 |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | 📁 `./src/lib`            | Common components, utilities, and libraries used throughout the app. Import things from this directory using the `$lib/` alias. |
-| 📁 `./src/lib/trpc`       | The tRPC server which has all of our backend endpoints. See `trpc routes`.                                                      |
 | 📁 `./src/lib/components` | Shared components used throughout the app.                                                                                      |
 | 📁 `./src/lib/trpc`       | The tRPC server which has all of our backend endpoints.                                                                         |
 | 📁 `./src/lib/types`      | Global types                                                                                                                    |

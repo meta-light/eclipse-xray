@@ -2,12 +2,10 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import type { PublicKey as PublicKeyType, ParsedAccountData } from "@solana/web3.js";
 import { ASSET_PROGRAM_ID } from "@nifty-oss/asset";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, networks, PROGRAM_INFO_BY_ID } from "./config";
-import type { SearchResultType, Network } from "./types";
-
+import type { Network, SearchResult } from "./types";
 export const connect = (network: Network = "mainnet") => {let url = networks[network]; return new Connection(url, "confirmed");};
 export const getSolanaName = (publicKey: string): string => {const programInfo = PROGRAM_INFO_BY_ID[publicKey]; return programInfo?.name || publicKey;};
 export const isValidPublicKey = (address: string = ""): PublicKeyType | null => {try {return new PublicKey(address.trim());} catch (error) {return null;}};
-export interface SearchResult {url: string; address: string; type: SearchResultType; valid: boolean; search: string;}
 const searchDefaults: SearchResult = {address: "", search: "", type: null, url: `/`, valid: false};
 function isParsedAccountData(data: any): data is ParsedAccountData {return data && typeof data === 'object' && 'parsed' in data;}
 export const search = async (query: string, connection: Connection): Promise<SearchResult> => {

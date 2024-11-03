@@ -13,26 +13,7 @@ import { findMetadataPda } from '@metaplex-foundation/mpl-token-metadata';
 import { fetchMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { publicKey } from '@metaplex-foundation/umi';
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "$lib/config";
-
-export interface TokenData {
-  address: string;
-  decimals: number;
-  supply: string;
-  isToken2022: boolean;
-  freezeAuthority?: string;
-  mintAuthority?: string;
-  metadata?: {
-    name: string;
-    symbol: string;
-    uri: string;
-    image?: string;
-  };
-  externalMetadata?: {
-    image?: string;
-    description?: string;
-    [key: string]: any;
-  } | Record<string, never> | null;
-}
+import type { TokenData } from "$lib/types";
 
 async function fetchMetadataFromUri(uri: string): Promise<any> {
     try {
