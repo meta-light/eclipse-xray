@@ -6,21 +6,24 @@
     import { TldParser } from "@onsol/tldparser";
     import { getRPCUrl } from "$lib/utils";
     export let address: string;
-    let username: string | null = null;
+    let usernames: string[] = [];
     let isLoading = true;
     const client = trpcWithQuery($page);
+
     async function fetchAllDomainsUsername(address: string) {
         const rpcUrl = getRPCUrl("mainnet");
         const connection = new Connection(rpcUrl);
         const parser = new TldParser(connection);
         try {
             const pubkey = new PublicKey(address);
-            const allUserDomains = await parser.getAllUserDomains(pubkey);
-            if (allUserDomains.length > 0) {username = allUserDomains[0].toString();}
+            const allUserDomains = await parser.getParsedAllUserDomains(pubkey);
+            usernames = allUserDomains.map(domain => domain.domain.toString());
         } 
         catch (error) {console.error("Error fetching AllDomains username:", error);} 
         finally {isLoading = false;}
     }
+
     onMount(() => {fetchAllDomainsUsername(address);});
 </script>
-<slot {username} {isLoading} />
+
+<slot {usernames} {isLoading} />

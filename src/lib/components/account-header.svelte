@@ -61,7 +61,7 @@
     onMount(() => {setTimeout(() => {localIsLoading = false;}, 5000);});
 </script>
 
-<Username address={account} let:username let:isLoading>
+<Username address={account} let:usernames let:isLoading>
     <div class="nav sticky top-16 z-30 gap-2 bg-base-100 px-3 pt-2">
         <div class="flex flex-col bg-base-100">
             <div class="flex items-center justify-between">
@@ -84,7 +84,7 @@
                             <CopyButton text={link} icon="link" />
                         </div>
                     </div>
-                    <div  class="badge-outline badge relative mx-2 flex cursor-pointer px-4 py-2 opacity-90" on:click={toggleNetwork} on:keydown={e => e.key === 'Enter' && toggleNetwork()} role="button" tabindex="0">
+                    <div class="badge-outline badge relative mx-2 flex cursor-pointer px-4 py-2 opacity-90" on:click={toggleNetwork} on:keydown={e => e.key === 'Enter' && toggleNetwork()} role="button" tabindex="0">
                         {isMainnetValue ? "mainnet" : "devnet"}
                     </div>
                 </div>
@@ -106,7 +106,9 @@
                 </div>
             {:else}
                 <div class="flex flex-wrap gap-2 pt-2">
-                    {#if username}<div class="username-block inline-block rounded-full px-3 py-1 text-xs font-extrabold">{username}</div>{/if}
+                    {#each usernames as username}
+                        <div class="username-block inline-block rounded-full px-3 py-1 text-xs font-extrabold">{username}</div>
+                    {/each}
                 </div>
             {/if}
         </div>

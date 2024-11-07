@@ -174,5 +174,47 @@
         "icon": "/media/dapps/eclipse.jpg",
         "link": "https://teth.eclipse.xyz/",
         "network": "mainnet"
+    },
+    {
+        "name": "Send Arcade",
+        "description": "Play Games. Win SEND.",
+        "icon": "/media/dapps/send.jpg",
+        "link": "https://sendarcade.fun/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Orbiter Finance",
+        "description": "Orbiter Finance is a ZK-tech based cross-chain protocol offers fast, secure, and instant transfer.",
+        "icon": "/media/dapps/orbiter.png",
+        "link": "https://www.orbiter.finance/?source=Ethereum&dest=Eclipse&token=ETH",
+        "network": "mainnet"
+    },
+    {
+        "name": "Mini Bridge",
+        "description": "Free & open source omni-chain analytical tools",
+        "icon": "/media/dapps/minibridge.jpg",
+        "link": "https://minibridge.chaineye.tools/?src=ethereum&dst=eclipse&mode=swap",
+        "network": "mainnet"
+    },
+    {
+        "name": "Gas.Zip",
+        "description": "Fastest one-stop gas refuel bridge for over 275+ chains ⛽️",
+        "icon": "/media/dapps/gaszip.jpg",
+        "link": "https://www.gas.zip/",
+        "network": "mainnet"
+    },
+    {
+        "name": "DappEco",
+        "description": "Discover innovative projects being developed on Monad, Eclipse, and other emerging blockchains all in one place.",
+        "icon": "/media/dapps/dappeco.jpg",
+        "link": "https://dappeco.xyz/",
+        "network": "mainnet"
+    },
+    {
+        "name": "Stride Cosmos Bridge",
+        "description": "Liquid staking and modular bridging for the Celestia and Cosmos ecosystems. Secure, neutral, reliable.",
+        "icon": "/media/dapps/stride.png",
+        "link": "https://bridge.stride.zone/",
+        "network": "mainnet"
     }
 ]

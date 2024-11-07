@@ -62,7 +62,7 @@
         "@metaplex-foundation/umi": "^0.9.2",
         "@metaplex-foundation/umi-bundle-defaults": "^0.9.2",
         "@nifty-oss/asset": "^0.3.0",
-        "@onsol/tldparser": "^0.5.3",
+        "@onsol/tldparser": "^0.6.6",
         "@pythnetwork/price-service-client": "^1.9.0",
         "@pythnetwork/pyth-solana-receiver": "^0.8.2",
         "@solana/spl-account-compression": "^0.1.8",
