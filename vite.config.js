@@ -9,14 +9,15 @@ export default defineConfig(({ mode }) => ({
     build: {
         target: "es2020",
         rollupOptions: {
-            external: ['crypto'],
+            external: ['crypto']
         }
     },
     define: {
         APP_NAME: JSON.stringify(pkg.name),
         APP_VERSION: JSON.stringify(pkg.version),
         "process.env.NODE_DEBUG": false,
-        'global.crypto': 'crypto'
+        'global.crypto': 'crypto',
+        'global.Buffer': 'Buffer'
     },
     optimizeDeps: {
         esbuildOptions: {
@@ -32,6 +33,7 @@ export default defineConfig(({ mode }) => ({
             ],
             target: "es2020",
         },
+        include: ['buffer']
     },
     plugins: [
         sveltekit(),
@@ -40,7 +42,7 @@ export default defineConfig(({ mode }) => ({
             buffer: true,
             process: true,
             crypto: true
-        }),
+        })
     ],
     resolve: {
         alias: {
@@ -51,7 +53,8 @@ export default defineConfig(({ mode }) => ({
             http: 'stream-http',
             https: 'https-browserify',
             os: 'os-browserify',
-            url: 'url'
+            url: 'url',
+            buffer: 'buffer'
         }
     }
 }));

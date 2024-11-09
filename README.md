@@ -12,7 +12,8 @@ Contributions are welcome and encouraged! Learn more at [CONTRIBUTIONS.md](CONTR
 ### Setup Environment
 In the root of the project, create a `.env` file with the following contents:
 ```sh
-DUNE_KEY=<dune_api_key>
+DUNE_KEY=<YOUR_DUNE_KEY>
+FLIPSIDE_API_KEY=<YOUR_FLIPSIDE_API_KEY>
 ```
 This is only required for Mainnet Bridge stats.
 
