@@ -151,7 +151,11 @@
             <div class="relative flex flex-wrap items-center justify-between bg-gray-200 py-2 px-2 rounded-lg">
                 <div>
                     <h3 class="m-0 text-l font-bold md:text-l text-black">
-                        {$niftyAssetQuery.data.metadata?.name || $niftyAssetQuery.data.metadata?.name || 'Unnamed Asset'}
+                        {#if $niftyAssetQuery.data}
+                            {$niftyAssetQuery.data.externalMetadata?.name || 
+                             $niftyAssetQuery.data.metadata?.name || 
+                             'Unnamed Asset'}
+                        {/if}
                     </h3>
                 </div>
                 <div>
@@ -165,16 +169,19 @@
         </div>
 
         <!-- Display media if available -->
-        {#if mediaUrl}
-            <div class="content px-3">
-                <div class="flex flex-col items-center justify-center">
-                    {#if mediaType === "video"}
-                        <video class="m-auto my-3 h-auto w-full rounded-md object-contain" controls autoplay loop muted src={mediaUrl} />
-                    {:else if mediaType === "image"}
-                        <img  class="img m-auto my-3 h-auto w-full rounded-md object-contain" alt="asset media"  src={mediaUrl}  on:error={() => console.error(`Failed to load image: ${mediaUrl}`)}/>
-                    {/if}
+        {#if $niftyAssetQuery.data}
+            {#if $niftyAssetQuery.data.externalMetadata?.image || $niftyAssetQuery.data.metadata?.uri}
+                <div class="content px-3">
+                    <div class="flex flex-col items-center justify-center">
+                        <img 
+                            class="img m-auto my-3 h-auto w-full rounded-md object-contain" 
+                            alt="asset media"  
+                            src={$niftyAssetQuery.data.externalMetadata?.image || $niftyAssetQuery.data.metadata?.uri}
+                            on:error={() => console.error(`Failed to load image: ${$niftyAssetQuery.data.externalMetadata?.image || $niftyAssetQuery.data.metadata?.uri}`)}
+                        />
+                    </div>
                 </div>
-            </div>
+            {/if}
         {/if}
 
         <!-- Details -->
@@ -183,11 +190,11 @@
                 <div class="grid gap-2">
                     <div class="inline-block rounded-lg card p-0">
                         <h4 class="text-sm font-medium uppercase text-white mb-1">Name</h4>
-                        {#if $niftyAssetQuery.data?.metadata?.name}
-                            <p class="text-sm text-gray-300 break-words">
-                                {$niftyAssetQuery.data.metadata.name}
-                            </p>
-                        {/if}
+                        <p class="text-sm text-gray-300 break-words">
+                            {$niftyAssetQuery.data.externalMetadata?.name || 
+                             $niftyAssetQuery.data.metadata?.name || 
+                             'Unnamed Asset'}
+                        </p>
                     </div>
                     {#if $niftyAssetQuery.data?.metadata?.symbol && $niftyAssetQuery.data.metadata.symbol.trim().length > 0}
                         <div class="inline-block rounded-lg card p-0">

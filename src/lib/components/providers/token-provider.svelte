@@ -12,7 +12,8 @@
     let intersecting = false;
     const isMainnetValue = $page.url.searchParams.get("network") !== "devnet";
     const client = trpcWithQuery($page);
-    $: tokenQuery = address && address !== ETH ? client.token.createQuery([address, isMainnetValue]) : null;
+    $: tokenQuery = address && address !== ETH ? 
+        client.niftyAsset.createQuery([address, isMainnetValue]) : null;
     let isNFT = false;
     $: if (address === ETH) {
         localMetadata = {
@@ -42,10 +43,10 @@
             isNFT = result.decimals === 0 || result.decimals === undefined;
             localMetadata = {
                 address: result.address,
-                name: result.metadata?.name || "Unknown Token",
-                image: (result.externalMetadata as { image?: string })?.image || "",
+                name: result.metadata?.name || (result.externalMetadata as { name?: string })?.name || "Unknown Token",
+                image: (result.externalMetadata as { image?: string })?.image || result.metadata?.uri || "",
                 collectionKey: (result as any).collectionKey || "",
-                owner: (result as any).owner || ""
+                owner: result.owner || ""
             };
             token = { ...result, address };
             status = { isLoading: false, isError: false };

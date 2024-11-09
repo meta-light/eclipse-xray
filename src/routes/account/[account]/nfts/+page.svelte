@@ -78,7 +78,7 @@
     {:else}
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {#each nfts as nft (nft.mint)}
-                <TokenProvider address={nft.mint} on:metadataLoading={(e) => handleMetadataLoading(e, nft.mint)}>
+                <TokenProvider address={nft.mint} isToken2022={nft.isToken2022}>
                     <div slot="default" let:metadata let:tokenFailed let:token={tokenData}>
                         <a href="/nft/{nft.mint}?network={isMainnetValue ? 'mainnet' : 'devnet'}">
                             {#if tokenFailed}
@@ -87,15 +87,21 @@
                                 </div>
                             {:else}
                                 <div class="bg-white shadow rounded-lg overflow-hidden">
-                                    {#if metadata.image}
-                                        <img src={metadata.image} alt={metadata.name} class="w-full aspect-square object-cover">
+                                    {#if metadata?.externalMetadata?.image || metadata?.image}
+                                        <img 
+                                            src={metadata?.externalMetadata?.image || metadata?.image} 
+                                            alt={metadata?.externalMetadata?.name || metadata?.name} 
+                                            class="w-full aspect-square object-cover"
+                                        >
                                     {:else}
                                         <div class="w-full aspect-square bg-gray-200 flex items-center justify-center">
                                             <span class="text-gray-500 text-sm">No Image</span>
                                         </div>
                                     {/if}
                                     <div class="p-4">
-                                        <h3 class="font-semibold truncate">{metadata.name || "Unnamed NFT"}</h3>
+                                        <h3 class="font-semibold truncate">
+                                            {metadata?.externalMetadata?.name || metadata?.name || "Unnamed NFT"}
+                                        </h3>
                                         <p class="text-sm text-gray-500 truncate">{nft.mint.slice(0, 4)}...{nft.mint.slice(-4)}</p>
                                     </div>
                                 </div>

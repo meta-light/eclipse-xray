@@ -17,58 +17,84 @@ import { fetchAsset } from '@nifty-oss/asset';
 import type { NiftyAssetTwo } from "$lib/types";
 
 async function fetchMetadataFromUri(uri: string): Promise<any> {
-    const ipfsGateways = ['https://gateway.pinata.cloud/ipfs/', 'https://cloudflare-ipfs.com/ipfs/', 'https://ipfs.io/ipfs/'];
+    console.log('Attempting to fetch metadata from URI:', uri);
+    const ipfsGateways = [
+        'https://gateway.pinata.cloud/ipfs/',
+        'https://cloudflare-ipfs.com/ipfs/',
+        'https://ipfs.io/ipfs/',
+        'https://ipfs.dweb.link/ipfs/'  // Added additional gateway
+    ];
+
     let ipfsHash: string | undefined;
-    if (uri.startsWith('ipfs://')) {ipfsHash = uri.slice(7);} else if (uri.includes('/ipfs/')) {ipfsHash = uri.split('/ipfs/')[1];}
+    if (uri.startsWith('ipfs://')) {
+        ipfsHash = uri.slice(7);
+    } else if (uri.includes('/ipfs/')) {
+        ipfsHash = uri.split('/ipfs/')[1];
+    }
+
     if (ipfsHash) {
         ipfsHash = cleanUri(ipfsHash);
-        const validIpfsHash = ipfsHash.match(/^Qm[1-9A-HJ-NP-Za-km-z]{44}$/) ? ipfsHash : '';
-        if (!validIpfsHash) {console.error('Invalid IPFS hash:', ipfsHash); return null;}
+        // More permissive IPFS hash validation
+        if (!ipfsHash.match(/^[1-9A-HJ-NP-Za-km-z]{46,59}$/)) {
+            console.error('Invalid IPFS hash:', ipfsHash);
+            return null;
+        }
+
         for (const gateway of ipfsGateways) {
             try {
-                const url = encodeURI(gateway + validIpfsHash);
-                console.log(`Attempting to fetch metadata from: ${url}`);
-                const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 5000 });
+                const url = encodeURI(gateway + ipfsHash);
+                console.log(`Attempting IPFS gateway: ${url}`);
+                const response = await axios.get(url, { 
+                    responseType: 'arraybuffer', 
+                    timeout: 5000,
+                    headers: {
+                        'Accept': 'application/json,*/*'
+                    }
+                });
+                
                 const contentType = response.headers['content-type'];
+                console.log('Response content type:', contentType);
 
                 if (contentType && contentType.startsWith('image/')) {
                     console.log(`Fetched image from ${url}`);
                     return { image: url };
-                } 
-                else if (response.data) {
+                } else if (response.data) {
                     const data = JSON.parse(Buffer.from(response.data, 'binary').toString('utf8'));
                     console.log(`Fetched metadata from ${url}:`, data);
                     return data;
                 }
-            } 
-            catch (error) {
+            } catch (error) {
                 console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
             }
         }
-        console.error('Failed to fetch metadata from all IPFS gateways');
-        return null;
     } else {
         try {
             const url = encodeURI(cleanUri(uri));
-            console.log(`Attempting to fetch metadata from URI: ${url}`);
-            const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 5000 });
+            console.log(`Attempting direct URI fetch: ${url}`);
+            const response = await axios.get(url, { 
+                responseType: 'arraybuffer', 
+                timeout: 5000,
+                headers: {
+                    'Accept': 'application/json,*/*'
+                }
+            });
+            
             const contentType = response.headers['content-type'];
+            console.log('Response content type:', contentType);
 
             if (contentType && contentType.startsWith('image/')) {
                 console.log(`Fetched image from URI: ${uri}`);
                 return { image: url };
-            } 
-            else if (response.data) {
+            } else if (response.data) {
                 const data = JSON.parse(Buffer.from(response.data, 'binary').toString('utf8'));
                 console.log(`Fetched metadata from URI: ${uri}`, data);
                 return data;
             }
-        } 
-        catch (error) {
+        } catch (error) {
             console.error(`Error fetching metadata from URI: ${uri}`, error instanceof Error ? error.message : String(error));
         }
-        return null;
     }
+    return null;
 }
 
 function parseToken2022Metadata(extensionData: Buffer): { uri?: string; name?: string; symbol?: string } {
@@ -77,28 +103,68 @@ function parseToken2022Metadata(extensionData: Buffer): { uri?: string; name?: s
     
     const metadata: { uri?: string; name?: string; symbol?: string } = {};
     
-    // Extract name and symbol using string search
-    const nameIndex = stringData.indexOf('Turbo Sticker Collectable #');
-    if (nameIndex !== -1) {
-        const nameEndIndex = nameIndex + 'Turbo Sticker Collectable #003'.length;
-        const symbolEndIndex = nameEndIndex + 'T-STK3'.length;
-        
-        metadata.name = stringData.slice(nameIndex, nameEndIndex);
-        metadata.symbol = stringData.slice(nameEndIndex, symbolEndIndex);
-        
-        console.log('Found name:', metadata.name);
-        console.log('Found symbol:', metadata.symbol);
+    // Enhanced pattern matching for different NFT types
+    const namePatterns = [
+        /Turbo Sticker Collectable #\d{3}/,
+        /Path of Discovery/,
+        /ASC Sticker #\d{3}/,
+        /VALIDATOR #\d{4}/,  // Added for validator NFTs
+        /Turbo Sticker #\d{3}/  // Added for Turbo stickers
+    ];
+
+    // Try each pattern
+    for (const pattern of namePatterns) {
+        const match = stringData.match(pattern);
+        if (match) {
+            metadata.name = match[0];
+            console.log('Found name with pattern:', pattern, ':', metadata.name);
+            break;
+        }
     }
-    
-    // Extract URI
-    const httpUriRegex = /(https:\/\/[^\s]+?)(?:Eclipse|$)/;
-    const httpUriMatch = stringData.match(httpUriRegex);
-    if (httpUriMatch) {
-        const [, uri] = httpUriMatch;
-        metadata.uri = cleanUri(uri);
-        console.log('Found URI:', metadata.uri);
+
+    // Enhanced symbol patterns
+    const symbolPatterns = [
+        /T-STK\d/,
+        /POD\d/,
+        /A-STK\d/,
+        /VLDTR/  // Added for validator NFTs
+    ];
+
+    // Try each symbol pattern
+    for (const pattern of symbolPatterns) {
+        const match = stringData.match(pattern);
+        if (match) {
+            metadata.symbol = match[0];
+            console.log('Found symbol with pattern:', pattern, ':', metadata.symbol);
+            break;
+        }
     }
+
+    // Update URI parsing to extract just the IPFS hash
+    const ipfsPattern = /ipfs:\/\/([a-zA-Z0-9]+)/i;
+    const ipfsMatch = stringData.match(ipfsPattern);
     
+    if (ipfsMatch) {
+        const ipfsHash = ipfsMatch[1].split(/[^a-zA-Z0-9]/)[0]; // Get clean hash before any extra data
+        metadata.uri = `https://ipfs.io/ipfs/${ipfsHash}`; // Use gateway URL
+        console.log('Found IPFS hash:', ipfsHash);
+    } else {
+        // Fallback to existing URI patterns if not IPFS
+        const uriPatterns = [
+            /(https:\/\/[^\s]+\.json)/i,
+            /(https:\/\/[^\s]+)/i
+        ];
+        
+        for (const pattern of uriPatterns) {
+            const match = stringData.match(pattern);
+            if (match) {
+                metadata.uri = cleanUri(match[0]);
+                break;
+            }
+        }
+    }
+
+    console.log('Final parsed Token2022 metadata:', metadata);
     return metadata;
 }
 
@@ -170,73 +236,69 @@ export const niftyAsset = t.procedure
                 freezeAuthority: decodedMintInfo.freezeAuthority,
             };
             const isNFT = mintInfo.decimals === 0 && mintInfo.supply.toString() === '1';
-            let metadata: { name: string; symbol: string; uri: string } | undefined;
+            let metadata: { name: string; symbol: string; uri: string } = {
+                name: '',
+                symbol: '',
+                uri: ''
+            };
             let externalMetadata: any = null;
+
+            console.log(`Fetching metadata for token ${token}`);
+
+            // Try Token-2022 metadata first
             if (isToken2022 && accountInfo.data.length > ACCOUNT_SIZE) {
                 const extensionData = accountInfo.data.slice(ACCOUNT_SIZE);
                 const tokenMetadata = parseToken2022Metadata(extensionData);
                 
-                if (tokenMetadata.uri || tokenMetadata.name || tokenMetadata.symbol) {
+                metadata = {
+                    name: tokenMetadata.name || '',
+                    symbol: tokenMetadata.symbol || '',
+                    uri: tokenMetadata.uri || ''
+                };
+                
+                if (tokenMetadata.uri) {
                     try {
-                        externalMetadata = tokenMetadata.uri ? await fetchMetadataFromUri(tokenMetadata.uri) : null;
-                        
-                        metadata = {
-                            name: tokenMetadata.name || '',
-                            symbol: tokenMetadata.symbol || '',
-                            uri: tokenMetadata.uri || ''
-                        };
-                        
-                        console.log('Found Token-2022 metadata:', metadata);
+                        externalMetadata = await fetchMetadataFromUri(tokenMetadata.uri);
+                        if (externalMetadata) {
+                            metadata = {
+                                name: externalMetadata.name || tokenMetadata.name || '',
+                                symbol: externalMetadata.symbol || tokenMetadata.symbol || '',
+                                uri: tokenMetadata.uri
+                            };
+                        }
                     } catch (error) {
-                        console.error('Error processing Token-2022 metadata:', error);
+                        console.error('Error fetching Token-2022 external metadata:', error);
                     }
                 }
             }
-            if (!metadata) {
+
+            // Try Metaplex metadata if we still don't have complete metadata
+            if (!metadata.name || !metadata.uri) {
                 try {
                     const umiPublicKey = publicKey(tokenPublicKey.toBase58());
                     const [metadataPda] = findMetadataPda(umi, { mint: umiPublicKey });
                     const metadataAccount = await fetchMetadata(umi, metadataPda);
+                    
                     if (metadataAccount) {
-                        metadata = {
-                            name: metadataAccount.name,
-                            symbol: metadataAccount.symbol,
-                            uri: cleanUri(metadataAccount.uri)
-                        };
-                        externalMetadata = {};
-                        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-                        const uriLower = metadata.uri.toLowerCase();
-                        if (imageExtensions.some(ext => uriLower.endsWith(ext))) {
-                            externalMetadata.image = metadata.uri;
+                        if (!externalMetadata && metadataAccount.uri) {
+                            try {
+                                externalMetadata = await fetchMetadataFromUri(metadataAccount.uri);
+                            } catch (error) {
+                                console.error('Error fetching Metaplex external metadata:', error);
+                            }
                         }
-                    } else {
-                        console.log('No metadata account found');
+                        
+                        metadata = {
+                            name: externalMetadata?.name || metadataAccount.name || metadata.name || '',
+                            symbol: externalMetadata?.symbol || metadataAccount.symbol || metadata.symbol || '',
+                            uri: metadataAccount.uri || metadata.uri || ''
+                        };
                     }
                 } catch (error) {
                     console.error('Error fetching Metaplex metadata:', error);
                 }
             }
-            if (!metadata) {
-                try {
-                    const niftyMetadata = await fetchNiftyAssetMetadata(umi, tokenPublicKey.toBase58());
-                    if (niftyMetadata) {
-                        metadata = {
-                            name: niftyMetadata.name,
-                            symbol: niftyMetadata.symbol,
-                            uri: cleanUri(niftyMetadata.uri)
-                        };
-                        if (niftyMetadata.uri) {
-                            try {
-                                externalMetadata = await fetchMetadataFromUri(cleanUri(niftyMetadata.uri));
-                            } catch (error) {
-                                console.error('Error fetching external metadata from Nifty Asset URI:', error);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error fetching Nifty Asset metadata:', error);
-                }
-            }
+
             const niftyAssetData: NiftyAssetTwo = {
                 mint: token,
                 address: token,
@@ -249,15 +311,15 @@ export const niftyAsset = t.procedure
                 metadata,
                 externalMetadata
             };
-            console.log('Nifty Asset Data:', niftyAssetData);
+
+            console.log('Final Nifty Asset Data:', niftyAssetData);
             return niftyAssetData;
         } 
         catch (error) {
-            console.error("Error in nifty asset procedure:", error);
-            if (error instanceof TRPCError) {throw error;}
+            console.error('Error in niftyAsset procedure:', error);
             throw new TRPCError({
                 code: 'INTERNAL_SERVER_ERROR',
-                message: `Error fetching Nifty Asset data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                message: 'Failed to fetch asset data',
                 cause: error
             });
         }
