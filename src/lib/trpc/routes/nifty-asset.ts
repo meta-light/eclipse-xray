@@ -34,12 +34,14 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
                 if (contentType && contentType.startsWith('image/')) {
                     console.log(`Fetched image from ${url}`);
                     return { image: url };
-                } else if (response.data) {
+                } 
+                else if (response.data) {
                     const data = JSON.parse(Buffer.from(response.data, 'binary').toString('utf8'));
                     console.log(`Fetched metadata from ${url}:`, data);
                     return data;
                 }
-            } catch (error) {
+            } 
+            catch (error) {
                 console.error(`Error fetching from ${gateway}:`, error instanceof Error ? error.message : String(error));
             }
         }
@@ -55,12 +57,14 @@ async function fetchMetadataFromUri(uri: string): Promise<any> {
             if (contentType && contentType.startsWith('image/')) {
                 console.log(`Fetched image from URI: ${uri}`);
                 return { image: url };
-            } else if (response.data) {
+            } 
+            else if (response.data) {
                 const data = JSON.parse(Buffer.from(response.data, 'binary').toString('utf8'));
                 console.log(`Fetched metadata from URI: ${uri}`, data);
                 return data;
             }
-        } catch (error) {
+        } 
+        catch (error) {
             console.error(`Error fetching metadata from URI: ${uri}`, error instanceof Error ? error.message : String(error));
         }
         return null;
@@ -122,7 +126,8 @@ export const niftyAsset = t.procedure
             let tokenPublicKey: PublicKey;
             try {
                 tokenPublicKey = new PublicKey(token);
-            } catch (error) {
+            } 
+            catch (error) {
                 console.error(`Invalid token address: ${token}`, error);
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
@@ -149,7 +154,8 @@ export const niftyAsset = t.procedure
             let decodedMintInfo;
             try {
                 decodedMintInfo = MintLayout.decode(accountInfo.data.slice(0, ACCOUNT_SIZE));
-            } catch (error) {
+            } 
+            catch (error) {
                 console.error("Error decoding mint info:", error);
                 throw new TRPCError({
                     code: 'INTERNAL_SERVER_ERROR',
@@ -245,11 +251,10 @@ export const niftyAsset = t.procedure
             };
             console.log('Nifty Asset Data:', niftyAssetData);
             return niftyAssetData;
-        } catch (error) {
+        } 
+        catch (error) {
             console.error("Error in nifty asset procedure:", error);
-            if (error instanceof TRPCError) {
-                throw error;
-            }
+            if (error instanceof TRPCError) {throw error;}
             throw new TRPCError({
                 code: 'INTERNAL_SERVER_ERROR',
                 message: `Error fetching Nifty Asset data: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -273,7 +278,6 @@ export const nfts = t.procedure
         const connection = new Connection(getRPCUrl(network), "confirmed");
         const pubKey = new PublicKey(account);
         try {
-            // Get both Token and Token-2022 accounts
             const tokenAccounts = await Promise.all([
                 connection.getTokenAccountsByOwner(pubKey, {
                     programId: new PublicKey(TOKEN_PROGRAM_ID)
@@ -353,18 +357,14 @@ async function fetchNiftyAssetMetadata(umi: Umi, mint: string) {
                     metadata.name = metadataAccount.name || metadata.name;
                     metadata.symbol = metadataAccount.symbol || metadata.symbol;
                     metadata.uri = cleanUri(metadataAccount.uri || metadata.uri);
-                } else {
-                    console.log('No metadata account found');
-                }
-            } catch (error) {
+                } 
+            } 
+            catch (error) {
                 console.error('Error fetching Metaplex metadata:', error);
             }
         }
 
         return metadata;
     } 
-    catch (error) {
-        console.error('Error in fetchNiftyAssetMetadata:', error);
-        return null;
-    }
+    catch (error) {console.error('Error in fetchNiftyAssetMetadata:', error); return null;}
 }

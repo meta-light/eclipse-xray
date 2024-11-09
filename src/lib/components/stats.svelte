@@ -12,6 +12,7 @@
     const slot = client.currentSlot.createQuery([isMainnetValue]);
     const duneQueryResult = client.duneQuery.createQuery();
     const pythPricesQuery = client.pythPrices.createQuery();
+    const flipsideQueryResult = client.flipsideQuery.createQuery();
     let prices: Record<string, number | null> = {};
     let ethUsdPrice: number | null = null;
     $: if ($pythPricesQuery.data !== undefined) {prices = $pythPricesQuery.data; ethUsdPrice = prices['ETH'];}
@@ -30,16 +31,6 @@
             {/if}
         </div>
         <div>
-            {#if !$pythPricesQuery.isLoading && ethUsdPrice !== null}
-                <div in:fade={{duration: 500}}>
-                    <span class="font-bold">ETH:</span>
-                    <span class="opacity-50">{formatMoney(ethUsdPrice)}</span>
-                </div>
-            {:else}
-                <div class="pulse h-2 w-16 rounded-lg bg-secondary" />
-            {/if}
-        </div>
-        <div>
             {#if !$slot.isLoading}
                 <div in:fade={{duration: 500}}>
                     <span class="font-bold">Slot:</span>
@@ -51,18 +42,46 @@
         </div>
     </div>
     <div class="flex items-center space-x-4">
-        {#if !$duneQueryResult.isLoading}
-            <div in:fade={{duration: 500}}>
-                <span class="font-bold">Bridged:</span>
-                <span class="opacity-50">{formatLargeNumber($duneQueryResult.data.total_deposits)} ETH</span>
-            </div>
-            <div in:fade={{duration: 500}}>
-                <span class="font-bold">Txs:</span>
-                <span class="opacity-50">{formatLargeNumber($duneQueryResult.data.transaction_count)}</span>
-            </div>
-            <div in:fade={{duration: 500}}>
-                <span class="font-bold">Users:</span>
-                <span class="opacity-50">{formatLargeNumber($duneQueryResult.data.users)}</span>
+        {#if !$flipsideQueryResult.isLoading && $flipsideQueryResult.data?.records}
+            <div class="flex items-center space-x-4">
+                <div in:fade={{duration: 500}}>
+                    <span class="font-bold">TVL:</span>
+                    <span class="opacity-50">${formatLargeNumber(Number($flipsideQueryResult.data.records.find(r => r.name === 'TVL')?.amount || 0))}</span>
+                </div>
+                {#if !$duneQueryResult.isLoading}
+                    <div in:fade={{duration: 500}}>
+                        <span class="font-bold">Txs:</span>
+                        <span class="opacity-50">{formatLargeNumber($duneQueryResult.data.transaction_count)}</span>
+                    </div>
+                    <div in:fade={{duration: 500}}>
+                        <span class="font-bold">Users:</span>
+                        <span class="opacity-50">{formatLargeNumber($duneQueryResult.data.users)}</span>
+                    </div>
+                {:else}
+                    <div class="pulse h-2 w-64 rounded-lg bg-secondary" />
+                {/if}
+                <div in:fade={{duration: 500}}>
+                    <span class="font-bold">Bridged ETH:</span>
+                    <span class="opacity-50">
+                        {formatLargeNumber(Number($flipsideQueryResult.data.records.find(r => r.name === 'ETH')?.amount || 0))}
+                    </span>
+                </div>
+                <div>
+                    {#if !$pythPricesQuery.isLoading && ethUsdPrice !== null}
+                        <div in:fade={{duration: 500}}>
+                            <span class="font-bold">ETH:</span>
+                            <span class="opacity-50">{formatMoney(ethUsdPrice)}</span>
+                        </div>
+                    {:else}
+                        <div class="pulse h-2 w-16 rounded-lg bg-secondary" />
+                    {/if}
+                </div>
+                <div in:fade={{duration: 500}}>
+                    <a href="https://status.eclipse.xyz" target="_blank"><span class="font-bold hover:link-success">Status</span></a>
+                </div>
+                <div in:fade={{duration: 500}}>
+                    <a href="https://app.eclipse.xyz" target="_blank"><span class="font-bold hover:link-success">App</span></a>
+                </div>
             </div>
         {:else}
             <div class="pulse h-2 w-64 rounded-lg bg-secondary" />

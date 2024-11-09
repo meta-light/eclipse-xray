@@ -55,6 +55,7 @@
     "dependencies": {
         "@coral-xyz/anchor": "^0.29.0",
         "@duneanalytics/client-sdk": "^0.2.1",
+        "@flipsidecrypto/sdk": "^2.1.0",
         "@lottiefiles/svelte-lottie-player": "^0.3.0",
         "@metaplex-foundation/digital-asset-standard-api": "^1.0.4",
         "@metaplex-foundation/mpl-core": "^1.1.1",

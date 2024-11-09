@@ -17,6 +17,7 @@ import { assets } from "$lib/trpc/routes/assets";
 import { duneQuery } from "$lib/trpc/routes/dune-query";
 import { programs } from "$lib/trpc/routes/programs";
 import { pythPrices } from "$lib/trpc/routes/pyth";
+import { flipsideQuery } from "$lib/trpc/routes/flipside";
 export const t = initTRPC.context<Context>().create();
 export const router = t.router({
     accountInfo,
@@ -27,6 +28,7 @@ export const router = t.router({
     concurrentMerkleTree,
     currentSlot,
     duneQuery,
+    flipsideQuery,
     niftyAsset,
     nfts,
     programs,
