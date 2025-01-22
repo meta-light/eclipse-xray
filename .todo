@@ -1,2 +1,5 @@
 - Transaction type labeling (all showing as generic transaction currently)
 - Reverse lookup by domain name (.turbo)
+
+https://sdk.eclipsedomains.xyz/swagger
+https://www.npmjs.com/package/@helio-nexus/svm-ens-sdk
